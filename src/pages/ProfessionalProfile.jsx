@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, ArrowLeft, Loader2, Search, X } from 'lucide-react';
-import { getProfessionalProfile, getProfessionalRatings } from '../services/api';
+import { getProfessionalProfile, getProfessionalRatings } from '../services/api.js';
 
 function ProfessionalProfile() {
   const { professionalId } = useParams();
