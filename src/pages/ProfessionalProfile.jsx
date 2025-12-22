@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, ArrowLeft, Loader2, Search, X } from 'lucide-react';
-import { getProfessionalProfile, getProfessionalRatings } from '../services/api.js';
+import api from '../services/api.js';
+
 
 function ProfessionalProfile() {
   const { professionalId } = useParams();
@@ -18,8 +19,8 @@ function ProfessionalProfile() {
   const loadProfessionalData = async () => {
     try {
       const [profileData, ratingsData] = await Promise.all([
-        getProfessionalProfile(professionalId),
-        getProfessionalRatings(professionalId)
+        api.getProfessionalProfile(professionalId),
+        api.getProfessionalRatings(professionalId)
       ]);
       setProfessional(profileData);
       setRatings(ratingsData);
@@ -338,4 +339,4 @@ function ProfessionalProfile() {
   );
 }
 
-export default ProfessionalProfile;// Cache bust
+export default ProfessionalProfile;
