@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, ArrowLeft, Loader2, Search } from 'lucide-react';
-import { getWaiterProfile, getWaiterRatings } from '../services/api';
+import { getWaiterProfile, getWaiterRatings } from '../services/api.js';
 
 function WaiterProfile() {
   const { waiterId } = useParams();

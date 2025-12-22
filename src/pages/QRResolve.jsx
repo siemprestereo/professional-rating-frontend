@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { resolveQR } from '../services/api';
+import { resolveQR } from '../services/api.js';
 import { Loader2, XCircle } from 'lucide-react';
 
 function QRResolve() {

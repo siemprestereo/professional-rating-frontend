@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
-import { getProfessionalProfile, createRating } from '../services/api';
+import { getProfessionalProfile, createRating } from '../services/api.js';
 
 function RatingForm() {
   const { professionalId } = useParams();
