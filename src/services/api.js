@@ -40,3 +40,12 @@ export const resolveQR = async (code) => {
   const response = await apiClient.get(`/qr/resolve/${code}`);
   return response.data;
 };
+
+// ========== DEFAULT EXPORT ==========
+export default {
+  getCurrentUser,
+  getProfessionalProfile,
+  createRating,
+  getProfessionalRatings,
+  resolveQR
+};
