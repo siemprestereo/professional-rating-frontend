@@ -23,7 +23,7 @@ function RatingForm() {
     try {
       const data = await getProfessionalProfile(professionalId);
       setProfessional(data);
-      
+      //
       // Auto-seleccionar si solo hay 1 trabajo activo
       const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
       if (activeJobs.length === 1) {
