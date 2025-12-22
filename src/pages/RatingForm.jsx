@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
-import { getProfessionalProfile, createRating } from '../services/api.js';
+import api from '../services/api.js';
 
 function RatingForm() {
   const { professionalId } = useParams();
@@ -21,7 +21,7 @@ function RatingForm() {
 
   const loadProfessional = async () => {
     try {
-      const data = await getProfessionalProfile(professionalId);
+      const data = await api.getProfessionalProfile(professionalId);
       setProfessional(data);
       //
       // Auto-seleccionar si solo hay 1 trabajo activo
@@ -67,7 +67,7 @@ function RatingForm() {
         ratingData.workHistoryId = selectedWorkplace.workHistoryId;
       }
 
-      await createRating(ratingData);
+      await api.createRating(ratingData);
 
       setSuccess(true);
       
