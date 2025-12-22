@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { resolveQR } from '../services/api.js';
+import api from '../services/api.js';
 import { Loader2, XCircle } from 'lucide-react';
 
 function QRResolve() {
@@ -14,7 +14,7 @@ function QRResolve() {
 
   const resolveQRCode = async () => {
     try {
-      const response = await resolveQR(code);
+      const response = await api.resolveQR(code);
       const professionalId = response.professionalId;
       navigate('/rate-professional/' + professionalId, { replace: true });
     } catch (err) {
