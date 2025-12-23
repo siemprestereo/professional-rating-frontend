@@ -4,9 +4,10 @@ import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus } from 'lucide
 function LandingPage() {
   const navigate = useNavigate();
 
-  const handleGoogleLogin = () => {
-    window.location.href = '/oauth2/authorization/google';
-  };
+ const handleGoogleLogin = () => {
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+  window.location.href = `${backendUrl}/oauth2/authorization/google`;
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
