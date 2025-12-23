@@ -31,7 +31,8 @@ function ProfessionalRegister() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const backendUrl = import.meta.env.VITE_API_URL || 'https://professional-rating-backend-production.up.railway.app';
+const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
