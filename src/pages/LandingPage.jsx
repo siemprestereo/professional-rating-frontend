@@ -6,6 +6,8 @@ function LandingPage() {
 
  const handleGoogleLogin = () => {
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+  console.log('Backend URL:', backendUrl); // ← AGREGÁ ESTA LÍNEA
+  console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`); // ← Y ESTA
   window.location.href = `${backendUrl}/oauth2/authorization/google`;
 };
 
