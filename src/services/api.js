@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-// ✅ Ahora usa rutas relativas (el proxy de Vite las redirige al backend)
-const API_URL = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : '/api';
+const API_URL = 'https://professional-rating-backend-production.up.railway.app/api';
 
 // Configurar axios
 const apiClient = axios.create({

@@ -4,13 +4,13 @@ import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus } from 'lucide
 function LandingPage() {
   const navigate = useNavigate();
 
- const handleGoogleLogin = () => {
-  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-  console.log('Backend URL:', backendUrl); // ← AGREGÁ ESTA LÍNEA
-  console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`); // ← Y ESTA
+const handleGoogleLogin = () => {
+  // Hardcodeado temporalmente para producción
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  console.log('Backend URL:', backendUrl);
+  console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`);
   window.location.href = `${backendUrl}/oauth2/authorization/google`;
 };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
       {/* Navbar */}
