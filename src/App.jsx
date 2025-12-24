@@ -1,13 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import ProfessionalProfile from './pages/ProfessionalProfile.jsx/index.js';
+import ProfessionalProfile from './pages/ProfessionalProfile';
 import RatingForm from './pages/RatingForm';
 import QRResolve from './pages/QRResolve.jsx';
 import ProfessionalDashboard from './pages/ProfessionalDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import SearchProfessionals from './pages/SearchProfessionals';
 import ProfessionalLogin from './pages/ProfessionalLogin';
-import ProfessionalRegister from './pages/ProfessionalRegister2';
+import ProfessionalRegister from './pages/ProfessionalRegister';
 import EditCV from './pages/EditCV';
 import Stats from './pages/Stats';
 
