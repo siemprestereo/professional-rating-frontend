@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download } from 'lucide-react';
 
-
 function ProfessionalDashboard() {
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const navigate = useNavigate();
   const [professional, setProfessional] = useState(null);
   const [ratings, setRatings] = useState([]);
@@ -18,13 +18,11 @@ function ProfessionalDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Obtener datos del profesional logueado
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch(`${backendUrl}/api/auth/me`, {
         credentials: 'include'
       });
       
       if (!response.ok) {
-        // Si no está autenticado, redirigir al login
         navigate('/professional-login');
         return;
       }
@@ -33,8 +31,6 @@ function ProfessionalDashboard() {
       console.log('✅ Datos del profesional:', professionalData);
       
       setProfessional(professionalData);
-      
-      // TODO: Obtener ratings reales del profesional
       setRatings([]);
       
     } catch (error) {
@@ -48,7 +44,7 @@ function ProfessionalDashboard() {
   const handleGenerateQR = async () => {
     setGeneratingQR(true);
     try {
-      const response = await fetch(`/api/qr/generate?ttlMinutes=3`, {
+      const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -81,7 +77,7 @@ function ProfessionalDashboard() {
   const handleDownloadPDF = async () => {
     setDownloadingPDF(true);
     try {
-      const response = await fetch(`/api/cv/${professional.id}/download-pdf`, {
+      const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
         credentials: 'include'
       });
 
@@ -89,20 +85,13 @@ function ProfessionalDashboard() {
         throw new Error('Error al descargar PDF');
       }
 
-      // Convertir respuesta a blob
       const blob = await response.blob();
-      
-      // Crear URL temporal
       const url = window.URL.createObjectURL(blob);
-      
-      // Crear link invisible y hacer click
       const link = document.createElement('a');
       link.href = url;
       link.download = `CV_${professional.name.replace(/\s+/g, '_')}.pdf`;
       document.body.appendChild(link);
       link.click();
-      
-      // Limpiar
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
@@ -186,7 +175,7 @@ function ProfessionalDashboard() {
           </div>
         </div>
 
-        {/* Descargar CV - NUEVO */}
+        {/* Descargar CV */}
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
           <div className="flex items-center justify-between text-white">
             <div className="flex-1">
