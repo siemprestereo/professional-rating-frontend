@@ -52,9 +52,10 @@ const response = await fetch(`${backendUrl}/api/auth/register`, {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = '/oauth2/authorization/google';
-  };
+ const handleGoogleLogin = () => {
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  window.location.href = `${backendUrl}/oauth2/authorization/google`;
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4 animate-fadeIn">
