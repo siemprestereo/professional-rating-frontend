@@ -17,6 +17,15 @@ function ProfessionalDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
+    // Intentar cargar datos guardados del registro
+    const savedData = localStorage.getItem('professional');
+    if (savedData) {
+      setProfessional(JSON.parse(savedData));
+      setLoading(false);
+      localStorage.removeItem('professional'); // Limpiar después de usar
+      return;
+    }
+
     try {
       const response = await fetch(`${backendUrl}/api/auth/me`, {
         credentials: 'include'
@@ -104,6 +113,7 @@ function ProfessionalDashboard() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('professional');
     window.location.href = '/logout';
   };
 

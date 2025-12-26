@@ -32,7 +32,7 @@ function ProfessionalRegister() {
 
     try {
       const backendUrl = import.meta.env.VITE_API_URL || 'https://professional-rating-backend-production.up.railway.app';
-const response = await fetch(`${backendUrl}/api/auth/register`, {
+      const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -44,6 +44,8 @@ const response = await fetch(`${backendUrl}/api/auth/register`, {
         throw new Error(data.error || 'Error al registrarse');
       }
 
+      const userData = await response.json();
+      localStorage.setItem('professional', JSON.stringify(userData));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -52,10 +54,10 @@ const response = await fetch(`${backendUrl}/api/auth/register`, {
     }
   };
 
- const handleGoogleLogin = () => {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  window.location.href = `${backendUrl}/oauth2/authorization/google`;
-};
+  const handleGoogleLogin = () => {
+    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4 animate-fadeIn">
