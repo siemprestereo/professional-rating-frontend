@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download } from 'lucide-react';
+import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download, Settings } from 'lucide-react';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -11,6 +11,8 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -22,7 +24,7 @@ function ProfessionalDashboard() {
     if (savedData) {
       setProfessional(JSON.parse(savedData));
       setLoading(false);
-      localStorage.removeItem('professional'); // Limpiar después de usar
+      localStorage.removeItem('professional');
       return;
     }
 
@@ -109,6 +111,30 @@ function ProfessionalDashboard() {
       alert('Error al descargar el CV');
     } finally {
       setDownloadingPDF(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/delete-account`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar cuenta');
+      }
+
+      localStorage.removeItem('professional');
+      alert('Tu cuenta ha sido eliminada exitosamente');
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Error al eliminar la cuenta. Intentá nuevamente.');
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -334,7 +360,60 @@ function ProfessionalDashboard() {
             <p className="text-sm font-semibold text-gray-800">Estadísticas</p>
           </button>
         </div>
+
+        {/* Configuración - Eliminar cuenta */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-500">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <Settings className="w-5 h-5 mr-2 text-gray-600" />
+            Configuración
+          </h3>
+          
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-600 transition-all"
+          >
+            Eliminar mi cuenta
+          </button>
+        </div>
       </div>
+
+      {/* Modal de confirmación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              ¿Eliminar cuenta?
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Esta acción es permanente y eliminará todos tus datos, incluyendo tu CV, calificaciones y perfil. 
+              <strong> No se puede deshacer.</strong>
+            </p>
+            
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 disabled:opacity-50 transition-all"
+              >
+                {deleting ? (
+                  <span className="flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Eliminando...
+                  </span>
+                ) : (
+                  'Sí, eliminar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
