@@ -15,7 +15,8 @@ function ProfessionalLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -27,6 +28,8 @@ function ProfessionalLogin() {
         throw new Error(data.error || 'Error al iniciar sesión');
       }
 
+      const userData = await response.json();
+      localStorage.setItem('professional', JSON.stringify(userData));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
