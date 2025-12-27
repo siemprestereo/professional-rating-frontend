@@ -24,27 +24,10 @@ function MyProfile() {
     }
 
     // Si no hay datos en localStorage, cargar desde el backend
-    try {
-      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-      const response = await fetch(`${backendUrl}/api/auth/me`, {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        navigate('/professional-login');
-        return;
-      }
-
-      const data = await response.json();
-      setProfessional(data);
-      loadRatings(data.id);
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      navigate('/professional-login');
-    } finally {
-      setLoading(false);
-    }
-  };
+      console.log('No hay datos de sesión, redirigiendo al login');
+  navigate('/professional-login');
+  setLoading(false);
+};
 
   const loadRatings = async (professionalId) => {
     try {
