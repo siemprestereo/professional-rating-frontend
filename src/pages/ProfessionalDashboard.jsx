@@ -117,10 +117,10 @@ function ProfessionalDashboard() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const response = await fetch(`${backendUrl}/api/auth/delete-account`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
+      const response = await fetch(`${backendUrl}/api/auth/delete-account/${professional.id}`, {
+  method: 'DELETE',
+  credentials: 'include'
+});
 
       if (!response.ok) {
         throw new Error('Error al eliminar cuenta');
