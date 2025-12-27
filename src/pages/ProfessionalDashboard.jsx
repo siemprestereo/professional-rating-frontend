@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download } from 'lucide-react';
-
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
