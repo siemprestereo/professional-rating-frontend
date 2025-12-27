@@ -24,7 +24,7 @@ function ProfessionalDashboard() {
     if (savedData) {
       setProfessional(JSON.parse(savedData));
       setLoading(false);
-      localStorage.removeItem('professional');
+      
       return;
     }
 
