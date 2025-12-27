@@ -13,6 +13,7 @@ import Stats from './pages/Stats';
 import MyProfile from './pages/MyProfile';
 import ClientLogin from './pages/ClientLogin';
 import ClientRegister from './pages/ClientRegister';
+import EditProfile from './pages/EditProfile';
 
 
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/my-profile" element={<MyProfile />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-register" element={<ClientRegister />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>
     </Router>
   );
