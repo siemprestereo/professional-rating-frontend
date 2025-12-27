@@ -10,6 +10,9 @@ import ProfessionalLogin from './pages/ProfessionalLogin';
 import ProfessionalRegister from './pages/ProfessionalRegister';
 import EditCV from './pages/EditCV';
 import Stats from './pages/Stats';
+import MyProfile from './pages/MyProfile';
+
+
 
 function App() {
   return (
@@ -27,6 +30,7 @@ function App() {
         <Route path="/professional-register" element={<ProfessionalRegister />} />
         <Route path="/edit-cv" element={<EditCV />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/my-profile" element={<MyProfile />} />
       </Routes>
     </Router>
   );

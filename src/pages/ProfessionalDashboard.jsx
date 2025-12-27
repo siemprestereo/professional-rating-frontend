@@ -336,10 +336,10 @@ function ProfessionalDashboard() {
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <button
-            onClick={() => navigate(`/professional/${professional.id}`)}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
-          >
+         <button
+  onClick={() => navigate('/my-profile')}
+  className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
+>
             <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-gray-800">Ver mi perfil</p>
           </button>
