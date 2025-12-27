@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download } from 'lucide-react';
+import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download, Edit } from 'lucide-react';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -11,7 +11,6 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
-  
 
   useEffect(() => {
     loadDashboardData();
@@ -23,7 +22,6 @@ function ProfessionalDashboard() {
     if (savedData) {
       setProfessional(JSON.parse(savedData));
       setLoading(false);
-      
       return;
     }
 
@@ -112,8 +110,6 @@ function ProfessionalDashboard() {
       setDownloadingPDF(false);
     }
   };
-
-
 
   const handleLogout = () => {
     localStorage.removeItem('professional');
@@ -313,49 +309,31 @@ function ProfessionalDashboard() {
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-         <button
-  onClick={() => navigate('/my-profile')}
-  className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
->
+          <button
+            onClick={() => navigate('/my-profile')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
+          >
             <User className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-gray-800">Ver mi perfil</p>
           </button>
           
           <button
+            onClick={() => navigate('/edit-profile')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
+          >
+            <Edit className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-gray-800">Editar Perfil</p>
+          </button>
+
+          <button
             onClick={() => navigate('/edit-cv')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
           >
-            <QrCode className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <QrCode className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-gray-800">Editar CV</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/stats')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
-          >
-            <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800">Estadísticas</p>
-          </button>
-        </div>
-
-        {/* Configuración - Eliminar cuenta */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-500">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2 text-gray-600" />
-            Configuración
-          </h3>
-          
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-600 transition-all"
-          >
-            Eliminar mi cuenta
           </button>
         </div>
       </div>
-
-      
-      
     </div>
   );
 }
