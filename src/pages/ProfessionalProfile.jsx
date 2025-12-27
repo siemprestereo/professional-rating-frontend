@@ -19,11 +19,19 @@ function ProfessionalProfile() {
   const loadProfessionalData = async () => {
     try {
       const [profileData, ratingsData] = await Promise.all([
-        api.getProfessionalProfile(professionalId),
-        api.getProfessionalRatings(professionalId)
-      ]);
-      setProfessional(profileData);
-      setRatings(ratingsData);
+  api.getProfessionalProfile(professionalId),
+  api.getProfessionalRatings(professionalId)
+]);
+
+// Mapear campos del backend al formato esperado
+const mappedProfile = {
+  ...profileData,
+  professionalName: profileData.name,
+  reputationScore: profileData.averageRating || 0
+};
+
+setProfessional(mappedProfile);
+setRatings(ratingsData);
     } catch (error) {
       console.error('Error loading professional:', error);
     } finally {
