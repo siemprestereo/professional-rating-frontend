@@ -10,7 +10,7 @@ import ProfessionalLogin from './pages/ProfessionalLogin';
 import ProfessionalRegister from './pages/ProfessionalRegister';
 import EditCV from './pages/EditCV';
 import Stats from './pages/Stats';
-import MyProfile from './pages/MyProfile.jsx/index.js';
+import MyProfile from './pages/MyProfile';
 import ClientLogin from './pages/ClientLogin';
 import ClientRegister from './pages/ClientRegister';
 
