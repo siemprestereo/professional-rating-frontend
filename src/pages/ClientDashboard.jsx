@@ -13,38 +13,39 @@ function ClientDashboard() {
   }, []);
 
   const loadClientData = async () => {
-    try {
-      // Obtener datos del cliente logueado
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        navigate('/');
-        return;
-      }
-      
+  // Cargar datos desde localStorage primero
+  const savedData = localStorage.getItem('client');
+  if (savedData) {
+    const clientData = JSON.parse(savedData);
+    setClient(clientData);
+    loadRatings(clientData.id);
+    setLoading(false);
+    return;
+  }
+
+  // Si no hay localStorage, intentar cargar desde backend (OAuth)
+  try {
+    const response = await fetch(`${backendUrl}/api/auth/me/client`, {
+      credentials: 'include'
+    });
+
+    if (response.ok) {
       const clientData = await response.json();
-      console.log('✅ Cliente:', clientData);
-      
       setClient(clientData);
-      
-      // TODO: Obtener calificaciones que el cliente ha dado
-      // const ratingsResponse = await fetch(`/api/ratings/client/${clientData.id}`, {
-      //   credentials: 'include'
-      // });
-      // const ratingsData = await ratingsResponse.json();
-      // setMyRatings(ratingsData);
-      
-      setMyRatings([]);
-      
-    } catch (error) {
-      console.error('Error loading client data:', error);
-      navigate('/');
-    } finally {
+      localStorage.setItem('client', JSON.stringify(clientData));
+      loadRatings(clientData.id);
       setLoading(false);
+      return;
     }
-  };
+  } catch (error) {
+    console.error('Error loading client from session:', error);
+  }
+
+  // Si falló todo, redirigir al login
+  console.log('No hay datos de sesión, redirigiendo al login');
+  navigate('/client-login');
+  setLoading(false);
+};
 
   const handleLogout = () => {
     window.location.href = '/logout';
