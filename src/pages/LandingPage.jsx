@@ -65,7 +65,7 @@ const handleGoogleLogin = () => {
           </button>
           
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => navigate('/client-login')}
             className="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-bold text-lg border-2 border-white/50 hover:bg-white/30 transition-all flex items-center gap-2"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
