@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Edit2, Trash2, Save, Loader2, Briefcase, X, User, MapP
 
 function EditCV() {
   const navigate = useNavigate();
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const [professional, setProfessional] = useState(null);
   
   // Información personal
@@ -40,14 +41,10 @@ function EditCV() {
   }, []);
 
   const loadData = async () => {
-    try {
-      // Obtener profesional
-      const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
-      if (!meResponse.ok) {
-        navigate('/professional-login');
-        return;
-      }
-      const meData = await meResponse.json();
+    // Cargar desde localStorage primero
+    const savedData = localStorage.getItem('professional');
+    if (savedData) {
+      const meData = JSON.parse(savedData);
       setProfessional(meData);
       
       // Cargar datos personales
@@ -55,9 +52,14 @@ function EditCV() {
       setLocation(meData.location || '');
       setProfessionalTitle(meData.professionalTitle || '');
       setProfilePicture(meData.profilePicture || '');
+    } else {
+      navigate('/professional-login');
+      return;
+    }
 
+    try {
       // Obtener CV usando /me
-      const cvResponse = await fetch('/api/cv/me', { credentials: 'include' });
+      const cvResponse = await fetch(`${backendUrl}/api/cv/me`, { credentials: 'include' });
       if (cvResponse.ok) {
         const cvData = await cvResponse.json();
         setDescription(cvData.description || '');
@@ -65,7 +67,7 @@ function EditCV() {
       }
 
       // Obtener lugares de trabajo
-      const businessResponse = await fetch('/api/businesses');
+      const businessResponse = await fetch(`${backendUrl}/api/businesses`);
       if (businessResponse.ok) {
         const businessData = await businessResponse.json();
         setBusinesses(businessData);
@@ -110,7 +112,7 @@ function EditCV() {
       const formData = new FormData();
       formData.append('photo', file);
 
-      const response = await fetch('/api/auth/upload-photo', {
+      const response = await fetch(`${backendUrl}/api/auth/upload-photo`, {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -137,7 +139,7 @@ function EditCV() {
   const handleDownloadPDF = async () => {
     setDownloadingPDF(true);
     try {
-      const response = await fetch(`/api/cv/${professional.id}/download-pdf`, {
+      const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
         credentials: 'include'
       });
 
@@ -166,7 +168,7 @@ function EditCV() {
   const handleSavePersonalInfo = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/auth/update-profile', {
+      const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -179,6 +181,15 @@ function EditCV() {
 
       if (response.ok) {
         alert('✅ Información personal guardada!');
+        // Actualizar localStorage
+        const updatedProfessional = {
+          ...professional,
+          phone,
+          location,
+          professionalTitle
+        };
+        localStorage.setItem('professional', JSON.stringify(updatedProfessional));
+        setProfessional(updatedProfessional);
       } else {
         const error = await response.json();
         alert('❌ Error: ' + (error.message || 'No se pudo guardar'));
@@ -194,7 +205,7 @@ function EditCV() {
   const handleSaveDescription = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/cv/me/description', {
+      const response = await fetch(`${backendUrl}/api/cv/me/description`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -231,7 +242,7 @@ function EditCV() {
         endDate: formData.currentJob ? null : (formData.endDate || null)
       };
       
-      const response = await fetch('/api/cv/me/work-history', {
+      const response = await fetch(`${backendUrl}/api/cv/me/work-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -271,7 +282,7 @@ function EditCV() {
         endDate: formData.currentJob ? null : (formData.endDate || null)
       };
 
-      const response = await fetch(`/api/cv/me/work-history/${editingWork.workHistoryId}`, {
+      const response = await fetch(`${backendUrl}/api/cv/me/work-history/${editingWork.workHistoryId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -302,7 +313,7 @@ function EditCV() {
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/cv/me/work-history/${workHistoryId}`, {
+      const response = await fetch(`${backendUrl}/api/cv/me/work-history/${workHistoryId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -361,6 +372,10 @@ function EditCV() {
         </div>
       </div>
     );
+  }
+
+  if (!professional) {
+    return null;
   }
 
   // Determinar qué foto mostrar
