@@ -16,44 +16,52 @@ function ClientDashboard() {
   }, []);
 
   const loadClientData = async () => {
-    // Cargar datos desde localStorage primero
-    const savedData = localStorage.getItem('client');
-    if (savedData) {
-      const clientData = JSON.parse(savedData);
-      setClient(clientData);
-      loadRatings(clientData.id);
+    // Verificar si hay token
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      console.log('No hay token, redirigiendo al login');
+      navigate('/client-login');
       setLoading(false);
       return;
     }
 
-    // Si no hay localStorage, intentar cargar desde backend (OAuth)
     try {
+      // Llamar al backend con el token JWT
       const response = await fetch(`${backendUrl}/api/auth/me/client`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
         const clientData = await response.json();
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
-        loadRatings(clientData.id);
-        setLoading(false);
-        return;
+        loadRatings(clientData.id, token);
+      } else if (response.status === 401) {
+        // Token inválido o expirado
+        console.log('Token inválido, redirigiendo al login');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('client');
+        navigate('/client-login');
+      } else {
+        throw new Error('Error al cargar datos del cliente');
       }
     } catch (error) {
-      console.error('Error loading client from session:', error);
+      console.error('Error loading client:', error);
+      navigate('/client-login');
+    } finally {
+      setLoading(false);
     }
-
-    // Si falló todo, redirigir al login
-    console.log('No hay datos de sesión, redirigiendo al login');
-    navigate('/client-login');
-    setLoading(false);
   };
 
-  const loadRatings = async (clientId) => {
+  const loadRatings = async (clientId, token) => {
     try {
       const response = await fetch(`${backendUrl}/api/ratings/client/${clientId}`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
@@ -67,17 +75,26 @@ function ClientDashboard() {
   };
 
   const handleDeleteAccount = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/client-login');
+      return;
+    }
+
     setDeleting(true);
     try {
       const response = await fetch(`${backendUrl}/api/auth/delete-account-client/${client.id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
         throw new Error('Error al eliminar cuenta');
       }
 
+      localStorage.removeItem('authToken');
       localStorage.removeItem('client');
       alert('Tu cuenta ha sido eliminada exitosamente');
       navigate('/');
@@ -91,6 +108,7 @@ function ClientDashboard() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('authToken');
     localStorage.removeItem('client');
     navigate('/');
   };

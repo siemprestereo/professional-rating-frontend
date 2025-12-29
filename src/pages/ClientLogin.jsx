@@ -1,13 +1,38 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, ShoppingBag } from 'lucide-react';
 
 function ClientLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Capturar token de la URL después del OAuth redirect
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      console.log('✅ Token recibido de OAuth:', token);
+      localStorage.setItem('authToken', token);
+      
+      // Verificar el tipo de usuario y redirigir
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('📦 Payload del token:', payload);
+        
+        if (payload.userType === 'CLIENT') {
+          navigate('/client-dashboard', { replace: true });
+        } else {
+          navigate('/professional-dashboard', { replace: true });
+        }
+      } catch (e) {
+        console.error('Error al decodificar token:', e);
+        setError('Error al procesar autenticación');
+      }
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +44,6 @@ function ClientLogin() {
       const response = await fetch(`${backendUrl}/api/auth/login-client`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
 
@@ -28,8 +52,19 @@ function ClientLogin() {
         throw new Error(data.error || 'Error al iniciar sesión');
       }
 
-      const userData = await response.json();
-      localStorage.setItem('client', JSON.stringify(userData));
+      const data = await response.json();
+      
+      // Guardar token en localStorage
+      localStorage.setItem('authToken', data.token);
+      
+      // Guardar datos del usuario (opcional, para mostrar info sin llamar al backend)
+      localStorage.setItem('client', JSON.stringify({
+        id: data.id,
+        email: data.email,
+        name: data.name
+      }));
+
+      console.log('✅ Login exitoso con email/password');
       navigate('/client-dashboard');
     } catch (err) {
       setError(err.message);
@@ -40,6 +75,7 @@ function ClientLogin() {
 
   const handleGoogleLogin = () => {
     const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    // Google redirigirá de vuelta a esta misma página con ?token=xxx
     window.location.href = `${backendUrl}/oauth2/authorization/google`;
   };
 
