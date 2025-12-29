@@ -12,6 +12,18 @@ function ClientDashboard() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    // Primero verificar si hay token en la URL (OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    
+    if (tokenFromUrl) {
+      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+      localStorage.setItem('authToken', tokenFromUrl);
+      
+      // Limpiar la URL (quitar el ?token=xxx)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     loadClientData();
   }, []);
 
