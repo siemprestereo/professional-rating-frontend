@@ -31,11 +31,10 @@ function ProfessionalRegister() {
     setLoading(true);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'https://professional-rating-backend-production.up.railway.app';
+      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
       const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, email, password })
       });
 
@@ -44,9 +43,19 @@ function ProfessionalRegister() {
         throw new Error(data.error || 'Error al registrarse');
       }
 
-      const userData = await response.json();
-      localStorage.setItem('professional', JSON.stringify(userData));
-      navigate('/dashboard');
+      const data = await response.json();
+      
+      // Guardar token en localStorage
+      localStorage.setItem('authToken', data.token);
+      
+      // Guardar datos del usuario
+      localStorage.setItem('professional', JSON.stringify({
+        id: data.id,
+        email: data.email,
+        name: data.name
+      }));
+
+      navigate('/professional-dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -56,7 +65,8 @@ function ProfessionalRegister() {
 
   const handleGoogleLogin = () => {
     const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+    // Agregar parámetro type=professional
+    window.location.href = `${backendUrl}/oauth2/authorization/google?type=professional`;
   };
 
   return (
