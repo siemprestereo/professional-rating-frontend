@@ -47,11 +47,13 @@ function ProfessionalLogin() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    // Agregar parámetro type=professional
-    window.location.href = `${backendUrl}/oauth2/authorization/google?type=professional`;
-  };
+const handleGoogleLogin = () => {
+  // Guardar el tipo ANTES de redirigir
+  sessionStorage.setItem('oauth_user_type', 'professional');
+  
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  window.location.href = `${backendUrl}/oauth2/authorization/google`;
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">

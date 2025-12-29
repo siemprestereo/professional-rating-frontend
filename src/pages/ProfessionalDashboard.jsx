@@ -13,33 +13,77 @@ function ProfessionalDashboard() {
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   useEffect(() => {
+    // Primero verificar si hay token en la URL (OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    
+    if (tokenFromUrl) {
+      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+      
+      // Verificar que el tipo de usuario sea correcto
+      const expectedType = sessionStorage.getItem('oauth_user_type');
+      
+      // Decodificar token para verificar el tipo
+      try {
+        const payload = JSON.parse(atob(tokenFromUrl.split('.')[1]));
+        console.log('📦 Payload del token:', payload);
+        
+        if (expectedType === 'professional' && payload.userType === 'PROFESSIONAL') {
+          localStorage.setItem('authToken', tokenFromUrl);
+          sessionStorage.removeItem('oauth_user_type'); // Limpiar
+          
+          // Limpiar la URL (quitar el ?token=xxx)
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          // Tipo incorrecto, redirigir al login correcto
+          console.log('❌ Tipo de usuario incorrecto, redirigiendo...');
+          sessionStorage.removeItem('oauth_user_type');
+          navigate('/professional-login');
+          return;
+        }
+      } catch (e) {
+        console.error('Error al decodificar token:', e);
+      }
+    }
+    
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
-    // Intentar cargar datos guardados del registro
-    const savedData = localStorage.getItem('professional');
-    if (savedData) {
-      setProfessional(JSON.parse(savedData));
+    // Verificar si hay token
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      console.log('No hay token, redirigiendo al login');
+      navigate('/professional-login');
       setLoading(false);
       return;
     }
 
     try {
+      // Llamar al backend con el token JWT
       const response = await fetch(`${backendUrl}/api/auth/me`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
-      if (!response.ok) {
+      if (response.ok) {
+        const professionalData = await response.json();
+        console.log('✅ Datos del profesional:', professionalData);
+        
+        setProfessional(professionalData);
+        localStorage.setItem('professional', JSON.stringify(professionalData));
+        setRatings([]);
+      } else if (response.status === 401) {
+        // Token inválido o expirado
+        console.log('Token inválido, redirigiendo al login');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('professional');
         navigate('/professional-login');
-        return;
+      } else {
+        throw new Error('Error al cargar datos del profesional');
       }
-      
-      const professionalData = await response.json();
-      console.log('✅ Datos del profesional:', professionalData);
-      
-      setProfessional(professionalData);
-      setRatings([]);
       
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -50,11 +94,19 @@ function ProfessionalDashboard() {
   };
 
   const handleGenerateQR = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/professional-login');
+      return;
+    }
+
     setGeneratingQR(true);
     try {
       const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
         method: 'POST',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       if (!response.ok) {
@@ -83,10 +135,18 @@ function ProfessionalDashboard() {
   };
 
   const handleDownloadPDF = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/professional-login');
+      return;
+    }
+
     setDownloadingPDF(true);
     try {
       const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
@@ -112,8 +172,9 @@ function ProfessionalDashboard() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('authToken');
     localStorage.removeItem('professional');
-    window.location.href = '/logout';
+    navigate('/');
   };
 
   const renderStars = (score) => {
@@ -136,6 +197,10 @@ function ProfessionalDashboard() {
     );
   }
 
+  if (!professional) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       {/* Header */}
@@ -156,13 +221,13 @@ function ProfessionalDashboard() {
           </div>
           <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{professional.name}</h2>
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
-            {renderStars(Math.round(professional.reputationScore))}
+            {renderStars(Math.round(professional.reputationScore || 0))}
             <span className="ml-2 text-white font-semibold">
-              {professional.reputationScore.toFixed(1)}
+              {(professional.reputationScore || 0).toFixed(1)}
             </span>
           </div>
           <p className="text-white/90 text-sm animate-slideUp delay-200">
-            {professional.totalRatings} calificaciones
+            {professional.totalRatings || 0} calificaciones
           </p>
         </div>
       </div>
@@ -173,13 +238,13 @@ function ProfessionalDashboard() {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp hover-lift">
             <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{professional.reputationScore.toFixed(1)}</p>
+            <p className="text-2xl font-bold text-gray-800">{(professional.reputationScore || 0).toFixed(1)}</p>
             <p className="text-sm text-gray-600">Promedio</p>
           </div>
           
           <div className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-100 hover-lift">
             <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{professional.totalRatings}</p>
+            <p className="text-2xl font-bold text-gray-800">{professional.totalRatings || 0}</p>
             <p className="text-sm text-gray-600">Calificaciones</p>
           </div>
         </div>
