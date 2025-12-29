@@ -73,12 +73,11 @@ function ClientLogin() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    // Google redirigirá de vuelta a esta misma página con ?token=xxx
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
-  };
-
+const handleGoogleLogin = () => {
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  // Agregar parámetro type=client para indicar que quiere registrarse como cliente
+  window.location.href = `${backendUrl}/oauth2/authorization/google?type=client`;
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
