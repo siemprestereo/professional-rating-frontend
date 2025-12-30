@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
+import Toast from '../components/toast';
+import ErrorModal from '../components/ErrorModal';
 
 function ClientRegister() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,6 +15,46 @@ function ClientRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
+
+  // Detectar errores de OAuth y capturar token
+  useEffect(() => {
+    // Detectar errores de OAuth
+    const errorParam = searchParams.get('error');
+    
+    if (errorParam === 'email_already_registered_as_professional') {
+      setErrorModal({
+        title: 'Email ya registrado',
+        message: 'Este email ya está registrado como Profesional. Por favor, usá otro email o iniciá sesión como Profesional.'
+      });
+      return;
+    }
+
+    // Capturar token de OAuth
+    const token = searchParams.get('token');
+    if (token) {
+      console.log('✅ Token recibido de OAuth en register:', token);
+      localStorage.setItem('authToken', token);
+      
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('📦 Payload del token:', payload);
+        
+        if (payload.userType === 'CLIENT') {
+          setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
+          setTimeout(() => {
+            navigate('/client-dashboard', { replace: true });
+          }, 1000);
+        } else {
+          navigate('/professional-dashboard', { replace: true });
+        }
+      } catch (e) {
+        console.error('Error al decodificar token:', e);
+        setError('Error al procesar autenticación');
+      }
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +78,6 @@ function ClientRegister() {
       const response = await fetch(`${backendUrl}/api/auth/register-client`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, email, password })
       });
 
@@ -44,9 +86,23 @@ function ClientRegister() {
         throw new Error(data.error || 'Error al registrarse');
       }
 
-      const userData = await response.json();
-      localStorage.setItem('client', JSON.stringify(userData));
-      navigate('/client-dashboard');
+      const data = await response.json();
+      
+      // Guardar token en localStorage
+      localStorage.setItem('authToken', data.token);
+      
+      // Guardar datos del usuario
+      localStorage.setItem('client', JSON.stringify({
+        id: data.id,
+        email: data.email,
+        name: data.name
+      }));
+
+      setToast({ type: 'success', message: '¡Registro exitoso!' });
+      
+      setTimeout(() => {
+        navigate('/client-dashboard');
+      }, 1000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -54,10 +110,10 @@ function ClientRegister() {
     }
   };
 
-const handleGoogleLogin = () => {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  window.location.href = `${backendUrl}/oauth2/authorization/google-client`;
-};
+  const handleGoogleLogin = () => {
+    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    window.location.href = `${backendUrl}/oauth2/authorization/google-client`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">
@@ -215,6 +271,24 @@ const handleGoogleLogin = () => {
           </p>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
     </div>
   );
 }

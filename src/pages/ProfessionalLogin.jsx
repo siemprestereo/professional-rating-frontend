@@ -1,13 +1,56 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, User } from 'lucide-react';
+import Toast from '../components/toast';
+import ErrorModal from '../components/ErrorModal';
 
 function ProfessionalLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
+
+  // Detectar errores de OAuth y capturar token
+  useEffect(() => {
+    // Detectar errores de OAuth
+    const errorParam = searchParams.get('error');
+    
+    if (errorParam === 'email_already_registered_as_client') {
+      setErrorModal({
+        title: 'Email ya registrado',
+        message: 'Este email ya está registrado como Cliente. Por favor, usá otro email o iniciá sesión como Cliente.'
+      });
+      return;
+    }
+
+    // Capturar token de OAuth
+    const token = searchParams.get('token');
+    if (token) {
+      console.log('✅ Token recibido de OAuth:', token);
+      localStorage.setItem('authToken', token);
+      
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('📦 Payload del token:', payload);
+        
+        if (payload.userType === 'PROFESSIONAL') {
+          setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+          setTimeout(() => {
+            navigate('/professional-dashboard', { replace: true });
+          }, 1000);
+        } else {
+          navigate('/client-dashboard', { replace: true });
+        }
+      } catch (e) {
+        console.error('Error al decodificar token:', e);
+        setError('Error al procesar autenticación');
+      }
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +82,11 @@ function ProfessionalLogin() {
         name: data.name
       }));
 
-      navigate('/professional-dashboard');
+      setToast({ type: 'success', message: '¡Login exitoso!' });
+      
+      setTimeout(() => {
+        navigate('/professional-dashboard');
+      }, 1000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -47,10 +94,10 @@ function ProfessionalLogin() {
     }
   };
 
-const handleGoogleLogin = () => {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
-};
+  const handleGoogleLogin = () => {
+    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
@@ -161,6 +208,24 @@ const handleGoogleLogin = () => {
           </p>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
     </div>
   );
 }

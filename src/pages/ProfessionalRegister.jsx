@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
+import Toast from '../components/toast';
+import ErrorModal from '../components/ErrorModal';
 
 function ProfessionalRegister() {
   const navigate = useNavigate();
@@ -13,9 +15,23 @@ function ProfessionalRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
 
-  // Capturar token de la URL después del OAuth redirect
+  // Detectar errores de OAuth y capturar token
   useEffect(() => {
+    // Detectar errores de OAuth
+    const errorParam = searchParams.get('error');
+    
+    if (errorParam === 'email_already_registered_as_client') {
+      setErrorModal({
+        title: 'Email ya registrado',
+        message: 'Este email ya está registrado como Cliente. Por favor, usá otro email o iniciá sesión como Cliente.'
+      });
+      return;
+    }
+
+    // Capturar token de OAuth
     const token = searchParams.get('token');
     const step = searchParams.get('step');
     
@@ -23,15 +39,15 @@ function ProfessionalRegister() {
       console.log('✅ Token recibido de OAuth en register:', token);
       localStorage.setItem('authToken', token);
       
-      // Verificar el tipo de usuario y redirigir
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('📦 Payload del token:', payload);
         
         if (payload.userType === 'PROFESSIONAL') {
-          // Si tiene step=complete-profile, podría ir a un formulario específico
-          // Por ahora, redirigir al dashboard
-          navigate('/professional-dashboard', { replace: true });
+          setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
+          setTimeout(() => {
+            navigate('/professional-dashboard', { replace: true });
+          }, 1000);
         } else {
           navigate('/client-dashboard', { replace: true });
         }
@@ -84,7 +100,11 @@ function ProfessionalRegister() {
         name: data.name
       }));
 
-      navigate('/professional-dashboard');
+      setToast({ type: 'success', message: '¡Registro exitoso!' });
+      
+      setTimeout(() => {
+        navigate('/professional-dashboard');
+      }, 1000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -253,6 +273,24 @@ function ProfessionalRegister() {
           </p>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
     </div>
   );
 }
