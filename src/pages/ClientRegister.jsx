@@ -54,10 +54,10 @@ function ClientRegister() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
-  };
+const handleGoogleLogin = () => {
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  window.location.href = `${backendUrl}/oauth2/authorization/google-client`;
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">

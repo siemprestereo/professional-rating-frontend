@@ -63,11 +63,10 @@ function ProfessionalRegister() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    // Agregar parámetro type=professional
-    window.location.href = `${backendUrl}/oauth2/authorization/google?type=professional`;
-  };
+const handleGoogleLogin = () => {
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4 animate-fadeIn">

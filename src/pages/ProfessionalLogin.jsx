@@ -48,11 +48,8 @@ function ProfessionalLogin() {
   };
 
 const handleGoogleLogin = () => {
-  // Guardar el tipo ANTES de redirigir
-  sessionStorage.setItem('oauth_user_type', 'professional');
-  
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  window.location.href = `${backendUrl}/oauth2/authorization/google`;
+  window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
 };
 
   return (
