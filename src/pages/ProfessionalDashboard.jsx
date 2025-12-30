@@ -12,42 +12,21 @@ function ProfessionalDashboard() {
   const [generatingQR, setGeneratingQR] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
-  useEffect(() => {
-    // Primero verificar si hay token en la URL (OAuth redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+ useEffect(() => {
+  // Primero verificar si hay token en la URL (OAuth redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  
+  if (tokenFromUrl) {
+    console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+    localStorage.setItem('authToken', tokenFromUrl);
     
-    if (tokenFromUrl) {
-      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-      
-      // Verificar que el tipo de usuario sea correcto
-      const expectedType = sessionStorage.getItem('oauth_user_type');
-      
-      // Decodificar token para verificar el tipo
-      try {
-        const payload = JSON.parse(atob(tokenFromUrl.split('.')[1]));
-        console.log('📦 Payload del token:', payload);
-        
-        if (expectedType === 'professional' && payload.userType === 'PROFESSIONAL') {
-          localStorage.setItem('authToken', tokenFromUrl);
-          sessionStorage.removeItem('oauth_user_type'); // Limpiar
-          
-          // Limpiar la URL (quitar el ?token=xxx)
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else {
-          // Tipo incorrecto, redirigir al login correcto
-          console.log('❌ Tipo de usuario incorrecto, redirigiendo...');
-          sessionStorage.removeItem('oauth_user_type');
-          navigate('/professional-login');
-          return;
-        }
-      } catch (e) {
-        console.error('Error al decodificar token:', e);
-      }
-    }
-    
-    loadDashboardData();
-  }, []);
+    // Limpiar la URL (quitar el ?token=xxx)
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  
+  loadDashboardData();
+}, []);
 
   const loadDashboardData = async () => {
     // Verificar si hay token
