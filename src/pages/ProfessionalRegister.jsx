@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 function ProfessionalRegister() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,6 +13,34 @@ function ProfessionalRegister() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Capturar token de la URL después del OAuth redirect
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const step = searchParams.get('step');
+    
+    if (token) {
+      console.log('✅ Token recibido de OAuth en register:', token);
+      localStorage.setItem('authToken', token);
+      
+      // Verificar el tipo de usuario y redirigir
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('📦 Payload del token:', payload);
+        
+        if (payload.userType === 'PROFESSIONAL') {
+          // Si tiene step=complete-profile, podría ir a un formulario específico
+          // Por ahora, redirigir al dashboard
+          navigate('/professional-dashboard', { replace: true });
+        } else {
+          navigate('/client-dashboard', { replace: true });
+        }
+      } catch (e) {
+        console.error('Error al decodificar token:', e);
+        setError('Error al procesar autenticación');
+      }
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,10 +92,10 @@ function ProfessionalRegister() {
     }
   };
 
-const handleGoogleLogin = () => {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
-};
+  const handleGoogleLogin = () => {
+    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4 animate-fadeIn">
