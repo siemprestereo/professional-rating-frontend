@@ -6,7 +6,7 @@ function EditProfile() {
   const navigate = useNavigate();
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   
-  const [professional, setProfessional] = useState(null);
+  const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -28,17 +28,17 @@ function EditProfile() {
   }, []);
 
   const loadProfile = () => {
-    const savedData = localStorage.getItem('professional');
+    const savedData = localStorage.getItem('client');
     if (savedData) {
       const data = JSON.parse(savedData);
-      setProfessional(data);
+      setClient(data);
       setName(data.name || '');
       setEmail(data.email || '');
       setPhone(data.phone || '');
       setLocation(data.location || '');
       setLoading(false);
     } else {
-      navigate('/professional-login');
+      navigate('/client-login');
     }
   };
 
@@ -49,10 +49,13 @@ function EditProfile() {
     setSaving(true);
 
     try {
-      const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${backendUrl}/api/clients/${client.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ phone, location })
       });
 
@@ -64,13 +67,13 @@ function EditProfile() {
       const data = await response.json();
       
       // Actualizar localStorage
-      const updatedProfessional = {
-        ...professional,
+      const updatedClient = {
+        ...client,
         phone: data.phone || phone,
         location: data.location || location
       };
-      localStorage.setItem('professional', JSON.stringify(updatedProfessional));
-      setProfessional(updatedProfessional);
+      localStorage.setItem('client', JSON.stringify(updatedClient));
+      setClient(updatedClient);
 
       setSuccess('Perfil actualizado correctamente');
       setTimeout(() => setSuccess(''), 3000);
@@ -84,16 +87,20 @@ function EditProfile() {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const response = await fetch(`${backendUrl}/api/auth/delete-account/${professional.id}`, {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${backendUrl}/api/clients/${client.id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
         throw new Error('Error al eliminar cuenta');
       }
 
-      localStorage.removeItem('professional');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('client');
       alert('Tu cuenta ha sido eliminada exitosamente');
       navigate('/');
     } catch (error) {
@@ -107,7 +114,7 @@ function EditProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
+      <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center animate-fadeIn">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
           <p className="text-white text-xl">Cargando...</p>
@@ -119,10 +126,10 @@ function EditProfile() {
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       {/* Navbar */}
-      <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
+      <nav className="bg-gradient-to-r from-green-500 to-teal-600 px-4 py-4 animate-slideDown">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/client-dashboard')}
             className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -132,9 +139,9 @@ function EditProfile() {
       </nav>
 
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
+          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-green-600 animate-scaleIn">
             {name.charAt(0)}
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
@@ -166,7 +173,7 @@ function EditProfile() {
             {/* Nombre (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <User className="w-5 h-5 mr-2 text-purple-600" />
+                <User className="w-5 h-5 mr-2 text-green-600" />
                 Nombre
               </label>
               <input
@@ -181,7 +188,7 @@ function EditProfile() {
             {/* Email (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <Mail className="w-5 h-5 mr-2 text-purple-600" />
+                <Mail className="w-5 h-5 mr-2 text-green-600" />
                 Email
               </label>
               <input
@@ -196,7 +203,7 @@ function EditProfile() {
             {/* Teléfono */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-purple-600" />
+                <Phone className="w-5 h-5 mr-2 text-green-600" />
                 Teléfono
               </label>
               <input
@@ -204,14 +211,14 @@ function EditProfile() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+54 11 1234-5678"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
               />
             </div>
 
             {/* Ubicación */}
             <div className="mb-6">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-purple-600" />
+                <MapPin className="w-5 h-5 mr-2 text-green-600" />
                 Ubicación
               </label>
               <input
@@ -219,7 +226,7 @@ function EditProfile() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Buenos Aires, Argentina"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
               />
             </div>
 
@@ -227,7 +234,7 @@ function EditProfile() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple flex items-center justify-center"
             >
               {saving ? (
                 <>
@@ -270,7 +277,7 @@ function EditProfile() {
               ¿Eliminar cuenta?
             </h2>
             <p className="text-gray-600 mb-6">
-              Esta acción es permanente y eliminará todos tus datos, incluyendo tu CV, calificaciones y perfil. 
+              Esta acción es permanente y eliminará todos tus datos y calificaciones. 
               <strong> No se puede deshacer.</strong>
             </p>
             
