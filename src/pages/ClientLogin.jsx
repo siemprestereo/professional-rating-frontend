@@ -10,7 +10,6 @@ function ClientLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -48,14 +47,13 @@ function ClientLogin() {
         }
       } catch (e) {
         console.error('Error al decodificar token:', e);
-        setError('Error al procesar autenticación');
+        setToast({ type: 'error', message: 'Error al procesar autenticación' });
       }
     }
   }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -90,7 +88,7 @@ function ClientLogin() {
         navigate('/client-dashboard');
       }, 1000);
     } catch (err) {
-      setError(err.message);
+      setToast({ type: 'error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -123,12 +121,6 @@ function ClientLogin() {
             Accedé para calificar profesionales
           </p>
         </div>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl mb-4 animate-shake">
-            {error}
-          </div>
-        )}
 
         {/* Botón de Google */}
         <button
@@ -225,11 +217,7 @@ function ClientLogin() {
         <ErrorModal
           title={errorModal.title}
           message={errorModal.message}
-          onClose={() => {
-            setErrorModal(null);
-            // Opcional: redirigir al login de profesionales
-            // navigate('/professional-login');
-          }}
+          onClose={() => setErrorModal(null)}
         />
       )}
     </div>
