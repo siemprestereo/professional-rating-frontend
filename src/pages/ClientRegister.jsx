@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
-import Toast from '../components/toast';
+import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
 function ClientRegister() {
