@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download, Edit } from 'lucide-react';
+import Toast from '../components/Toast';
+import ErrorModal from '../components/ErrorModal';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -11,22 +13,26 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
+  
+  // Toast y ErrorModal
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
 
- useEffect(() => {
-  // Primero verificar si hay token en la URL (OAuth redirect)
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenFromUrl = urlParams.get('token');
-  
-  if (tokenFromUrl) {
-    console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-    localStorage.setItem('authToken', tokenFromUrl);
+  useEffect(() => {
+    // Primero verificar si hay token en la URL (OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
     
-    // Limpiar la URL (quitar el ?token=xxx)
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-  
-  loadDashboardData();
-}, []);
+    if (tokenFromUrl) {
+      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+      localStorage.setItem('authToken', tokenFromUrl);
+      
+      // Limpiar la URL (quitar el ?token=xxx)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    loadDashboardData();
+  }, []);
 
   const loadDashboardData = async () => {
     // Verificar si hay token
@@ -99,15 +105,16 @@ function ProfessionalDashboard() {
       
       if (!data.qrPngBase64) {
         console.error('⚠️ qrPngBase64 está vacío:', data);
-        alert('El backend no devolvió la imagen del QR');
+        setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
         return;
       }
       
       setQrCode(data);
+      setToast({ type: 'success', message: 'QR generado exitosamente' });
       
     } catch (error) {
       console.error('❌ Error generating QR:', error);
-      alert('Error al generar QR: ' + error.message);
+      setToast({ type: 'error', message: 'Error al generar QR: ' + error.message });
     } finally {
       setGeneratingQR(false);
     }
@@ -142,9 +149,11 @@ function ProfessionalDashboard() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
+      setToast({ type: 'success', message: 'CV descargado exitosamente' });
+      
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Error al descargar el CV');
+      setToast({ type: 'error', message: 'Error al descargar el CV' });
     } finally {
       setDownloadingPDF(false);
     }
@@ -378,6 +387,24 @@ function ProfessionalDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
     </div>
   );
 }
