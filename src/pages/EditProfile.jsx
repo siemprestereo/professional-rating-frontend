@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2 } from 'lucide-react';
+import Toast from '../components/Toast';
+import ErrorModal from '../components/ErrorModal';
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -20,8 +22,9 @@ function EditProfile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  // Toast y ErrorModal
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
     loadProfile();
@@ -44,8 +47,6 @@ function EditProfile() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setSaving(true);
 
     try {
@@ -75,10 +76,9 @@ function EditProfile() {
       localStorage.setItem('client', JSON.stringify(updatedClient));
       setClient(updatedClient);
 
-      setSuccess('Perfil actualizado correctamente');
-      setTimeout(() => setSuccess(''), 3000);
+      setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
     } catch (err) {
-      setError(err.message);
+      setToast({ type: 'error', message: err.message });
     } finally {
       setSaving(false);
     }
@@ -101,11 +101,18 @@ function EditProfile() {
 
       localStorage.removeItem('authToken');
       localStorage.removeItem('client');
-      alert('Tu cuenta ha sido eliminada exitosamente');
-      navigate('/');
+      
+      setToast({ type: 'success', message: 'Cuenta eliminada exitosamente' });
+      
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
     } catch (error) {
       console.error('Error deleting account:', error);
-      alert('Error al eliminar la cuenta. Intentá nuevamente.');
+      setErrorModal({
+        title: 'Error al eliminar cuenta',
+        message: 'No se pudo eliminar tu cuenta. Por favor, intentá nuevamente.'
+      });
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -157,18 +164,6 @@ function EditProfile() {
       <div className="max-w-4xl mx-auto px-4 -mt-16">
         {/* Formulario */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl mb-4 animate-shake">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-2xl mb-4 animate-slideUp">
-              {success}
-            </div>
-          )}
-
           <form onSubmit={handleSave}>
             {/* Nombre (solo lectura) */}
             <div className="mb-4">
@@ -305,6 +300,24 @@ function EditProfile() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
       )}
     </div>
   );
