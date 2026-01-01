@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
+import Toast from '../components/Toast';
 import api from '../services/api.js';
 
 function RatingForm() {
@@ -14,6 +15,7 @@ function RatingForm() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     loadProfessional();
@@ -23,7 +25,7 @@ function RatingForm() {
     try {
       const data = await api.getProfessionalProfile(professionalId);
       setProfessional(data);
-      //
+      
       // Auto-seleccionar si solo hay 1 trabajo activo
       const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
       if (activeJobs.length === 1) {
@@ -40,7 +42,7 @@ function RatingForm() {
     e.preventDefault();
     
     if (score === 0) {
-      alert('Por favor seleccioná una calificación');
+      setToast({ type: 'warning', message: 'Por favor seleccioná una calificación' });
       return;
     }
 
@@ -48,7 +50,7 @@ function RatingForm() {
     
     // Validar workplace si hay múltiples trabajos activos
     if (activeJobs.length > 1 && !selectedWorkplace) {
-      alert('Por favor seleccioná dónde te atendió este profesional');
+      setToast({ type: 'warning', message: 'Por favor seleccioná dónde te atendió este profesional' });
       return;
     }
 
@@ -76,7 +78,24 @@ function RatingForm() {
       }, 2000);
     } catch (error) {
       console.error('Error submitting rating:', error);
-      alert('Error al enviar la calificación. ¿Iniciaste sesión?');
+      
+      // Mensaje más específico según el tipo de error
+      if (error.response?.status === 401) {
+        setToast({ 
+          type: 'error', 
+          message: 'Debes iniciar sesión como Cliente para calificar' 
+        });
+      } else if (error.response?.status === 409) {
+        setToast({ 
+          type: 'warning', 
+          message: 'Ya calificaste a este profesional en este lugar' 
+        });
+      } else {
+        setToast({ 
+          type: 'error', 
+          message: 'Error al enviar la calificación. Intentá nuevamente.' 
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -253,6 +272,15 @@ function RatingForm() {
           </p>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
