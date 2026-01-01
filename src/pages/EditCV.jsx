@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Save, Loader2, Briefcase, X, User, MapPin, Phone, Award, Download, Camera } from 'lucide-react';
+import Toast from '../components/Toast';
+import ErrorModal from '../components/ErrorModal';
+import ConfirmModal from '../components/ConfirmModal';
 
 function EditCV() {
   const navigate = useNavigate();
@@ -25,6 +28,11 @@ function EditCV() {
   // Estados para foto
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+
+  // Toast, ErrorModal y ConfirmModal
+  const [toast, setToast] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   // Form data para experiencia laboral
   const [formData, setFormData] = useState({
@@ -58,8 +66,14 @@ function EditCV() {
     }
 
     try {
+      const token = localStorage.getItem('authToken');
+      
       // Obtener CV usando /me
-      const cvResponse = await fetch(`${backendUrl}/api/cv/me`, { credentials: 'include' });
+      const cvResponse = await fetch(`${backendUrl}/api/cv/me`, { 
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (cvResponse.ok) {
         const cvData = await cvResponse.json();
         setDescription(cvData.description || '');
@@ -85,13 +99,13 @@ function EditCV() {
 
     // Validar tipo
     if (!file.type.startsWith('image/')) {
-      alert('❌ Solo se permiten imágenes');
+      setToast({ type: 'error', message: 'Solo se permiten imágenes' });
       return;
     }
 
     // Validar tamaño (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('❌ La imagen no puede superar 5MB');
+      setToast({ type: 'error', message: 'La imagen no puede superar 5MB' });
       return;
     }
 
@@ -109,27 +123,30 @@ function EditCV() {
   const handlePhotoUpload = async (file) => {
     setUploadingPhoto(true);
     try {
+      const token = localStorage.getItem('authToken');
       const formData = new FormData();
       formData.append('photo', file);
 
       const response = await fetch(`${backendUrl}/api/auth/upload-photo`, {
         method: 'POST',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData
       });
 
       if (response.ok) {
         const data = await response.json();
         setProfilePicture(data.profilePicture);
-        alert('✅ Foto actualizada!');
+        setToast({ type: 'success', message: 'Foto actualizada correctamente' });
       } else {
         const error = await response.json();
-        alert('❌ Error: ' + (error.error || 'No se pudo subir la foto'));
+        setToast({ type: 'error', message: error.error || 'No se pudo subir la foto' });
         setPhotoPreview(null);
       }
     } catch (error) {
       console.error('Error uploading photo:', error);
-      alert('❌ Error al subir la foto');
+      setToast({ type: 'error', message: 'Error al subir la foto' });
       setPhotoPreview(null);
     } finally {
       setUploadingPhoto(false);
@@ -139,8 +156,11 @@ function EditCV() {
   const handleDownloadPDF = async () => {
     setDownloadingPDF(true);
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
@@ -157,9 +177,11 @@ function EditCV() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
+      setToast({ type: 'success', message: 'CV descargado exitosamente' });
+      
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Error al descargar el CV');
+      setToast({ type: 'error', message: 'Error al descargar el CV' });
     } finally {
       setDownloadingPDF(false);
     }
@@ -168,10 +190,13 @@ function EditCV() {
   const handleSavePersonalInfo = async () => {
     setSaving(true);
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           phone, 
           location, 
@@ -180,7 +205,7 @@ function EditCV() {
       });
 
       if (response.ok) {
-        alert('✅ Información personal guardada!');
+        setToast({ type: 'success', message: 'Información personal guardada' });
         // Actualizar localStorage
         const updatedProfessional = {
           ...professional,
@@ -192,11 +217,11 @@ function EditCV() {
         setProfessional(updatedProfessional);
       } else {
         const error = await response.json();
-        alert('❌ Error: ' + (error.message || 'No se pudo guardar'));
+        setToast({ type: 'error', message: error.message || 'No se pudo guardar' });
       }
     } catch (error) {
       console.error('Error saving personal info:', error);
-      alert('❌ Error al guardar');
+      setToast({ type: 'error', message: 'Error al guardar' });
     } finally {
       setSaving(false);
     }
@@ -205,22 +230,25 @@ function EditCV() {
   const handleSaveDescription = async () => {
     setSaving(true);
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${backendUrl}/api/cv/me/description`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ description })
       });
 
       if (response.ok) {
-        alert('✅ Descripción guardada!');
+        setToast({ type: 'success', message: 'Descripción guardada' });
       } else {
         const error = await response.json();
-        alert('❌ Error: ' + (error.message || 'No se pudo guardar'));
+        setToast({ type: 'error', message: error.message || 'No se pudo guardar' });
       }
     } catch (error) {
       console.error('Error saving description:', error);
-      alert('❌ Error al guardar');
+      setToast({ type: 'error', message: 'Error al guardar' });
     } finally {
       setSaving(false);
     }
@@ -228,12 +256,13 @@ function EditCV() {
 
   const handleAddWorkHistory = async () => {
     if (!formData.businessName || !formData.position || !formData.startDate) {
-      alert('⚠️ Completá todos los campos obligatorios');
+      setToast({ type: 'warning', message: 'Completá todos los campos obligatorios' });
       return;
     }
 
     setSaving(true);
     try {
+      const token = localStorage.getItem('authToken');
       const payload = {
         businessName: formData.businessName,
         position: formData.position,
@@ -244,23 +273,25 @@ function EditCV() {
       
       const response = await fetch(`${backendUrl}/api/cv/me/work-history`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        alert('✅ Experiencia agregada!');
+        setToast({ type: 'success', message: 'Experiencia agregada' });
         setShowAddForm(false);
         resetForm();
         loadData();
       } else {
         const error = await response.json();
-        alert('❌ Error: ' + (error.message || 'No se pudo agregar'));
+        setToast({ type: 'error', message: error.message || 'No se pudo agregar' });
       }
     } catch (error) {
       console.error('Error adding work history:', error);
-      alert('❌ Error al agregar experiencia');
+      setToast({ type: 'error', message: 'Error al agregar experiencia' });
     } finally {
       setSaving(false);
     }
@@ -268,12 +299,13 @@ function EditCV() {
 
   const handleUpdateWorkHistory = async () => {
     if (!formData.businessName || !formData.position || !formData.startDate) {
-      alert('⚠️ Completá todos los campos obligatorios');
+      setToast({ type: 'warning', message: 'Completá todos los campos obligatorios' });
       return;
     }
 
     setSaving(true);
     try {
+      const token = localStorage.getItem('authToken');
       const payload = {
         businessName: formData.businessName,
         position: formData.position,
@@ -284,53 +316,61 @@ function EditCV() {
 
       const response = await fetch(`${backendUrl}/api/cv/me/work-history/${editingWork.workHistoryId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        alert('✅ Experiencia actualizada!');
+        setToast({ type: 'success', message: 'Experiencia actualizada' });
         setEditingWork(null);
         resetForm();
         loadData();
       } else {
         const error = await response.json();
-        alert('❌ Error: ' + (error.message || 'No se pudo actualizar'));
+        setToast({ type: 'error', message: error.message || 'No se pudo actualizar' });
       }
     } catch (error) {
       console.error('Error updating work history:', error);
-      alert('❌ Error al actualizar experiencia');
+      setToast({ type: 'error', message: 'Error al actualizar experiencia' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteWorkHistory = async (workHistoryId) => {
-    if (!confirm('¿Estás seguro de eliminar esta experiencia?')) {
-      return;
-    }
+    setConfirmModal({
+      title: '¿Eliminar experiencia?',
+      message: 'Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        setSaving(true);
+        try {
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${backendUrl}/api/cv/me/work-history/${workHistoryId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-    setSaving(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/cv/me/work-history/${workHistoryId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        alert('✅ Experiencia eliminada!');
-        loadData();
-      } else {
-        const error = await response.json();
-        alert('❌ Error: ' + (error.message || 'No se pudo eliminar'));
+          if (response.ok) {
+            setToast({ type: 'success', message: 'Experiencia eliminada' });
+            loadData();
+          } else {
+            const error = await response.json();
+            setToast({ type: 'error', message: error.message || 'No se pudo eliminar' });
+          }
+        } catch (error) {
+          console.error('Error deleting work history:', error);
+          setToast({ type: 'error', message: 'Error al eliminar experiencia' });
+        } finally {
+          setSaving(false);
+          setConfirmModal(null);
+        }
       }
-    } catch (error) {
-      console.error('Error deleting work history:', error);
-      alert('❌ Error al eliminar experiencia');
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   const startEditWorkHistory = (work) => {
@@ -537,7 +577,6 @@ function EditCV() {
             </button>
           </div>
         </div>
-
         {/* Historial Laboral */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200">
           <div className="flex justify-between items-center mb-4">
@@ -735,6 +774,36 @@ function EditCV() {
           </div>
         </div>
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
+      {/* Error modal */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setErrorModal(null)}
+        />
+      )}
+
+      {/* Confirm modal */}
+      {confirmModal && (
+        <ErrorModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onClose={() => setConfirmModal(null)}
+          showCancel={true}
+          onConfirm={confirmModal.onConfirm}
+          actionText="Sí, eliminar"
+        />
+      )}
     </div>
   );
 }
