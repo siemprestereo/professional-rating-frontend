@@ -286,7 +286,7 @@ function ProfessionalDashboard() {
                   Generando...
                 </span>
               ) : (
-                'Generar QR (3 min)'
+                'Generar QR (estará activo por 3 min)'
               )}
             </button>
           ) : (
