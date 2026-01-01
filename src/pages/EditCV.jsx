@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Save, Loader2, Briefcase, X, User, MapPin, Phone, Award, Download, Camera } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-import ConfirmModal from '../components/ConfirmModal';
+
 
 function EditCV() {
   const navigate = useNavigate();
