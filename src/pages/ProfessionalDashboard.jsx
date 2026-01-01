@@ -384,7 +384,7 @@ function ProfessionalDashboard() {
           </button>
           
           <button
-            onClick={() => navigate('/edit-profile')}
+            onClick={() => navigate('/edit-profile-professional')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-400 hover-lift"
           >
             <Edit className="w-8 h-8 text-blue-600 mx-auto mb-2" />
