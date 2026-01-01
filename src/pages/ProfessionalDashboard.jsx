@@ -79,46 +79,59 @@ function ProfessionalDashboard() {
   };
 
   const handleGenerateQR = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/professional-login');
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    navigate('/professional-login');
+    return;
+  }
+
+  setGeneratingQR(true);
+  try {
+    const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error response:', errorData);
+      
+      // Mostrar mensaje específico según el error
+      if (response.status === 409) {
+        setToast({ 
+          type: 'warning', 
+          message: errorData.message || 'Debes tener al menos un trabajo activo para generar QR'
+        });
+      } else {
+        setToast({ 
+          type: 'error', 
+          message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}`
+        });
+      }
       return;
     }
-
-    setGeneratingQR(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Error ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ QR generado:', data);
-      
-      if (!data.qrPngBase64) {
-        console.error('⚠️ qrPngBase64 está vacío:', data);
-        setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
-        return;
-      }
-      
-      setQrCode(data);
-      setToast({ type: 'success', message: 'QR generado exitosamente' });
-      
-    } catch (error) {
-      console.error('❌ Error generating QR:', error);
-      setToast({ type: 'error', message: 'Error al generar QR: ' + error.message });
-    } finally {
-      setGeneratingQR(false);
+    
+    const data = await response.json();
+    console.log('✅ QR generado:', data);
+    
+    if (!data.qrPngBase64) {
+      console.error('⚠️ qrPngBase64 está vacío:', data);
+      setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
+      return;
     }
-  };
+    
+    setQrCode(data);
+    setToast({ type: 'success', message: 'QR generado exitosamente' });
+    
+  } catch (error) {
+    console.error('❌ Error generating QR:', error);
+    setToast({ type: 'error', message: 'Error al generar QR. Intentá nuevamente.' });
+  } finally {
+    setGeneratingQR(false);
+  }
+};
 
   const handleDownloadPDF = async () => {
     const token = localStorage.getItem('authToken');
