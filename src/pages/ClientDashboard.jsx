@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, Settings, X } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -8,24 +8,22 @@ function ClientDashboard() {
   const [client, setClient] = useState(null);
   const [myRatings, setMyRatings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-  // Primero verificar si hay token en la URL (OAuth redirect)
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenFromUrl = urlParams.get('token');
-  
-  if (tokenFromUrl) {
-    console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-    localStorage.setItem('authToken', tokenFromUrl);
+    // Primero verificar si hay token en la URL (OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
     
-    // Limpiar la URL (quitar el ?token=xxx)
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-  
-  loadClientData();
-}, []);
+    if (tokenFromUrl) {
+      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+      localStorage.setItem('authToken', tokenFromUrl);
+      
+      // Limpiar la URL (quitar el ?token=xxx)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    loadClientData();
+  }, []);
 
   const loadClientData = async () => {
     // Verificar si hay token
@@ -86,39 +84,6 @@ function ClientDashboard() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/client-login');
-      return;
-    }
-
-    setDeleting(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/auth/delete-account-client/${client.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al eliminar cuenta');
-      }
-
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('client');
-      alert('Tu cuenta ha sido eliminada exitosamente');
-      navigate('/');
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      alert('Error al eliminar la cuenta. Intentá nuevamente.');
-    } finally {
-      setDeleting(false);
-      setShowDeleteModal(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('client');
@@ -175,7 +140,7 @@ function ClientDashboard() {
       </div>
 
       {/* Contenido */}
-      <div className="px-4 -mt-16 max-w-4xl mx-auto">
+      <div className="px-4 -mt-16">
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -239,67 +204,25 @@ function ClientDashboard() {
           )}
         </div>
 
-        {/* Configuración - Eliminar cuenta */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2 text-gray-600" />
-            Configuración
-          </h3>
-          
+        {/* Acciones rápidas */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <button
-            onClick={() => setShowDeleteModal(true)}
-            className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-600 transition-all"
+            onClick={() => navigate('/edit-profile')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
           >
-            Eliminar mi cuenta
+            <Edit className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-gray-800">Editar Perfil</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/search')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
+          >
+            <User className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-gray-800">Buscar Profesionales</p>
           </button>
         </div>
-
-        {/* Botón volver al inicio */}
-        <button
-          onClick={() => navigate('/')}
-          className="w-full bg-teal-600 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-teal-700 transition-all animate-slideUp delay-300"
-        >
-          Volver al inicio
-        </button>
       </div>
-
-      {/* Modal de confirmación */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              ¿Eliminar cuenta?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Esta acción es permanente y eliminará todos tus datos, incluyendo tus calificaciones. 
-              <strong> No se puede deshacer.</strong>
-            </p>
-            
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 disabled:opacity-50 transition-all"
-              >
-                {deleting ? (
-                  <span className="flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Eliminando...
-                  </span>
-                ) : (
-                  'Sí, eliminar'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
