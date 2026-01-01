@@ -99,11 +99,11 @@ function ProfessionalDashboard() {
       console.error('Error response:', errorData);
       
       // Mostrar mensaje específico según el error
-      if (response.status === 409) {
-        setToast({ 
-          type: 'warning', 
-          message: errorData.message || 'Debes tener al menos un trabajo activo para generar QR'
-        });
+     if (response.status === 409) {
+  setToast({ 
+    type: 'warning', 
+    message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV'
+  });
       } else {
         setToast({ 
           type: 'error', 
