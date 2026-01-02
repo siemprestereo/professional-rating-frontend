@@ -147,7 +147,7 @@ function ClientDashboard() {
             ¡Hola {client.name.split(' ')[0]}! 👋
           </h3>
           <p className="text-gray-600">
-            Para calificar a un profesional, escaneá su código QR o accedé directamente desde su perfil.
+            Para calificar a un profesional, pídele que te muestre su código QR.
           </p>
         </div>
 
