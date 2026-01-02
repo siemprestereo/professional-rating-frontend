@@ -317,12 +317,13 @@ function ProfessionalDashboard() {
                   <p className="text-sm text-gray-600 mb-3">
                     <span className="font-semibold">Válido por los próximos 3 minutos, hasta </span>{' '}
                     {qrCode.expiresAt ? 
-                      new Date(qrCode.expiresAt).toLocaleString('es-AR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      }) + ' hs'
-                      : 'Fecha inválida'}
+  new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Argentina/Buenos_Aires'
+  }) + ' hs'
+  : 'Fecha inválida'}
                   </p>
                   <button
                     onClick={handleGenerateQR}
