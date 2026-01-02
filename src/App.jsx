@@ -14,6 +14,7 @@ import MyProfile from './pages/MyProfile';
 import ClientLogin from './pages/ClientLogin';
 import ClientRegister from './pages/ClientRegister';
 import EditProfile from './pages/EditProfile';
+import EditProfileProfessional from './pages/EditProfileProfessional';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -72,6 +73,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/edit-profile-professional" 
+          element={
+            <ProtectedRoute userType="PROFESSIONAL">
+              <EditProfileProfessional />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Rutas protegidas - CLIENTES */}
         <Route 
@@ -94,5 +103,6 @@ function App() {
     </Router>
   );
 }
+//Hace calor
 
-export default App;// Force redeploy
+export default App;
