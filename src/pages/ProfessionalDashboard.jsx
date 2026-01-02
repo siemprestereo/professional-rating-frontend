@@ -79,59 +79,68 @@ function ProfessionalDashboard() {
   };
 
   const handleGenerateQR = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/professional-login');
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    navigate('/professional-login');
+    return;
+  }
+
+  setGeneratingQR(true);
+  try {
+    const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('Error response:', response.status);
+      
+      if (response.status === 409) {
+        setToast({ 
+          type: 'warning', 
+          message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV'
+        });
+      } else {
+        const errorData = await response.json();
+        setToast({ 
+          type: 'error', 
+          message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}`
+        });
+      }
       return;
     }
-
-    setGeneratingQR(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        console.error('Error response:', response.status);
-        
-        // Mostrar mensaje específico según el error
-        if (response.status === 409) {
-          setToast({ 
-            type: 'warning', 
-            message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV'
-          });
-        } else {
-          const errorData = await response.json();
-          setToast({ 
-            type: 'error', 
-            message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}`
-          });
-        }
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('✅ QR generado:', data);
-      
-      if (!data.qrPngBase64) {
-        console.error('⚠️ qrPngBase64 está vacío:', data);
-        setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
-        return;
-      }
-      
-      setQrCode(data);
-      setToast({ type: 'success', message: 'QR generado exitosamente' });
-      
-    } catch (error) {
-      console.error('❌ Error generating QR:', error);
-      setToast({ type: 'error', message: 'Error al generar QR. Intentá nuevamente.' });
-    } finally {
-      setGeneratingQR(false);
+    
+    const data = await response.json();
+    console.log('✅ QR generado:', data);
+    
+    // 🔍 DEBUG - Ver qué devuelve el backend
+    console.log('📅 expiresAt from backend:', data.expiresAt);
+    console.log('📅 expiresAt parsed:', new Date(data.expiresAt));
+    console.log('📅 expiresAt formatted:', new Date(data.expiresAt).toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires'
+    }));
+    
+    if (!data.qrPngBase64) {
+      console.error('⚠️ qrPngBase64 está vacío:', data);
+      setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
+      return;
     }
-  };
+    
+    setQrCode(data);
+    setToast({ type: 'success', message: 'QR generado exitosamente' });
+    
+  } catch (error) {
+    console.error('❌ Error generating QR:', error);
+    setToast({ type: 'error', message: 'Error al generar QR. Intentá nuevamente.' });
+  } finally {
+    setGeneratingQR(false);
+  }
+};
 
   const handleDownloadPDF = async () => {
     const token = localStorage.getItem('authToken');
