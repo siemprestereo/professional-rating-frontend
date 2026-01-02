@@ -1,8 +1,23 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function ProtectedRoute({ children, userType }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // PRIMERO: Capturar token de la URL si existe
+  const urlParams = new URLSearchParams(location.search);
+  const tokenFromUrl = urlParams.get('token');
+  
+  if (tokenFromUrl) {
+    console.log('✅ Token detectado en URL, guardando en localStorage');
+    localStorage.setItem('authToken', tokenFromUrl);
+    
+    // Limpiar la URL sin recargar
+    window.history.replaceState({}, document.title, location.pathname);
+  }
+  
+  // LUEGO: Verificar token en localStorage
   const token = localStorage.getItem('authToken');
 
   useEffect(() => {
