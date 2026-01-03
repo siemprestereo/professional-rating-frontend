@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ function EditProfile() {
   // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Modal upgrade a profesional
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // Toast y ErrorModal
   const [toast, setToast] = useState(null);
@@ -246,6 +250,24 @@ function EditProfile() {
           </form>
         </div>
 
+        {/* Convertirse en Profesional */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-blue-200 animate-slideUp delay-50">
+          <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+            <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
+            ¿Sos un profesional?
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            Si prestás servicios profesionales (mozo, electricista, pintor, etc.), podés crear tu perfil para recibir calificaciones de tus clientes.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowUpgradeModal(true)}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+          >
+            Convertirme en Profesional
+          </button>
+        </div>
+
         {/* Zona de peligro - Eliminar cuenta */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
@@ -253,7 +275,7 @@ function EditProfile() {
             Atención
           </h3>
           <p className="text-gray-600 mb-4 text-sm">
-            Una vez eliminada tu cuenta perderas todas las calificaciones recibidas.
+            Una vez eliminada tu cuenta perderás todas las calificaciones emitidas.
           </p>
           <button
             onClick={() => setShowDeleteModal(true)}
@@ -264,7 +286,7 @@ function EditProfile() {
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal de confirmación de eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -300,6 +322,21 @@ function EditProfile() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de upgrade a profesional */}
+      {showUpgradeModal && (
+        <UpgradeToProfessionalModal
+          onClose={() => setShowUpgradeModal(false)}
+          onSuccess={(newToken) => {
+            // Actualizar token
+            localStorage.setItem('authToken', newToken);
+            // Limpiar datos de cliente
+            localStorage.removeItem('client');
+            // Redirigir al dashboard profesional
+            navigate('/professional-dashboard');
+          }}
+        />
       )}
 
       {/* Toast notification */}
