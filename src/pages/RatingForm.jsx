@@ -22,21 +22,27 @@ function RatingForm() {
   }, [professionalId]);
 
   const loadProfessional = async () => {
-    try {
-      const data = await api.getProfessionalProfile(professionalId);
-      setProfessional(data);
-      
-      // Auto-seleccionar si solo hay 1 trabajo activo
-      const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
-      if (activeJobs.length === 1) {
-        setSelectedWorkplace(activeJobs[0]);
-      }
-    } catch (error) {
-      console.error('Error loading professional:', error);
-    } finally {
-      setLoading(false);
+  try {
+    console.log('🔍 Loading professional:', professionalId);
+    const data = await api.getProfessionalProfile(professionalId);
+    console.log('✅ Professional data received:', data);
+    console.log('📦 Type of data:', typeof data);
+    console.log('📦 Data.name:', data?.name);
+    
+    setProfessional(data);
+    console.log('✅ Professional state set');
+    
+    // Auto-seleccionar si solo hay 1 trabajo activo
+    const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
+    if (activeJobs.length === 1) {
+      setSelectedWorkplace(activeJobs[0]);
     }
-  };
+  } catch (error) {
+    console.error('❌ Error loading professional:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
