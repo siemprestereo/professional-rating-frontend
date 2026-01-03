@@ -48,3 +48,17 @@ export default {
   getProfessionalRatings,
   resolveQR
 };
+// ========== ROLE SWITCHING ==========
+export const switchRole = async (newRole, professionType = null, professionalTitle = null) => {
+  const response = await apiClient.post('/role/switch', {
+    newRole,
+    professionType,
+    professionalTitle
+  });
+  return response.data;
+};
+
+export const getCurrentRole = async () => {
+  const response = await apiClient.get('/role/current');
+  return response.data;
+};
