@@ -143,7 +143,7 @@ function EditProfileProfessional() {
             className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
           >
             <ArrowLeft className="w-5 h-5" />
-            Volver al Dashboard
+            Volver al panel principal
           </div>
         </div>
       </nav>
