@@ -148,6 +148,7 @@ function RatingForm() {
       </div>
 
       {/* Contenido */}
+      {/* Contenido */}
       <div className="px-4 py-8">
         <div className="bg-white rounded-3xl p-6 max-w-md mx-auto animate-slideUp">
           {/* Avatar y nombre */}
