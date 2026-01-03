@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
+import ErrorModal from '../components/ErrorModal';
 import api from '../services/api.js';
 
 function RatingForm() {
@@ -16,37 +17,28 @@ function RatingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [toast, setToast] = useState(null);
-
-  // 🔍 DEBUG - Ver estado en cada render
-  console.log('🎨 RENDER - loading:', loading, 'professional:', professional?.name);
-
+  const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
     loadProfessional();
   }, [professionalId]);
 
   const loadProfessional = async () => {
-  try {
-    console.log('🔍 Loading professional:', professionalId);
-    const data = await api.getProfessionalProfile(professionalId);
-    console.log('✅ Professional data received:', data);
-    console.log('📦 Type of data:', typeof data);
-    console.log('📦 Data.name:', data?.name);
-    
-    setProfessional(data);
-    console.log('✅ Professional state set');
-    
-    // Auto-seleccionar si solo hay 1 trabajo activo
-    const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
-    if (activeJobs.length === 1) {
-      setSelectedWorkplace(activeJobs[0]);
+    try {
+      const data = await api.getProfessionalProfile(professionalId);
+      setProfessional(data);
+      
+      // Auto-seleccionar si solo hay 1 trabajo activo
+      const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
+      if (activeJobs.length === 1) {
+        setSelectedWorkplace(activeJobs[0]);
+      }
+    } catch (error) {
+      console.error('Error loading professional:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('❌ Error loading professional:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,9 +83,15 @@ function RatingForm() {
       
       // Mensaje más específico según el tipo de error
       if (error.response?.status === 401) {
-        setToast({ 
-          type: 'error', 
-          message: 'Debes iniciar sesión como Cliente para calificar' 
+        setErrorModal({
+          title: 'Inicio de sesión requerido',
+          message: 'Para calificar a este profesional necesitás iniciar sesión como Cliente.',
+          actionText: 'Iniciar sesión',
+          onAction: () => {
+            // Guardar la URL actual para volver después del login
+            localStorage.setItem('returnTo', window.location.pathname);
+            navigate('/client-login');
+          }
         });
       } else if (error.response?.status === 409) {
         setToast({ 
@@ -131,7 +129,7 @@ function RatingForm() {
             ¡Gracias por tu opinión!
           </h2>
           <p className="text-gray-600 mb-6 animate-slideUp delay-100">
-            Tu calificación ayuda a {professional?.Name?.split(' ')[0] || 'este profesional'} a mejorar su servicio
+            Tu calificación ayuda a {professional?.name?.split(' ')[0] || 'este profesional'} a mejorar su servicio
           </p>
           <div className="animate-pulse text-gray-500">
             Redirigiendo...
@@ -289,6 +287,17 @@ function RatingForm() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Error modal con botón de login */}
+      {errorModal && (
+        <ErrorModal
+          title={errorModal.title}
+          message={errorModal.message}
+          actionText={errorModal.actionText}
+          onClose={() => setErrorModal(null)}
+          onAction={errorModal.onAction}
         />
       )}
     </div>
