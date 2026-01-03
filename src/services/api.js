@@ -11,6 +11,20 @@ const apiClient = axios.create({
   }
 });
 
+// ✅ INTERCEPTOR: Agregar token JWT a todas las peticiones
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // ========== AUTH ==========
 export const getCurrentUser = async () => {
   const response = await apiClient.get('/');
@@ -19,7 +33,7 @@ export const getCurrentUser = async () => {
 
 // ========== PROFESSIONALS ==========
 export const getProfessionalProfile = async (professionalId) => {
-const response = await apiClient.get(`/professionals/${professionalId}`);
+  const response = await apiClient.get(`/professionals/${professionalId}`);
   return response.data;
 };
 
@@ -40,14 +54,6 @@ export const resolveQR = async (code) => {
   return response.data;
 };
 
-// ========== DEFAULT EXPORT ==========
-export default {
-  getCurrentUser,
-  getProfessionalProfile,
-  createRating,
-  getProfessionalRatings,
-  resolveQR
-};
 // ========== ROLE SWITCHING ==========
 export const switchRole = async (newRole, professionType = null, professionalTitle = null) => {
   const response = await apiClient.post('/role/switch', {
@@ -61,4 +67,15 @@ export const switchRole = async (newRole, professionType = null, professionalTit
 export const getCurrentRole = async () => {
   const response = await apiClient.get('/role/current');
   return response.data;
+};
+
+// ========== DEFAULT EXPORT ==========
+export default {
+  getCurrentUser,
+  getProfessionalProfile,
+  createRating,
+  getProfessionalRatings,
+  resolveQR,
+  switchRole,
+  getCurrentRole
 };
