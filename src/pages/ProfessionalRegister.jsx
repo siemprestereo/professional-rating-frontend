@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -11,11 +11,24 @@ function ProfessionalRegister() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [professionType, setProfessionType] = useState('');
+  const [professionalTitle, setProfessionalTitle] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
+
+  const professions = [
+    { value: 'WAITER', label: 'Mozo/Camarero' },
+    { value: 'ELECTRICIAN', label: 'Electricista' },
+    { value: 'PAINTER', label: 'Pintor' },
+    { value: 'PLUMBER', label: 'Plomero' },
+    { value: 'CARPENTER', label: 'Carpintero' },
+    { value: 'MECHANIC', label: 'Mecánico' },
+    { value: 'CLEANER', label: 'Personal de limpieza' },
+    { value: 'OTHER', label: 'Otro' }
+  ];
 
   // Detectar errores de OAuth y capturar token
   useEffect(() => {
@@ -60,6 +73,11 @@ function ProfessionalRegister() {
     e.preventDefault();
 
     // Validaciones
+    if (!professionType) {
+      setToast({ type: 'error', message: 'Por favor seleccioná tu profesión' });
+      return;
+    }
+
     if (password !== confirmPassword) {
       setToast({ type: 'error', message: 'Las contraseñas no coinciden' });
       return;
@@ -77,7 +95,13 @@ function ProfessionalRegister() {
       const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          password,
+          professionType,
+          professionalTitle: professionalTitle || null
+        })
       });
 
       if (!response.ok) {
@@ -185,6 +209,41 @@ function ProfessionalRegister() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               required
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+            />
+          </div>
+
+          {/* Tipo de profesión */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+              <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
+              Tipo de profesión *
+            </label>
+            <select
+              value={professionType}
+              onChange={(e) => setProfessionType(e.target.value)}
+              required
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+            >
+              <option value="">Seleccioná una opción</option>
+              {professions.map((prof) => (
+                <option key={prof.value} value={prof.value}>
+                  {prof.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Título profesional (opcional) */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-semibold mb-2">
+              Título profesional (opcional)
+            </label>
+            <input
+              type="text"
+              value={professionalTitle}
+              onChange={(e) => setProfessionalTitle(e.target.value)}
+              placeholder="Ej: Mozo Senior, Electricista Matriculado"
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
             />
           </div>
