@@ -17,6 +17,10 @@ function RatingForm() {
   const [success, setSuccess] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // 🔍 DEBUG - Ver estado en cada render
+  console.log('🎨 RENDER - loading:', loading, 'professional:', professional?.name);
+
+
   useEffect(() => {
     loadProfessional();
   }, [professionalId]);
@@ -159,10 +163,10 @@ function RatingForm() {
           {/* Avatar y nombre */}
           <div className="text-center mb-6">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
-              {professional?.Name?.charAt(0) || '?'}
+              {professional?.name?.charAt(0) || '?'}
             </div>
             <h1 className="text-2xl font-bold text-gray-800 animate-slideUp delay-100">
-              Calificar a {professional?.Name || 'Cargando...'}
+              Calificar a {professional?.name || 'Cargando...'}
             </h1>
           </div>
 
