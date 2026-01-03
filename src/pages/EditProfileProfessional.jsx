@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import SwitchToClientModal from '../components/SwitchToClientModal';
 
 function EditProfileProfessional() {
   const navigate = useNavigate();
@@ -22,6 +23,9 @@ function EditProfileProfessional() {
   // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Modal cambiar a cliente
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
   
   // Toast y ErrorModal
   const [toast, setToast] = useState(null);
@@ -266,6 +270,24 @@ function EditProfileProfessional() {
           </form>
         </div>
 
+        {/* Cambiar a Cliente */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-green-200 animate-slideUp delay-50">
+          <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
+            <UserCheck className="w-5 h-5 mr-2 text-green-600" />
+            ¿Ya no ejercés tu profesión?
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm">
+            Si ya no prestás servicios profesionales, podés volver a tu perfil de Cliente para seguir calificando a otros profesionales.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowSwitchModal(true)}
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+          >
+            Volver a ser Cliente
+          </button>
+        </div>
+
         {/* Zona de peligro - Eliminar cuenta */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
@@ -284,7 +306,7 @@ function EditProfileProfessional() {
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal de confirmación eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -320,6 +342,21 @@ function EditProfileProfessional() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de cambio a Cliente */}
+      {showSwitchModal && (
+        <SwitchToClientModal
+          onClose={() => setShowSwitchModal(false)}
+          onSuccess={(newToken) => {
+            // Actualizar token
+            localStorage.setItem('authToken', newToken);
+            // Limpiar datos de profesional
+            localStorage.removeItem('professional');
+            // Redirigir al dashboard de cliente
+            navigate('/client-dashboard');
+          }}
+        />
       )}
 
       {/* Toast notification */}
