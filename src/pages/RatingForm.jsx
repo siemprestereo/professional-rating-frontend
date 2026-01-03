@@ -46,7 +46,7 @@ function RatingForm() {
       return;
     }
 
-    const activeJobs = professional.workHistory?.filter(w => w.isActive) || [];
+    const activeJobs = professional?.workHistory?.filter(w => w.isActive) || [];
     
     // Validar workplace si hay múltiples trabajos activos
     if (activeJobs.length > 1 && !selectedWorkplace) {
@@ -59,7 +59,7 @@ function RatingForm() {
     try {
       const ratingData = {
         professionalId: parseInt(professionalId),
-        businessId: selectedWorkplace?.businessId || professional.workHistory[0]?.businessId || 1,
+        businessId: selectedWorkplace?.businessId || professional?.workHistory?.[0]?.businessId || 1,
         score: score,
         comment: comment.trim()
       };
@@ -121,7 +121,7 @@ function RatingForm() {
             ¡Gracias por tu opinión!
           </h2>
           <p className="text-gray-600 mb-6 animate-slideUp delay-100">
-            Tu calificación ayuda a {professional.professionalName.split(' ')[0]} a mejorar su servicio
+            Tu calificación ayuda a {professional?.professionalName?.split(' ')[0] || 'este profesional'} a mejorar su servicio
           </p>
           <div className="animate-pulse text-gray-500">
             Redirigiendo...
@@ -131,7 +131,7 @@ function RatingForm() {
     );
   }
 
-  const activeJobs = professional.workHistory?.filter(w => w.isActive) || [];
+  const activeJobs = professional?.workHistory?.filter(w => w.isActive) || [];
   const showWorkplaceSelector = activeJobs.length > 1;
 
   return (
@@ -148,16 +148,15 @@ function RatingForm() {
       </div>
 
       {/* Contenido */}
-      {/* Contenido */}
       <div className="px-4 py-8">
         <div className="bg-white rounded-3xl p-6 max-w-md mx-auto animate-slideUp">
           {/* Avatar y nombre */}
           <div className="text-center mb-6">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
-              {professional.professionalName.charAt(0)}
+              {professional?.professionalName?.charAt(0) || '?'}
             </div>
             <h1 className="text-2xl font-bold text-gray-800 animate-slideUp delay-100">
-              Calificar a {professional.professionalName}
+              Calificar a {professional?.professionalName || 'Cargando...'}
             </h1>
           </div>
 
