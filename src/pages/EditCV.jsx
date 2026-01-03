@@ -430,7 +430,7 @@ function EditCV() {
           className="text-white mb-4 flex items-center hover:translate-x-[-4px] transition-transform duration-300"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Volver al Dashboard
+          Volver al panel principal
         </button>
         <h1 className="text-2xl font-bold text-white">Editar mi CV</h1>
       </div>
