@@ -121,7 +121,7 @@ function RatingForm() {
             ¡Gracias por tu opinión!
           </h2>
           <p className="text-gray-600 mb-6 animate-slideUp delay-100">
-            Tu calificación ayuda a {professional?.professionalName?.split(' ')[0] || 'este profesional'} a mejorar su servicio
+            Tu calificación ayuda a {professional?.Name?.split(' ')[0] || 'este profesional'} a mejorar su servicio
           </p>
           <div className="animate-pulse text-gray-500">
             Redirigiendo...
@@ -153,10 +153,10 @@ function RatingForm() {
           {/* Avatar y nombre */}
           <div className="text-center mb-6">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
-              {professional?.professionalName?.charAt(0) || '?'}
+              {professional?.Name?.charAt(0) || '?'}
             </div>
             <h1 className="text-2xl font-bold text-gray-800 animate-slideUp delay-100">
-              Calificar a {professional?.professionalName || 'Cargando...'}
+              Calificar a {professional?.Name || 'Cargando...'}
             </h1>
           </div>
 
