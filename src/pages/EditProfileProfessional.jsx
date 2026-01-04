@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
@@ -19,6 +19,7 @@ function EditProfileProfessional() {
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
+  const [professionType, setProfessionType] = useState('');
   
   // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -30,6 +31,17 @@ function EditProfileProfessional() {
   // Toast y ErrorModal
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
+
+  const professions = [
+    { value: 'WAITER', label: 'Mozo/Camarero' },
+    { value: 'ELECTRICIAN', label: 'Electricista' },
+    { value: 'PAINTER', label: 'Pintor' },
+    { value: 'PLUMBER', label: 'Plomero' },
+    { value: 'CARPENTER', label: 'Carpintero' },
+    { value: 'MECHANIC', label: 'Mecánico' },
+    { value: 'CLEANER', label: 'Personal de limpieza' },
+    { value: 'OTHER', label: 'Otro' }
+  ];
 
   useEffect(() => {
     loadProfile();
@@ -45,6 +57,7 @@ function EditProfileProfessional() {
       setPhone(data.phone || '');
       setLocation(data.location || '');
       setProfessionalTitle(data.professionalTitle || '');
+      setProfessionType(data.professionType || '');
       setLoading(false);
     } else {
       navigate('/professional-login');
@@ -63,7 +76,12 @@ function EditProfileProfessional() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ phone, location, professionalTitle })
+        body: JSON.stringify({ 
+          phone, 
+          location, 
+          professionalTitle,
+          professionType
+        })
       });
 
       if (!response.ok) {
@@ -78,7 +96,8 @@ function EditProfileProfessional() {
         ...professional,
         phone: data.phone || phone,
         location: data.location || location,
-        professionalTitle: data.professionalTitle || professionalTitle
+        professionalTitle: data.professionalTitle || professionalTitle,
+        professionType: data.professionType || professionType
       };
       localStorage.setItem('professional', JSON.stringify(updatedProfessional));
       setProfessional(updatedProfessional);
@@ -200,6 +219,27 @@ function EditProfileProfessional() {
                 className="w-full border-2 border-gray-200 bg-gray-50 rounded-2xl px-4 py-3 text-gray-500 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 mt-1">El email no se puede modificar</p>
+            </div>
+
+            {/* Tipo de profesión */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+                <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
+                Tipo de profesión
+              </label>
+              <select
+                value={professionType}
+                onChange={(e) => setProfessionType(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+              >
+                <option value="">Seleccioná una opción</option>
+                {professions.map((prof) => (
+                  <option key={prof.value} value={prof.value}>
+                    {prof.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">Tu área de especialización</p>
             </div>
 
             {/* Título Profesional */}
