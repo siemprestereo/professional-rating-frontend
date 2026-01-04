@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Briefcase, Loader2 , Home } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Star, TrendingUp, Users, Calendar, Loader2, Home } from 'lucide-react';
 
 function Stats() {
   const navigate = useNavigate();
-  const [professional, setProfessional] = useState(null);
-  const [byMonth, setByMonth] = useState([]);
-  const [byBusiness, setByBusiness] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,37 +14,55 @@ function Stats() {
 
   const loadStats = async () => {
     try {
-      // Obtener profesional actual
-      const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
-      if (!meResponse.ok) {
+      const professional = JSON.parse(localStorage.getItem('professional'));
+      if (!professional) {
         navigate('/professional-login');
         return;
       }
-      const meData = await meResponse.json();
-      setProfessional(meData);
 
-      // Obtener stats por mes
-      const monthResponse = await fetch(`/api/stats/professional/${meData.id}/by-month`, {
-        credentials: 'include'
-      });
-      if (monthResponse.ok) {
-        const monthData = await monthResponse.json();
-        setByMonth(monthData);
-      }
+      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+      
+      // Cargar ratings
+      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professional.id}`);
+      if (ratingsResponse.ok) {
+        const ratingsData = await ratingsResponse.json();
+        setRatings(ratingsData);
+        
+        // Calcular estadísticas
+        const totalRatings = ratingsData.length;
+        const averageScore = totalRatings > 0 
+          ? ratingsData.reduce((sum, r) => sum + r.score, 0) / totalRatings 
+          : 0;
+        
+        const scoreDistribution = {
+          5: ratingsData.filter(r => r.score === 5).length,
+          4: ratingsData.filter(r => r.score === 4).length,
+          3: ratingsData.filter(r => r.score === 3).length,
+          2: ratingsData.filter(r => r.score === 2).length,
+          1: ratingsData.filter(r => r.score === 1).length,
+        };
 
-      // Obtener stats por lugar de trabajo
-      const businessResponse = await fetch(`/api/stats/professional/${meData.id}/by-business`, {
-        credentials: 'include'
-      });
-      if (businessResponse.ok) {
-        const businessData = await businessResponse.json();
-        setByBusiness(businessData);
+        setStats({
+          totalRatings,
+          averageScore,
+          scoreDistribution,
+          recentRatings: ratingsData.slice(0, 10)
+        });
       }
     } catch (error) {
       console.error('Error loading stats:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderStars = (score) => {
+    return [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`w-5 h-5 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+      />
+    ));
   };
 
   if (loading) {
@@ -62,110 +78,139 @@ function Stats() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
+      {/* Navbar */}
+      <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <button 
+            onClick={() => navigate('/professional-dashboard')}
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/20"
+            aria-label="Volver al inicio"
+          >
+            <Home className="w-6 h-6 text-white" />
+          </button>
+        </div>
+      </nav>
+
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6 animate-slideDown">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-white mb-4 flex items-center hover:translate-x-[-4px] transition-transform duration-300"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Volver al Dashboard
-        </button>
-        <h1 className="text-2xl font-bold text-white flex items-center">
-          <TrendingUp className="w-6 h-6 mr-2" />
-          Mis Estadísticas
-        </h1>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+            Estadísticas
+          </h1>
+          <p className="text-white/90 animate-slideUp delay-100">
+            Análisis de tus calificaciones
+          </p>
+        </div>
       </div>
 
-      <div className="px-4 py-6 max-w-6xl mx-auto">
-        {/* Resumen */}
+      {/* Contenido */}
+      <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
+        {/* Tarjetas de métricas principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp">
-            <TrendingUp className="w-10 h-10 text-green-500 mx-auto mb-2" />
-            <p className="text-3xl font-bold text-gray-800">{professional.reputationScore.toFixed(1)}</p>
-            <p className="text-gray-600">Promedio General</p>
+          {/* Total de calificaciones */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp">
+            <div className="flex items-center justify-between mb-2">
+              <Users className="w-8 h-8 text-blue-600" />
+              <span className="text-3xl font-bold text-gray-800">
+                {stats?.totalRatings || 0}
+              </span>
+            </div>
+            <p className="text-gray-600 text-sm">Total de Calificaciones</p>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-100">
-            <Calendar className="w-10 h-10 text-blue-500 mx-auto mb-2" />
-            <p className="text-3xl font-bold text-gray-800">{professional.totalRatings}</p>
-            <p className="text-gray-600">Total Calificaciones</p>
+
+          {/* Promedio */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp delay-100">
+            <div className="flex items-center justify-between mb-2">
+              <TrendingUp className="w-8 h-8 text-green-600" />
+              <span className="text-3xl font-bold text-gray-800">
+                {stats?.averageScore?.toFixed(1) || '0.0'}
+              </span>
+            </div>
+            <p className="text-gray-600 text-sm">Promedio de Estrellas</p>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-200">
-            <Briefcase className="w-10 h-10 text-purple-500 mx-auto mb-2" />
-            <p className="text-3xl font-bold text-gray-800">{byBusiness.length}</p>
-            <p className="text-gray-600">Lugares de Trabajo</p>
+
+          {/* Última calificación */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp delay-200">
+            <div className="flex items-center justify-between mb-2">
+              <Calendar className="w-8 h-8 text-purple-600" />
+              <span className="text-lg font-bold text-gray-800">
+                {stats?.recentRatings?.[0] 
+                  ? new Date(stats.recentRatings[0].createdAt).toLocaleDateString('es-AR')
+                  : 'N/A'}
+              </span>
+            </div>
+            <p className="text-gray-600 text-sm">Última Calificación</p>
           </div>
         </div>
 
-        {/* Gráfico por mes */}
-        {byMonth.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-              Evolución por Mes
+        {/* Distribución de estrellas */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            Distribución de Calificaciones
+          </h2>
+          <div className="space-y-3">
+            {[5, 4, 3, 2, 1].map((stars) => {
+              const count = stats?.scoreDistribution?.[stars] || 0;
+              const percentage = stats?.totalRatings > 0 
+                ? (count / stats.totalRatings) * 100 
+                : 0;
+              
+              return (
+                <div key={stars} className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 w-24">
+                    <span className="font-semibold text-gray-700">{stars}</span>
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  </div>
+                  <div className="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600 w-16 text-right">
+                    {count} ({percentage.toFixed(0)}%)
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Calificaciones recientes */}
+        {stats?.recentRatings && stats.recentRatings.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp delay-400">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Calificaciones Recientes
             </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={byMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis domain={[0, 5]} />
-                <Tooltip />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="average" 
-                  stroke="#8b5cf6" 
-                  strokeWidth={3}
-                  name="Promedio"
-                  dot={{ fill: '#8b5cf6', r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <p className="text-sm text-gray-500 text-center mt-4">
-              Tu promedio de calificaciones mes a mes
-            </p>
+            <div className="space-y-4">
+              {stats.recentRatings.map((rating) => (
+                <div key={rating.id} className="border-b border-gray-100 pb-4 last:border-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      {renderStars(rating.score)}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(rating.createdAt).toLocaleDateString('es-AR')}
+                    </span>
+                  </div>
+                  {rating.comment && (
+                    <p className="text-gray-600 text-sm">{rating.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Gráfico por lugar de trabajo */}
-        {byBusiness.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-400">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Briefcase className="w-5 h-5 mr-2 text-purple-500" />
-              Promedio por Lugar de Trabajo
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={byBusiness}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="business" />
-                <YAxis domain={[0, 5]} />
-                <Tooltip />
-                <Legend />
-                <Bar 
-                  dataKey="average" 
-                  fill="#8b5cf6" 
-                  name="Promedio"
-                  radius={[8, 8, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="text-sm text-gray-500 text-center mt-4">
-              Comparación de tu desempeño en cada lugar de trabajo
-            </p>
-          </div>
-        )}
-
-        {/* Sin datos */}
-        {byMonth.length === 0 && byBusiness.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-scaleIn">
-            <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        {/* Estado vacío */}
+        {stats?.totalRatings === 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-slideUp">
+            <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              Aún no tenés estadísticas
+              Aún no tenés calificaciones
             </h3>
             <p className="text-gray-600">
-              Empezá a recibir calificaciones para ver tus estadísticas aquí
+              Compartí tu código QR con tus clientes para empezar a recibir calificaciones
             </p>
           </div>
         )}

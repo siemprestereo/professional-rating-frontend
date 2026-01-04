@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Briefcase , Home } from 'lucide-react';
+import { Loader2, User, Mail, Phone, MapPin, Save, Trash2, Briefcase, Home } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
@@ -23,7 +23,7 @@ function EditProfile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  // Modal upgrade a profesional
+  // Modal upgrade to professional
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // Toast y ErrorModal
@@ -55,7 +55,7 @@ function EditProfile() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/clients/${client.id}`, {
+      const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ function EditProfile() {
     setDeleting(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/clients/${client.id}`, {
+      const response = await fetch(`${backendUrl}/api/auth/delete-account/${client.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -139,20 +139,20 @@ function EditProfile() {
       {/* Navbar */}
       <nav className="bg-gradient-to-r from-green-500 to-teal-600 px-4 py-4 animate-slideDown">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div 
+          <button 
             onClick={() => navigate('/client-dashboard')}
-            className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/20"
+            aria-label="Volver al inicio"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Volver al panel principal
-          </div>
+            <Home className="w-6 h-6 text-white" />
+          </button>
         </div>
       </nav>
 
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-green-600 animate-scaleIn">
+          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-teal-600 animate-scaleIn">
             {name.charAt(0)}
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
@@ -172,7 +172,7 @@ function EditProfile() {
             {/* Nombre (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <User className="w-5 h-5 mr-2 text-green-600" />
+                <User className="w-5 h-5 mr-2 text-teal-600" />
                 Nombre
               </label>
               <input
@@ -187,7 +187,7 @@ function EditProfile() {
             {/* Email (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <Mail className="w-5 h-5 mr-2 text-green-600" />
+                <Mail className="w-5 h-5 mr-2 text-teal-600" />
                 Email
               </label>
               <input
@@ -202,7 +202,7 @@ function EditProfile() {
             {/* Teléfono */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-green-600" />
+                <Phone className="w-5 h-5 mr-2 text-teal-600" />
                 Teléfono
               </label>
               <input
@@ -210,14 +210,14 @@ function EditProfile() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+54 11 1234-5678"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all"
               />
             </div>
 
             {/* Ubicación */}
             <div className="mb-6">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-green-600" />
+                <MapPin className="w-5 h-5 mr-2 text-teal-600" />
                 Ubicación
               </label>
               <input
@@ -225,7 +225,7 @@ function EditProfile() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Buenos Aires, Argentina"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all"
               />
             </div>
 
@@ -250,14 +250,14 @@ function EditProfile() {
           </form>
         </div>
 
-        {/* Convertirse en Profesional */}
+        {/* Upgrade to Professional */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-blue-200 animate-slideUp delay-50">
           <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
             <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
             ¿Sos un profesional?
           </h3>
           <p className="text-gray-600 mb-4 text-sm">
-            Si prestás servicios profesionales (mozo, electricista, pintor, etc.), podés crear tu perfil para recibir calificaciones de tus clientes.
+            Si prestás servicios profesionales, convertite en Profesional para recibir calificaciones de tus clientes.
           </p>
           <button
             type="button"
@@ -272,10 +272,10 @@ function EditProfile() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
             <Trash2 className="w-5 h-5 mr-2" />
-            Atención
+            Zona de Peligro
           </h3>
           <p className="text-gray-600 mb-4 text-sm">
-            Una vez eliminada tu cuenta perderás todas las calificaciones emitidas.
+            Una vez eliminada tu cuenta, no podrás recuperar tus datos.
           </p>
           <button
             onClick={() => setShowDeleteModal(true)}
@@ -286,7 +286,7 @@ function EditProfile() {
         </div>
       </div>
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Modal de confirmación eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -294,7 +294,7 @@ function EditProfile() {
               ¿Eliminar cuenta?
             </h2>
             <p className="text-gray-600 mb-6">
-              Esta acción es permanente y eliminará todos tus datos y calificaciones. 
+              Esta acción es permanente y eliminará todos tus datos.
               <strong> No se puede deshacer.</strong>
             </p>
             
@@ -324,7 +324,7 @@ function EditProfile() {
         </div>
       )}
 
-      {/* Modal de upgrade a profesional */}
+      {/* Modal de upgrade a Professional */}
       {showUpgradeModal && (
         <UpgradeToProfessionalModal
           onClose={() => setShowUpgradeModal(false)}
