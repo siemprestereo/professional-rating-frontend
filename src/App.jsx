@@ -16,6 +16,7 @@ import ClientRegister from './pages/ClientRegister';
 import EditProfile from './pages/EditProfile';
 import EditProfileProfessional from './pages/EditProfileProfessional';
 import ProtectedRoute from './components/ProtectedRoute';
+import FontWeightTest from './pages/FontWeightTest';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/professional-register" element={<ProfessionalRegister />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-register" element={<ClientRegister />} />
+        <Route path="/font-test" element={<FontWeightTest />} />
 
         {/* Rutas protegidas - PROFESIONALES */}
         <Route 
@@ -103,6 +105,6 @@ function App() {
     </Router>
   );
 }
-//Hace calor
+
 
 export default App;
