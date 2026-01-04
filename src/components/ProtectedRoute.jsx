@@ -35,8 +35,11 @@ function ProtectedRoute({ children, userType }) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       
+      console.log('🔍 Token userType:', payload.userType, '- Required:', userType);
       // Verificar tipo de usuario
       if (payload.userType !== userType) {
+
+        console.log('❌ userType mismatch, redirecting...');
         // Token de tipo incorrecto, redirigir al login correcto
         if (userType === 'CLIENT') {
           navigate('/client-login', { replace: true });
