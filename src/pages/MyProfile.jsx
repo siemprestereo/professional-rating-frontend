@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Briefcase, Award, ArrowLeft, Loader2, Edit, FileText } from 'lucide-react';
+import { Star, Briefcase, Award, Loader2, Edit, FileText, Home } from 'lucide-react';
 
 function MyProfile() {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ function MyProfile() {
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-xl">Cargando perfil...</p>
+          <p className="text-white text-xl font-light">Cargando perfil...</p>
         </div>
       </div>
     );
@@ -76,7 +76,7 @@ function MyProfile() {
         <div className="bg-white rounded-2xl p-8 text-center animate-scaleIn">
           <p className="text-gray-600 mb-4">No se pudo cargar tu perfil</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/professional-dashboard')}
             className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple"
           >
             Volver al panel principal
@@ -95,13 +95,13 @@ function MyProfile() {
       {/* Navbar */}
       <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div 
-            onClick={() => navigate('/dashboard')}
-            className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+          <button 
+            onClick={() => navigate('/professional-dashboard')}
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/20"
+            aria-label="Volver al inicio"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Volver al panel principal
-          </div>
+            <Home className="w-6 h-6 text-white" />
+          </button>
         </div>
       </nav>
 

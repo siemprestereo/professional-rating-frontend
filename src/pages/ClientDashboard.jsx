@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User , Home } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ function ClientDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center animate-fadeIn">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-xl">Cargando...</p>
+          <p className="text-white text-xl font-light">Cargando...</p>
         </div>
       </div>
     );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck, Briefcase } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck, Briefcase , Home } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
@@ -150,7 +150,7 @@ function EditProfileProfessional() {
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-xl">Cargando...</p>
+          <p className="text-white text-xl font-light">Cargando...</p>
         </div>
       </div>
     );

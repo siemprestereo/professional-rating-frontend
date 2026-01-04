@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Calendar, Briefcase, Loader2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Briefcase, Loader2 , Home } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 function Stats() {
@@ -54,7 +54,7 @@ function Stats() {
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-xl">Cargando estadísticas...</p>
+          <p className="text-white text-xl font-light">Cargando estadísticas...</p>
         </div>
       </div>
     );
