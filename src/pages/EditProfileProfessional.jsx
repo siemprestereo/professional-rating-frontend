@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck, Briefcase , Home } from 'lucide-react';
+import { Loader2, User, Mail, Phone, MapPin, Save, Trash2, Award, UserCheck, Briefcase, Home } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
@@ -161,13 +161,13 @@ function EditProfileProfessional() {
       {/* Navbar */}
       <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div 
+          <button 
             onClick={() => navigate('/professional-dashboard')}
-            className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/20"
+            aria-label="Volver al inicio"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Volver al panel principal
-          </div>
+            <Home className="w-6 h-6 text-white" />
+          </button>
         </div>
       </nav>
 
@@ -332,7 +332,7 @@ function EditProfileProfessional() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
             <Trash2 className="w-5 h-5 mr-2" />
-            Atención
+            Zona de Peligro
           </h3>
           <p className="text-gray-600 mb-4 text-sm">
             Una vez eliminada tu cuenta, no podrás recuperar tus datos.
