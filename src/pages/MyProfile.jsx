@@ -13,10 +13,15 @@ function MyProfile() {
   }, []);
 
   const loadMyProfile = async () => {
+    console.log('📍 loadMyProfile ejecutándose...');
+    
     // Intentar cargar desde localStorage primero
     const savedData = localStorage.getItem('professional');
+    console.log('📦 savedData:', savedData ? 'EXISTS' : 'NULL');
+    
     if (savedData) {
       const data = JSON.parse(savedData);
+      console.log('✅ Professional data loaded:', data);
       setProfessional(data);
       loadRatings(data.id);
       setLoading(false);
@@ -24,10 +29,10 @@ function MyProfile() {
     }
 
     // Si no hay datos en localStorage, cargar desde el backend
-      console.log('No hay datos de sesión, redirigiendo al login');
-  navigate('/professional-login');
-  setLoading(false);
-};
+    console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
+    navigate('/professional-login');
+    setLoading(false);
+  };
 
   const loadRatings = async (professionalId) => {
     try {
@@ -126,7 +131,7 @@ function MyProfile() {
         {/* Acciones de edición */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <button
-            onClick={() => navigate('/edit-profile')}
+            onClick={() => navigate('/edit-profile-professional')}
             className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
           >
             <Edit className="w-8 h-8 text-blue-600 mx-auto mb-2" />
