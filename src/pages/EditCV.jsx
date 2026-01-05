@@ -54,6 +54,11 @@ function EditCV() {
   };
 
   const handleSave = async () => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+      return;
+    }
+
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
@@ -90,13 +95,22 @@ function EditCV() {
       position: '',
       startDate: '',
       endDate: '',
-      description: ''
+      currentlyWorking: false,
+      description: '',
+      referenceName: '',
+      referencePhone: ''
     }]);
   };
 
   const updateWorkExperience = (index, field, value) => {
     const updated = [...workExperiences];
     updated[index][field] = value;
+    
+    // Si marca "actualmente trabajo aquí", limpiar fecha de fin
+    if (field === 'currentlyWorking' && value === true) {
+      updated[index].endDate = '';
+    }
+    
     setWorkExperiences(updated);
   };
 
@@ -111,6 +125,7 @@ function EditCV() {
       degree: '',
       startDate: '',
       endDate: '',
+      currentlyStudying: false,
       description: ''
     }]);
   };
@@ -118,6 +133,12 @@ function EditCV() {
   const updateEducation = (index, field, value) => {
     const updated = [...education];
     updated[index][field] = value;
+    
+    // Si marca "actualmente estudio aquí", limpiar fecha de fin
+    if (field === 'currentlyStudying' && value === true) {
+      updated[index].endDate = '';
+    }
+    
     setEducation(updated);
   };
 
@@ -194,7 +215,7 @@ function EditCV() {
             </h2>
             <button
               onClick={addWorkExperience}
-              className="bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 transition-all hover:scale-110"
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -224,39 +245,76 @@ function EditCV() {
                     <input
                       type="text"
                       placeholder="Empresa"
-                      value={exp.company}
+                      value={exp.company || ''}
                       onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Puesto"
-                      value={exp.position}
+                      value={exp.position || ''}
                       onChange={(e) => updateWorkExperience(index, 'position', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
-                    <input
-                      type="date"
-                      placeholder="Fecha inicio"
-                      value={exp.startDate}
-                      onChange={(e) => updateWorkExperience(index, 'startDate', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="date"
-                      placeholder="Fecha fin"
-                      value={exp.endDate}
-                      onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                      <input
+                        type="date"
+                        value={exp.startDate || ''}
+                        onChange={(e) => updateWorkExperience(index, 'startDate', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                      <input
+                        type="date"
+                        value={exp.endDate || ''}
+                        onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
+                        disabled={exp.currentlyWorking}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    </div>
                   </div>
+
+                  {/* Checkbox "Aún trabajo aquí" */}
+                  <div className="mt-3">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={exp.currentlyWorking || false}
+                        onChange={(e) => updateWorkExperience(index, 'currentlyWorking', e.target.checked)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                    </label>
+                  </div>
+
                   <textarea
                     placeholder="Descripción de responsabilidades"
-                    value={exp.description}
+                    value={exp.description || ''}
                     onChange={(e) => updateWorkExperience(index, 'description', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mt-3 focus:border-purple-500 focus:outline-none"
                     rows="3"
                   />
+
+                  {/* Persona de referencia */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                    <input
+                      type="text"
+                      placeholder="Nombre de referencia (opcional)"
+                      value={exp.referenceName || ''}
+                      onChange={(e) => updateWorkExperience(index, 'referenceName', e.target.value)}
+                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Teléfono de referencia (opcional)"
+                      value={exp.referencePhone || ''}
+                      onChange={(e) => updateWorkExperience(index, 'referencePhone', e.target.value)}
+                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -272,7 +330,7 @@ function EditCV() {
             </h2>
             <button
               onClick={addEducation}
-              className="bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 transition-all hover:scale-110"
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -302,35 +360,54 @@ function EditCV() {
                     <input
                       type="text"
                       placeholder="Institución"
-                      value={edu.institution}
+                      value={edu.institution || ''}
                       onChange={(e) => updateEducation(index, 'institution', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Título/Grado"
-                      value={edu.degree}
+                      value={edu.degree || ''}
                       onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
-                    <input
-                      type="date"
-                      placeholder="Fecha inicio"
-                      value={edu.startDate}
-                      onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="date"
-                      placeholder="Fecha fin"
-                      value={edu.endDate}
-                      onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                      <input
+                        type="date"
+                        value={edu.startDate || ''}
+                        onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                      <input
+                        type="date"
+                        value={edu.endDate || ''}
+                        onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
+                        disabled={edu.currentlyStudying}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    </div>
                   </div>
+
+                  {/* Checkbox "Actualmente estudio aquí" */}
+                  <div className="mt-3">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={edu.currentlyStudying || false}
+                        onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Actualmente estudio aquí</span>
+                    </label>
+                  </div>
+
                   <textarea
                     placeholder="Descripción"
-                    value={edu.description}
+                    value={edu.description || ''}
                     onChange={(e) => updateEducation(index, 'description', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mt-3 focus:border-purple-500 focus:outline-none"
                     rows="2"
@@ -350,7 +427,7 @@ function EditCV() {
             </h2>
             <button
               onClick={addCertification}
-              className="bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 transition-all hover:scale-110"
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -380,31 +457,35 @@ function EditCV() {
                     <input
                       type="text"
                       placeholder="Nombre de la certificación"
-                      value={cert.name}
+                      value={cert.name || ''}
                       onChange={(e) => updateCertification(index, 'name', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
                     <input
                       type="text"
                       placeholder="Emisor"
-                      value={cert.issuer}
+                      value={cert.issuer || ''}
                       onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
-                    <input
-                      type="date"
-                      placeholder="Fecha obtenida"
-                      value={cert.dateObtained}
-                      onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="date"
-                      placeholder="Fecha de expiración (opcional)"
-                      value={cert.expiryDate}
-                      onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha obtenida</label>
+                      <input
+                        type="date"
+                        value={cert.dateObtained || ''}
+                        onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
+                      <input
+                        type="date"
+                        value={cert.expiryDate || ''}
+                        onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -415,7 +496,7 @@ function EditCV() {
         {/* Botón Guardar */}
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || !cv}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center"
         >
           {saving ? (
