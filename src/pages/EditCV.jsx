@@ -496,7 +496,7 @@ function EditCV() {
         {/* Botón Guardar */}
         <button
           onClick={handleSave}
-          disabled={saving || !cv}
+          disabled={saving}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center"
         >
           {saving ? (
