@@ -24,34 +24,61 @@ function EditCV() {
   }, []);
 
   const loadCV = async () => {
-    try {
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      if (!professional) {
-        navigate('/professional-login');
-        return;
-      }
+  try {
+    const professional = JSON.parse(localStorage.getItem('professional'));
+    if (!professional) {
+      navigate('/professional-login');
+      return;
+    }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
+    const token = localStorage.getItem('authToken');
+    
+    // Intentar cargar el CV
+    let response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // Si no existe (404 o 400), forzar creación
+    if (!response.ok && (response.status === 404 || response.status === 400)) {
+      console.log('⚠️ CV no existe, forzando creación desde backend...');
+      
+      // Llamar al endpoint que crea el CV automáticamente
+      const createResponse = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCv(data);
-        setWorkExperiences(data.workExperiences || []);
-        setEducation(data.education || []);
-        setCertifications(data.certifications || []);
+      
+      if (createResponse.ok || createResponse.status === 200) {
+        // Intentar cargar nuevamente
+        response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
       }
-    } catch (error) {
-      console.error('Error loading CV:', error);
-      setToast({ type: 'error', message: 'Error al cargar CV' });
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ CV cargado:', data);
+      setCv(data);
+      setWorkExperiences(data.workExperiences || []);
+      setEducation(data.education || []);
+      setCertifications(data.certifications || []);
+    } else {
+      throw new Error('No se pudo cargar ni crear el CV');
+    }
+  } catch (error) {
+    console.error('Error loading CV:', error);
+    setToast({ type: 'error', message: 'Error al cargar CV. Intenta recargar la página.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSave = async () => {
     if (!cv || !cv.id) {
