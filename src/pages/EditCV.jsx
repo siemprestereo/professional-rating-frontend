@@ -89,7 +89,7 @@ function EditCV() {
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
