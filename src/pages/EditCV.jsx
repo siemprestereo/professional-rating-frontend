@@ -24,61 +24,40 @@ function EditCV() {
   }, []);
 
   const loadCV = async () => {
-  try {
-    const professional = JSON.parse(localStorage.getItem('professional'));
-    if (!professional) {
-      navigate('/professional-login');
-      return;
-    }
-
-    const token = localStorage.getItem('authToken');
-    
-    // Intentar cargar el CV
-    let response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    try {
+      const professional = JSON.parse(localStorage.getItem('professional'));
+      if (!professional) {
+        navigate('/professional-login');
+        return;
       }
-    });
 
-    // Si no existe (404 o 400), forzar creación
-    if (!response.ok && (response.status === 404 || response.status === 400)) {
-      console.log('⚠️ CV no existe, forzando creación desde backend...');
+      const token = localStorage.getItem('authToken');
       
-      // Llamar al endpoint que crea el CV automáticamente
-      const createResponse = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
-        method: 'POST',
+      // Usar el nuevo endpoint que crea el CV automáticamente
+      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (createResponse.ok || createResponse.status === 200) {
-        // Intentar cargar nuevamente
-        response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
-    }
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ CV cargado:', data);
-      setCv(data);
-      setWorkExperiences(data.workExperiences || []);
-      setEducation(data.education || []);
-      setCertifications(data.certifications || []);
-    } else {
-      throw new Error('No se pudo cargar ni crear el CV');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ CV cargado:', data);
+        
+        setCv({ id: data.id }); // Guardar el ID del CV para el PUT
+        setWorkExperiences(data.workExperiences || []);
+        setEducation(data.education || []);
+        setCertifications(data.certifications || []);
+      } else {
+        throw new Error('No se pudo cargar el CV');
+      }
+    } catch (error) {
+      console.error('Error loading CV:', error);
+      setToast({ type: 'error', message: 'Error al cargar CV' });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading CV:', error);
-    setToast({ type: 'error', message: 'Error al cargar CV. Intenta recargar la página.' });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSave = async () => {
     if (!cv || !cv.id) {
@@ -89,7 +68,7 @@ function EditCV() {
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -272,7 +251,7 @@ function EditCV() {
                     <input
                       type="text"
                       placeholder="Empresa"
-                      value={exp.company || ''}
+                      value={exp.company || exp.businessName || ''}
                       onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
@@ -298,7 +277,7 @@ function EditCV() {
                         type="date"
                         value={exp.endDate || ''}
                         onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
-                        disabled={exp.currentlyWorking}
+                        disabled={exp.currentlyWorking || exp.isActive}
                         className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                       />
                     </div>
@@ -309,7 +288,7 @@ function EditCV() {
                     <label className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={exp.currentlyWorking || false}
+                        checked={exp.currentlyWorking || exp.isActive || false}
                         onChange={(e) => updateWorkExperience(index, 'currentlyWorking', e.target.checked)}
                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                       />
@@ -330,7 +309,7 @@ function EditCV() {
                     <input
                       type="text"
                       placeholder="Nombre de referencia (opcional)"
-                      value={exp.referenceName || ''}
+                      value={exp.referenceName || exp.referenceContact || ''}
                       onChange={(e) => updateWorkExperience(index, 'referenceName', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                     />
