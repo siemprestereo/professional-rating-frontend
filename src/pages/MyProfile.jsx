@@ -129,23 +129,15 @@ function MyProfile() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
         {/* Acciones de edición */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <button
-            onClick={() => navigate('/edit-profile-professional')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
-          >
-            <Edit className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Editar Perfil</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/edit-cv')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-100 hover-lift"
-          >
-            <FileText className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Editar CV</p>
-          </button>
-        </div>
+        <div className="mb-4">
+  <button
+    onClick={() => navigate('/edit-profile-professional')}
+    className="w-full bg-white rounded-2xl shadow-lg p-8 text-center animate-slideUp hover-lift"
+  >
+    <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+    <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
+  </button>
+</div>
 
         {/* Información del perfil */}
         {professional.professionalTitle && (

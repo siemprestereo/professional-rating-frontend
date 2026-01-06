@@ -17,6 +17,7 @@ import EditProfile from './pages/EditProfile';
 import EditProfileProfessional from './pages/EditProfileProfessional';
 import ProtectedRoute from './components/ProtectedRoute';
 import FontWeightTest from './pages/FontWeightTest';
+import CvView from './pages/CvView';
 
 function App() {
   return (
@@ -83,6 +84,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+  path="/cv-view" 
+  element={
+    <ProtectedRoute userType="PROFESSIONAL">
+      <CvView />
+    </ProtectedRoute>
+  } 
+/>
 
         {/* Rutas protegidas - CLIENTES */}
         <Route 
