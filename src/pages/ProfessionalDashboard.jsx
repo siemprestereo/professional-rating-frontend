@@ -384,9 +384,22 @@ function ProfessionalDashboard() {
         </div>
 
         {/* Acciones rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <button onClick={() => navigate('/my-profile')}>Ver mi perfil</button>
-  <button onClick={() => navigate('/cv-view')}>Ver mi CV</button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <button
+    onClick={() => navigate('/my-profile')}
+    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-350 hover-lift"
+  >
+    <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+    <p className="font-semibold text-gray-800">Ver mi perfil</p>
+  </button>
+
+  <button
+    onClick={() => navigate('/cv-view')}
+    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-400 hover-lift"
+  >
+    <Edit className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+    <p className="font-semibold text-gray-800">Ver mi CV</p>
+  </button>
 </div>
       </div>
 

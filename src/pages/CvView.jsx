@@ -84,13 +84,7 @@ function CvView() {
             <Home className="w-6 h-6 text-white" />
           </button>
           
-          <button 
-            onClick={() => navigate('/edit-cv')}
-            className="w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110"
-            aria-label="Editar CV"
-          >
-            <Edit className="w-5 h-5 text-white" />
-          </button>
+          
         </div>
       </nav>
 

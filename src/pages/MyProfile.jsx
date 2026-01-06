@@ -129,10 +129,11 @@ function MyProfile() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
         {/* Acciones de edición */}
-        <div className="mb-4">
+        {/* Acciones de edición */}
+<div className="mb-4 flex justify-center">
   <button
     onClick={() => navigate('/edit-profile-professional')}
-    className="w-full bg-white rounded-2xl shadow-lg p-8 text-center animate-slideUp hover-lift"
+    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift max-w-xs w-full"
   >
     <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
     <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
