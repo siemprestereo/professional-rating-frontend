@@ -24,40 +24,52 @@ function EditCV() {
   }, []);
 
   const loadCV = async () => {
-    try {
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      if (!professional) {
-        navigate('/professional-login');
-        return;
-      }
-
-      const token = localStorage.getItem('authToken');
-      
-      // Usar el nuevo endpoint que crea el CV automáticamente
-      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ CV cargado:', data);
-        
-        setCv({ id: data.id }); // Guardar el ID del CV para el PUT
-        setWorkExperiences(data.workExperiences || []);
-        setEducation(data.education || []);
-        setCertifications(data.certifications || []);
-      } else {
-        throw new Error('No se pudo cargar el CV');
-      }
-    } catch (error) {
-      console.error('Error loading CV:', error);
-      setToast({ type: 'error', message: 'Error al cargar CV' });
-    } finally {
-      setLoading(false);
+  try {
+    const professional = JSON.parse(localStorage.getItem('professional'));
+    if (!professional) {
+      navigate('/professional-login');
+      return;
     }
-  };
+
+    const token = localStorage.getItem('authToken');
+    
+    const response = await fetch(`${backendUrl}/api/cv/me/full`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ CV cargado:', data);
+      
+      setCv({ id: data.id });
+      
+      // ✅ MAPEAR CORRECTAMENTE businessName → company
+      setWorkExperiences((data.workExperiences || []).map(exp => ({
+        workHistoryId: exp.workHistoryId,
+        company: exp.businessName || '', // ← MAPEAR AQUÍ
+        position: exp.position || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        currentlyWorking: exp.isActive || false,
+        description: exp.description || '',
+        referenceName: exp.referenceContact || '',
+        referencePhone: '' // Si no existe en backend
+      })));
+      
+      setEducation(data.education || []);
+      setCertifications(data.certifications || []);
+    } else {
+      throw new Error('No se pudo cargar el CV');
+    }
+  } catch (error) {
+    console.error('Error loading CV:', error);
+    setToast({ type: 'error', message: 'Error al cargar CV' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSave = async () => {
     if (!cv || !cv.id) {
