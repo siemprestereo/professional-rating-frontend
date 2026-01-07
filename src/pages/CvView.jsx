@@ -235,20 +235,83 @@ function CvView() {
       )}
 
       {/* Modal de compartir */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Compartir C.V</h2>
-            <p className="text-gray-600 mb-4">Modal de compartir (próximo paso)</p>
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
-            >
-              Cerrar
-            </button>
-          </div>
+      {/* Modal de compartir */}
+{showShareModal && (
+  <div 
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn"
+    onClick={() => setShowShareModal(false)}
+  >
+    <div 
+      className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Compartir CV</h2>
+        <button
+          onClick={() => setShowShareModal(false)}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p className="text-gray-600 mb-6">
+        Compartí tu CV profesional con clientes o empleadores
+      </p>
+
+      {/* Opción 1: Copiar URL */}
+      <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-gray-800">Link directo</h3>
+          <button
+            onClick={async () => {
+              const cvUrl = `${window.location.origin}/cv/${professional?.id}`;
+              try {
+                await navigator.clipboard.writeText(cvUrl);
+                setToast({ type: 'success', message: 'URL copiada al portapapeles' });
+              } catch (error) {
+                setToast({ type: 'error', message: 'Error al copiar URL' });
+              }
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all hover:scale-105"
+          >
+            Copiar URL
+          </button>
         </div>
-      )}
+        <p className="text-xs text-gray-500 break-all">
+          {window.location.origin}/cv/{professional?.id}
+        </p>
+      </div>
+
+      {/* Opción 2: Mostrar QR */}
+      <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
+        <h3 className="font-semibold text-gray-800 mb-3 text-center">
+          Código QR
+        </h3>
+        <div className="bg-white rounded-xl p-4 flex justify-center">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/cv/' + professional?.id)}`}
+            alt="QR Code del CV"
+            className="w-48 h-48"
+          />
+        </div>
+        <p className="text-xs text-gray-600 text-center mt-3">
+          Mostrá este QR para que te escaneen
+        </p>
+      </div>
+
+      {/* Botón cerrar */}
+      <button
+        onClick={() => setShowShareModal(false)}
+        className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl mt-6 hover:bg-gray-300 transition-all"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+)}
     </div>
   ) ;
 }
