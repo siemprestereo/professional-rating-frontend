@@ -83,8 +83,6 @@ function CvView() {
           >
             <Home className="w-6 h-6 text-white" />
           </button>
-          
-          
         </div>
       </nav>
 
@@ -105,26 +103,33 @@ function CvView() {
         </div>
       </div>
 
-          <div className="max-w-4xl mx-auto px-4 -mt-16">
-        {/* Acciones de edición */}
-        {/* Acciones de edición */}
-<div className="mb-4 flex justify-center">
-  <button
-    onClick={() => navigate('/edit-cv')}
-    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift max-w-xs w-full"
-  >
-    <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
-    <p className="font-semibold text-gray-800 text-lg">Editar CV</p>
-  </button>
-</div>
-</div>
-
       {/* Contenido */}
-      {/*<div className="max-w-4xl mx-auto px-4 -mt-16">*/}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift"></div>
+      <div className="max-w-4xl mx-auto px-4 -mt-16">
+        
+        {/* Botones de acción - Grid 2 columnas */}
+        <div className="mb-4">
+          <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+            <button
+              onClick={() => navigate('/edit-cv')}
+              className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
+            >
+              <Edit className="w-10 h-10 text-purple-600 mx-auto mb-3" />
+              <p className="font-semibold text-gray-800">Editar CV</p>
+            </button>
+
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
+            >
+              <Share2 className="w-10 h-10 text-white mx-auto mb-3" />
+              <p className="font-semibold text-white">Compartir</p>
+            </button>
+          </div>
+        </div>
+       
         {/* Experiencia Laboral */}
         {workExperiences.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
               Experiencia Laboral
@@ -154,7 +159,7 @@ function CvView() {
 
         {/* Educación */}
         {education.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250 hover-lift">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-blue-600" />
               Educación
@@ -179,7 +184,7 @@ function CvView() {
 
         {/* Certificaciones */}
         {certifications.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-300 hover-lift">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Award className="w-6 h-6 mr-2 text-yellow-600" />
               Certificaciones
@@ -220,15 +225,6 @@ function CvView() {
         )}
       </div>
 
-      {/* Botón flotante "Compartir" */}
-      <button
-        onClick={() => setShowShareModal(true)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50"
-        aria-label="Compartir CV"
-      >
-        <Share2 className="w-7 h-7" />
-      </button>
-
       {/* Toast */}
       {toast && (
         <Toast
@@ -238,15 +234,15 @@ function CvView() {
         />
       )}
 
-      {/* Modal de compartir (lo haremos en el siguiente paso) */}
+      {/* Modal de compartir */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Compartir CV</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Compartir C.V</h2>
             <p className="text-gray-600 mb-4">Modal de compartir (próximo paso)</p>
             <button
               onClick={() => setShowShareModal(false)}
-              className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl"
+              className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
             >
               Cerrar
             </button>
@@ -254,7 +250,7 @@ function CvView() {
         </div>
       )}
     </div>
-  );
+  ) ;
 }
 
 export default CvView;
