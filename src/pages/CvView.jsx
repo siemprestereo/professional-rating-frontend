@@ -298,7 +298,7 @@ function CvView() {
           />
         </div>
         <p className="text-xs text-gray-600 text-center mt-3">
-          Mostrá este QR para que te escaneen
+          Desde este QR podrán ver tu CV
         </p>
       </div>
 
