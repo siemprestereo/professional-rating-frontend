@@ -120,8 +120,8 @@ function CvView() {
 </div>
 
       {/* Contenido */}
-      <div className="max-w-4xl mx-auto px-4 -mt-16">
-        
+      {/*<div className="max-w-4xl mx-auto px-4 -mt-16">*/}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift"></div>
         {/* Experiencia Laboral */}
         {workExperiences.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
