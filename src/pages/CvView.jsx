@@ -277,7 +277,7 @@ function CvView() {
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all hover:scale-105"
           >
-            Copiar URL
+            Copiar link
           </button>
         </div>
         <p className="text-xs text-gray-500 break-all">
