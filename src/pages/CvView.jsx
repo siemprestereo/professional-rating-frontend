@@ -270,7 +270,7 @@ function CvView() {
               const cvUrl = `${window.location.origin}/cv/${professional?.id}`;
               try {
                 await navigator.clipboard.writeText(cvUrl);
-                setToast({ type: 'success', message: 'URL copiada al portapapeles' });
+                setToast({ type: 'success', message: 'Link copiado al portapapeles' });
               } catch (error) {
                 setToast({ type: 'error', message: 'Error al copiar URL' });
               }
@@ -305,7 +305,7 @@ function CvView() {
       {/* Botón cerrar */}
       <button
         onClick={() => setShowShareModal(false)}
-        className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl mt-6 hover:bg-gray-300 transition-all"
+        className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold py-3 rounded-2xl mt-6 hover:from-red-600 hover:to-rose-700 transition-all hover:scale-105"
       >
         Cerrar
       </button>
