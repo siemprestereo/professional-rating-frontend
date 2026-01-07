@@ -275,7 +275,7 @@ function CvView() {
                 setToast({ type: 'error', message: 'Error al copiar URL' });
               }
             }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-all hover:scale-105"
+            className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-green-600 hover:to-teal-700 transition-all hover:scale-105"
           >
             Copiar link
           </button>
