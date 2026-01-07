@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Download, Edit , Home } from 'lucide-react';
+import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Edit } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -12,7 +12,6 @@ function ProfessionalDashboard() {
   const [qrCode, setQrCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
-  const [downloadingPDF, setDownloadingPDF] = useState(false);
   
   // Toast y ErrorModal
   const [toast, setToast] = useState(null);
@@ -79,105 +78,56 @@ function ProfessionalDashboard() {
   };
 
   const handleGenerateQR = async () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    navigate('/professional-login');
-    return;
-  }
-
-  setGeneratingQR(true);
-  try {
-    const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      console.error('Error response:', response.status);
-      
-      if (response.status === 409) {
-        setToast({ 
-          type: 'warning', 
-          message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV'
-        });
-      } else {
-        const errorData = await response.json();
-        setToast({ 
-          type: 'error', 
-          message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}`
-        });
-      }
-      return;
-    }
-    
-    const data = await response.json();
-    console.log('✅ QR generado:', data);
-    
-    // 🔍 DEBUG - Ver qué devuelve el backend
-    console.log('📅 expiresAt from backend:', data.expiresAt);
-    console.log('📅 expiresAt parsed:', new Date(data.expiresAt));
-    console.log('📅 expiresAt formatted:', new Date(data.expiresAt).toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'America/Argentina/Buenos_Aires'
-    }));
-    
-    if (!data.qrPngBase64) {
-      console.error('⚠️ qrPngBase64 está vacío:', data);
-      setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
-      return;
-    }
-    
-    setQrCode(data);
-    setToast({ type: 'success', message: 'QR generado exitosamente' });
-    
-  } catch (error) {
-    console.error('❌ Error generating QR:', error);
-    setToast({ type: 'error', message: 'Error al generar QR. Intentá nuevamente.' });
-  } finally {
-    setGeneratingQR(false);
-  }
-};
-
-  const handleDownloadPDF = async () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/professional-login');
       return;
     }
 
-    setDownloadingPDF(true);
+    setGeneratingQR(true);
     try {
-      const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
+      const response = await fetch(`${backendUrl}/api/qr/generate?ttlMinutes=3`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
-      if (!response.ok) {
-        throw new Error('Error al descargar PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `CV_${professional.name.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
       
-      setToast({ type: 'success', message: 'CV descargado exitosamente' });
+      if (!response.ok) {
+        console.error('Error response:', response.status);
+        
+        if (response.status === 409) {
+          setToast({ 
+            type: 'warning', 
+            message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV'
+          });
+        } else {
+          const errorData = await response.json();
+          setToast({ 
+            type: 'error', 
+            message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}`
+          });
+        }
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ QR generado:', data);
+      
+      if (!data.qrPngBase64) {
+        console.error('⚠️ qrPngBase64 está vacío:', data);
+        setToast({ type: 'error', message: 'El backend no devolvió la imagen del QR' });
+        return;
+      }
+      
+      setQrCode(data);
+      setToast({ type: 'success', message: 'QR generado exitosamente' });
       
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      setToast({ type: 'error', message: 'Error al descargar el CV' });
+      console.error('❌ Error generating QR:', error);
+      setToast({ type: 'error', message: 'Error al generar QR. Intentá nuevamente.' });
     } finally {
-      setDownloadingPDF(false);
+      setGeneratingQR(false);
     }
   };
 
@@ -259,48 +209,18 @@ function ProfessionalDashboard() {
           </div>
         </div>
 
-        {/* Descargar CV */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
-          <div className="flex items-center justify-between text-white">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold mb-1 flex items-center">
-                <Download className="w-5 h-5 mr-2" />
-                Mi CV Profesional
-              </h3>
-              <p className="text-sm text-white/90">Descargá tu CV en formato PDF</p>
-            </div>
-            <button
-              onClick={handleDownloadPDF}
-              disabled={downloadingPDF}
-              className="bg-white text-green-600 font-bold px-6 py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple flex items-center"
-            >
-              {downloadingPDF ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generando...
-                </>
-              ) : (
-                <>
-                  <Download className="w-5 h-5 mr-2" />
-                  Descargar
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Generar QR */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
+        {/* Generar QR - Más destacado */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <QrCode className="w-5 h-5 mr-2 text-purple-600" />
-            Código QR
+            Código QR para Calificaciones
           </h3>
           
           {!qrCode ? (
             <button
               onClick={handleGenerateQR}
               disabled={generatingQR}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple"
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple"
             >
               {generatingQR ? (
                 <span className="flex items-center justify-center">
@@ -308,7 +228,7 @@ function ProfessionalDashboard() {
                   Generando...
                 </span>
               ) : (
-                'Generar QR (estará activo por 3 min)'
+                'Generar QR (activo por 3 minutos)'
               )}
             </button>
           ) : (
@@ -324,15 +244,15 @@ function ProfessionalDashboard() {
                     <span className="font-semibold">Código:</span> {qrCode.code}
                   </p>
                   <p className="text-sm text-gray-600 mb-3">
-                    <span className="font-semibold">Válido por los próximos 3 minutos, hasta </span>{' '}
+                    <span className="font-semibold">Válido hasta las </span>
                     {qrCode.expiresAt ? 
-  new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: 'America/Argentina/Buenos_Aires'
-}) + ' hs'
-  : 'Fecha inválida'}
+                      new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'America/Argentina/Buenos_Aires'
+                      }) + ' hs'
+                      : 'Fecha inválida'}
                   </p>
                   <button
                     onClick={handleGenerateQR}
@@ -349,7 +269,7 @@ function ProfessionalDashboard() {
         </div>
 
         {/* Calificaciones recientes */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300 hover-lift">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200 hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Star className="w-5 h-5 mr-2 text-yellow-500" />
             Calificaciones Recientes
@@ -385,22 +305,22 @@ function ProfessionalDashboard() {
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-  <button
-    onClick={() => navigate('/my-profile')}
-    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-350 hover-lift"
-  >
-    <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-    <p className="font-semibold text-gray-800">Ver mi perfil</p>
-  </button>
+          <button
+            onClick={() => navigate('/my-profile')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
+          >
+            <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800">Ver mi perfil</p>
+          </button>
 
-  <button
-    onClick={() => navigate('/cv-view')}
-    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-400 hover-lift"
-  >
-    <Edit className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-    <p className="font-semibold text-gray-800">Ver mi CV</p>
-  </button>
-</div>
+          <button
+            onClick={() => navigate('/cv-view')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-300 hover-lift"
+          >
+            <Edit className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800">Ver mi CV</p>
+          </button>
+        </div>
       </div>
 
       {/* Toast notification */}
@@ -412,7 +332,7 @@ function ProfessionalDashboard() {
         />
       )}
       
-      {/* Error modal / */}
+      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

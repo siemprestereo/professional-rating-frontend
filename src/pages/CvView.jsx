@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Home, Share2, Edit, Briefcase, GraduationCap, Award, Calendar } from 'lucide-react';
+import { Loader2, Home, Share2, Edit, Briefcase, GraduationCap, Award, Calendar, Download } from 'lucide-react';
 import Toast from '../components/Toast';
 
 function CvView() {
@@ -14,6 +14,7 @@ function CvView() {
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -51,6 +52,45 @@ function CvView() {
       setToast({ type: 'error', message: 'Error al cargar CV' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/professional-login');
+      return;
+    }
+
+    setDownloadingPDF(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al descargar PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CV_${professional.name.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      setToast({ type: 'success', message: 'CV descargado exitosamente' });
+      
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setToast({ type: 'error', message: 'Error al descargar el CV' });
+    } finally {
+      setDownloadingPDF(false);
     }
   };
 
@@ -106,15 +146,15 @@ function CvView() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
         
-        {/* Botones de acción - Grid 2 columnas */}
+        {/* Botones de acción - Grid 3 columnas */}
         <div className="mb-4">
-          <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
             <button
               onClick={() => navigate('/edit-cv')}
               className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
             >
               <Edit className="w-10 h-10 text-purple-600 mx-auto mb-3" />
-              <p className="font-semibold text-gray-800">Editar CV</p>
+              <p className="font-semibold text-gray-800 text-sm">Editar CV</p>
             </button>
 
             <button
@@ -122,7 +162,25 @@ function CvView() {
               className="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
             >
               <Share2 className="w-10 h-10 text-white mx-auto mb-3" />
-              <p className="font-semibold text-white">Compartir</p>
+              <p className="font-semibold text-white text-sm">Compartir</p>
+            </button>
+
+            <button
+              onClick={handleDownloadPDF}
+              disabled={downloadingPDF}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift disabled:opacity-50"
+            >
+              {downloadingPDF ? (
+                <>
+                  <Loader2 className="w-10 h-10 text-white mx-auto mb-3 animate-spin" />
+                  <p className="font-semibold text-white text-sm">Generando...</p>
+                </>
+              ) : (
+                <>
+                  <Download className="w-10 h-10 text-white mx-auto mb-3" />
+                  <p className="font-semibold text-white text-sm">Descargar PDF</p>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -235,85 +293,84 @@ function CvView() {
       )}
 
       {/* Modal de compartir */}
-      {/* Modal de compartir */}
-{showShareModal && (
-  <div 
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn"
-    onClick={() => setShowShareModal(false)}
-  >
-    <div 
-      className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Compartir CV</h2>
-        <button
+      {showShareModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn"
           onClick={() => setShowShareModal(false)}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <p className="text-gray-600 mb-6">
-        Compartí tu CV profesional con clientes o empleadores
-      </p>
-
-      {/* Opción 1: Copiar URL */}
-      <div className="bg-gray-50 rounded-2xl p-4 mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-gray-800">Link directo</h3>
-          <button
-            onClick={async () => {
-              const cvUrl = `${window.location.origin}/cv/${professional?.id}`;
-              try {
-                await navigator.clipboard.writeText(cvUrl);
-                setToast({ type: 'success', message: 'Link copiado al portapapeles' });
-              } catch (error) {
-                setToast({ type: 'error', message: 'Error al copiar URL' });
-              }
-            }}
-            className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-green-600 hover:to-teal-700 transition-all hover:scale-105"
+          <div 
+            className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
           >
-            Copiar link
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 break-all">
-          {window.location.origin}/cv/{professional?.id}
-        </p>
-      </div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Compartir CV</h2>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-      {/* Opción 2: Mostrar QR */}
-      <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
-        <h3 className="font-semibold text-gray-800 mb-3 text-center">
-          Código QR
-        </h3>
-        <div className="bg-white rounded-xl p-4 flex justify-center">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/cv/' + professional?.id)}`}
-            alt="QR Code del CV"
-            className="w-48 h-48"
-          />
-        </div>
-        <p className="text-xs text-gray-600 text-center mt-3">
-          Desde este QR podrán ver tu CV
-        </p>
-      </div>
+            <p className="text-gray-600 mb-6">
+              Compartí tu CV profesional con clientes o empleadores
+            </p>
 
-      {/* Botón cerrar */}
-      <button
-        onClick={() => setShowShareModal(false)}
-        className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold py-3 rounded-2xl mt-6 hover:from-red-600 hover:to-rose-700 transition-all hover:scale-105"
-      >
-        Cerrar
-      </button>
+            {/* Opción 1: Copiar URL */}
+            <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-800">Link directo</h3>
+                <button
+                  onClick={async () => {
+                    const cvUrl = `${window.location.origin}/cv/${professional?.id}`;
+                    try {
+                      await navigator.clipboard.writeText(cvUrl);
+                      setToast({ type: 'success', message: 'Link copiado al portapapeles' });
+                    } catch (error) {
+                      setToast({ type: 'error', message: 'Error al copiar URL' });
+                    }
+                  }}
+                  className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-green-600 hover:to-teal-700 transition-all hover:scale-105"
+                >
+                  Copiar link
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 break-all">
+                {window.location.origin}/cv/{professional?.id}
+              </p>
+            </div>
+
+            {/* Opción 2: Mostrar QR */}
+            <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
+              <h3 className="font-semibold text-gray-800 mb-3 text-center">
+                Código QR
+              </h3>
+              <div className="bg-white rounded-xl p-4 flex justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/cv/' + professional?.id)}`}
+                  alt="QR Code del CV"
+                  className="w-48 h-48"
+                />
+              </div>
+              <p className="text-xs text-gray-600 text-center mt-3">
+                Desde este QR podrán ver tu CV
+              </p>
+            </div>
+
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold py-3 rounded-2xl mt-6 hover:from-red-600 hover:to-rose-700 transition-all hover:scale-105"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
-    </div>
-  ) ;
+  );
 }
 
 export default CvView;
