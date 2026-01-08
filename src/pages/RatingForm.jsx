@@ -27,11 +27,18 @@ function RatingForm() {
   try {
     const data = await api.getProfessionalProfile(professionalId);
     console.log('👤 Professional data:', data);
-    console.log('📋 Work history:', data.workHistory);
-    setProfessional(data);
+    
+    // Mapear professionalName a name para compatibilidad
+    const mappedData = {
+      ...data,
+      name: data.professionalName || data.name
+    };
+    
+    console.log('📋 Work history:', mappedData.workHistory);
+    setProfessional(mappedData);
     
     // Auto-seleccionar si solo hay 1 trabajo activo
-    const activeJobs = data.workHistory?.filter(w => w.isActive) || [];
+    const activeJobs = mappedData.workHistory?.filter(w => w.isActive) || [];
     console.log('✅ Active jobs:', activeJobs);
     
     if (activeJobs.length === 1) {
