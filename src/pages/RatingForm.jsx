@@ -103,36 +103,33 @@ function RatingForm() {
   }, 2000);
     } catch (error) {
   console.error('❌ Error completo:', error);
-  console.error('❌ Error response:', error.response);
-  console.error('❌ Error request:', error.request);
-  console.error('❌ Error message:', error.message);
+  console.error('❌ Error response:', error.response?.data);
+  console.error('❌ Error status:', error.response?.status);
   
-  // ... resto del código que ya tenés
-      console.error('Error submitting rating:', error);
-      
-      // Mensaje más específico según el tipo de error
-      if (error.response?.status === 401) {
-        setErrorModal({
-          title: 'Inicio de sesión requerido',
-          message: 'Para calificar a este profesional necesitás iniciar sesión como Cliente.',
-          actionText: 'Iniciar sesión',
-          onAction: () => {
-            // Guardar la URL actual para volver después del login
-            localStorage.setItem('returnTo', window.location.pathname);
-            navigate('/client-login');
-          }
-        });
-      } else if (error.response?.status === 409) {
-        setToast({ 
-          type: 'warning', 
-          message: 'Ya calificaste a este profesional en este lugar' 
-        });
-      } else {
-        setToast({ 
-          type: 'error', 
-          message: 'Error al enviar la calificación. Intentá nuevamente.' 
-        });
+  // Mensaje más específico según el tipo de error
+  if (error.response?.status === 401) {
+    setErrorModal({
+      title: 'Inicio de sesión requerido',
+      message: 'Para calificar a este profesional necesitás iniciar sesión como Cliente.',
+      actionText: 'Iniciar sesión',
+      onAction: () => {
+        localStorage.setItem('returnTo', window.location.pathname);
+        navigate('/client-login');
       }
+    });
+  } else if (error.response?.status === 409) {
+    setToast({ 
+      type: 'warning', 
+      message: 'Ya calificaste a este profesional en este lugar' 
+    });
+  } else {
+    // Mostrar el mensaje de error real del backend
+    const errorMessage = error.response?.data?.message || 'Error al enviar la calificación. Intentá nuevamente.';
+    setToast({ 
+      type: 'error', 
+      message: errorMessage 
+    });
+  }
     } finally {
       setSubmitting(false);
     }
