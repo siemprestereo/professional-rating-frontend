@@ -33,7 +33,7 @@ export const getCurrentUser = async () => {
 
 // ========== PROFESSIONALS ==========
 export const getProfessionalProfile = async (professionalId) => {
-  const response = await apiClient.get(`/professionals/${professionalId}`);
+  const response = await apiClient.get(`/cv/professional/${professionalId}`);
   return response.data;
 };
 
