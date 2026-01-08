@@ -62,30 +62,34 @@ function RatingForm() {
   // Determinar qué trabajo usar
   const workplaceToUse = selectedWorkplace || activeJobs[0];
   
-  console.log('📤 Enviando calificación:', {
-    professionalId: parseInt(professionalId),
-    workHistoryId: workplaceToUse?.workHistoryId,
-    score: score,
-    comment: comment.trim()
-  });
+  console.log('🔍 workplaceToUse:', workplaceToUse);
+  console.log('🔍 activeJobs:', activeJobs);
+  
+  if (!workplaceToUse || !workplaceToUse.workHistoryId) {
+    setToast({ 
+      type: 'error', 
+      message: 'No se pudo determinar el lugar de trabajo' 
+    });
+    setSubmitting(false);
+    return;
+  }
 
   const ratingData = {
     professionalId: parseInt(professionalId),
-    workHistoryId: workplaceToUse?.workHistoryId,
+    workHistoryId: workplaceToUse.workHistoryId,
     score: score,
     comment: comment.trim() || null
   };
-console.log('🔍 ratingData completo:', JSON.stringify(ratingData, null, 2));
-console.log('🔍 workplaceToUse:', workplaceToUse);
-console.log('🔍 activeJobs:', activeJobs);
 
-await api.createRating(ratingData);
+  console.log('📤 ratingData completo:', JSON.stringify(ratingData, null, 2));
 
-      setSuccess(true);
-      
-      setTimeout(() => {
-        navigate(`/professional/${professionalId}`);
-      }, 2000);
+  await api.createRating(ratingData);
+
+  setSuccess(true);
+  
+  setTimeout(() => {
+    navigate(`/professional/${professionalId}`);
+  }, 2000);
     } catch (error) {
   console.error('❌ Error completo:', error);
   console.error('❌ Error response:', error.response);
