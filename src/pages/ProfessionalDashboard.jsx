@@ -121,7 +121,7 @@ function ProfessionalDashboard() {
       }
       
       setQrCode(data);
-      setToast({ type: 'success', message: 'QR generado exitosamente' });
+      setToast({ type: 'success', message: 'QR generado exitosamente' });{/* es necesario este toast?*/}
       
     } catch (error) {
       console.error('❌ Error generating QR:', error);

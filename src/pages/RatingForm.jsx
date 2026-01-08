@@ -75,8 +75,11 @@ function RatingForm() {
     score: score,
     comment: comment.trim() || null
   };
+console.log('🔍 ratingData completo:', JSON.stringify(ratingData, null, 2));
+console.log('🔍 workplaceToUse:', workplaceToUse);
+console.log('🔍 activeJobs:', activeJobs);
 
-  await api.createRating(ratingData);
+await api.createRating(ratingData);
 
       setSuccess(true);
       
@@ -84,6 +87,12 @@ function RatingForm() {
         navigate(`/professional/${professionalId}`);
       }, 2000);
     } catch (error) {
+  console.error('❌ Error completo:', error);
+  console.error('❌ Error response:', error.response);
+  console.error('❌ Error request:', error.request);
+  console.error('❌ Error message:', error.message);
+  
+  // ... resto del código que ya tenés
       console.error('Error submitting rating:', error);
       
       // Mensaje más específico según el tipo de error
