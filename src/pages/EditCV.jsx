@@ -72,6 +72,7 @@ function EditCV() {
 };
 
   const handleSave = async () => {
+    console.log('📤 workExperiences antes de enviar:', workExperiences);
     if (!cv || !cv.id) {
       setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
       return;
