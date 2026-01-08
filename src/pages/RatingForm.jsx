@@ -59,19 +59,24 @@ function RatingForm() {
     setSubmitting(true);
 
     try {
-      const ratingData = {
-        professionalId: parseInt(professionalId),
-        businessId: selectedWorkplace?.businessId || professional?.workHistory?.[0]?.businessId || 1,
-        score: score,
-        comment: comment.trim()
-      };
+  // Determinar qué trabajo usar
+  const workplaceToUse = selectedWorkplace || activeJobs[0];
+  
+  console.log('📤 Enviando calificación:', {
+    professionalId: parseInt(professionalId),
+    workHistoryId: workplaceToUse?.workHistoryId,
+    score: score,
+    comment: comment.trim()
+  });
 
-      // Agregar workHistoryId si hay workplace seleccionado
-      if (selectedWorkplace) {
-        ratingData.workHistoryId = selectedWorkplace.workHistoryId;
-      }
+  const ratingData = {
+    professionalId: parseInt(professionalId),
+    workHistoryId: workplaceToUse?.workHistoryId,
+    score: score,
+    comment: comment.trim() || null
+  };
 
-      await api.createRating(ratingData);
+  await api.createRating(ratingData);
 
       setSuccess(true);
       
