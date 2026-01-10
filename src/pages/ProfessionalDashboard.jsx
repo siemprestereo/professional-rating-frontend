@@ -34,48 +34,67 @@ function ProfessionalDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
-    // Verificar si hay token
-    const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      console.log('No hay token, redirigiendo al login');
-      navigate('/professional-login');
-      setLoading(false);
-      return;
-    }
+  const token = localStorage.getItem('authToken');
+  
+  if (!token) {
+    console.log('No hay token, redirigiendo al login');
+    navigate('/professional-login');
+    setLoading(false);
+    return;
+  }
 
-    try {
-      // Llamar al backend con el token JWT
-      const response = await fetch(`${backendUrl}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  try {
+    // 1. Cargar datos del profesional
+    const response = await fetch(`${backendUrl}/api/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const professionalData = await response.json();
+      console.log('✅ Datos del profesional:', professionalData);
       
-      if (response.ok) {
-        const professionalData = await response.json();
-        console.log('✅ Datos del profesional:', professionalData);
+      setProfessional(professionalData);
+      localStorage.setItem('professional', JSON.stringify(professionalData));
+      
+      // *** 2. AGREGAR ESTA PARTE: Cargar ratings del profesional ***
+      try {
+        const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         
-        setProfessional(professionalData);
-        localStorage.setItem('professional', JSON.stringify(professionalData));
+        if (ratingsResponse.ok) {
+          const ratingsData = await ratingsResponse.json();
+          console.log('✅ Ratings cargados:', ratingsData);
+          setRatings(ratingsData);
+        } else {
+          console.error('Error al cargar ratings:', ratingsResponse.status);
+          setRatings([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar ratings:', error);
         setRatings([]);
-      } else if (response.status === 401) {
-        // Token inválido o expirado
-        console.log('Token inválido, redirigiendo al login');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('professional');
-        navigate('/professional-login');
-      } else {
-        throw new Error('Error al cargar datos del profesional');
       }
       
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
+    } else if (response.status === 401) {
+      console.log('Token inválido, redirigiendo al login');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('professional');
       navigate('/professional-login');
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error('Error al cargar datos del profesional');
     }
-  };
+    
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    navigate('/professional-login');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGenerateQR = async () => {
     const token = localStorage.getItem('authToken');
