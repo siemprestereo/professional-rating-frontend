@@ -99,8 +99,8 @@ function RatingForm() {
   setSuccess(true);
   
   setTimeout(() => {
-    navigate(`/professional/${professionalId}`);
-  }, 2000);
+  navigate('/client-dashboard'); // ✅ Redirige al dashboard del cliente
+}, 2000);
     } catch (error) {
   console.error('❌ Error completo:', error);
   console.error('❌ Error response:', error.response?.data);
