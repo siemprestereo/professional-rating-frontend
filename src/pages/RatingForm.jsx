@@ -118,9 +118,10 @@ function RatingForm() {
       }
     });
   } else if (error.response?.status === 409) {
-    setToast({ 
-      type: 'warning', 
-      message: 'Ya calificaste a este profesional en este lugar' 
+    // *** CAMBIAR ESTO: De toast a modal ***
+    setErrorModal({
+      title: 'No podés calificar aún',
+      message: error.response?.data?.message || 'Ya calificaste a este profesional recientemente. Debés esperar antes de volver a calificarlo.',
     });
   } else {
     // Mostrar el mensaje de error real del backend
@@ -130,9 +131,9 @@ function RatingForm() {
       message: errorMessage 
     });
   }
-    } finally {
-      setSubmitting(false);
-    }
+} finally {
+  setSubmitting(false);
+}
   };
 
   if (loading) {
