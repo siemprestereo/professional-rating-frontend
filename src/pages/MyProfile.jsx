@@ -59,6 +59,28 @@ function MyProfile() {
     ));
   };
 
+  // Función para traducir el professionType
+  const getProfessionTypeLabel = (type) => {
+    const translations = {
+      'WAITER': 'Mozo/a',
+      'CHEF': 'Chef',
+      'BARTENDER': 'Bartender',
+      'SOMMELIER': 'Sommelier',
+      'HOST': 'Anfitrión/a',
+      'MANAGER': 'Manager',
+      'BARISTA': 'Barista',
+      'COOK': 'Cocinero/a',
+      'DISHWASHER': 'Lavavajillas',
+      'DELIVERY': 'Delivery',
+      'CASHIER': 'Cajero/a',
+      'CLEANER': 'Personal de limpieza',
+      'SECURITY': 'Seguridad',
+      'VALET': 'Valet parking',
+      'OTHER': 'Otro'
+    };
+    return translations[type] || type;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
@@ -129,16 +151,23 @@ function MyProfile() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
         {/* Acciones de edición */}
-        {/* Acciones de edición */}
-<div className="mb-4 flex justify-center">
-  <button
-    onClick={() => navigate('/edit-profile-professional')}
-    className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift max-w-xs w-full"
-  >
-    <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
-    <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
-  </button>
-</div>
+        <div className="mb-4 flex justify-center">
+          <button
+            onClick={() => navigate('/edit-profile-professional')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift max-w-xs w-full"
+          >
+            <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+            <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
+          </button>
+        </div>
+
+        {/* Tipo de profesión */}
+        {professional.professionType && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
+            <h2 className="text-lg font-bold text-gray-800 mb-3">Tipo de Profesión</h2>
+            <p className="text-gray-600">{getProfessionTypeLabel(professional.professionType)}</p>
+          </div>
+        )}
 
         {/* Información del perfil */}
         {professional.professionalTitle && (
