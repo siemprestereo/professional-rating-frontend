@@ -118,19 +118,22 @@ function RatingForm() {
       }
     });
   } else if (error.response?.status === 409) {
-    // *** CAMBIAR ESTO: De toast a modal ***
-    setErrorModal({
-      title: 'No podés calificar aún',
-      message: error.response?.data?.message || 'Ya calificaste a este profesional recientemente. Debés esperar antes de volver a calificarlo.',
-    });
-  } else {
-    // Mostrar el mensaje de error real del backend
-    const errorMessage = error.response?.data?.message || 'Error al enviar la calificación. Intentá nuevamente.';
-    setToast({ 
-      type: 'error', 
-      message: errorMessage 
-    });
-  }
+  setErrorModal({
+    title: 'No podés calificar a este profesional',
+    message: error.response?.data?.message || 'Aún no transcurrieron 6 meses desde la última vez que lo calificaste',
+    onClose: () => {
+      setErrorModal(null);
+      navigate('/client-dashboard');
+    }
+  });
+} else {
+  // Mostrar el mensaje de error real del backend
+  const errorMessage = error.response?.data?.message || 'Error al enviar la calificación. Intentá nuevamente.';
+  setToast({ 
+    type: 'error', 
+    message: errorMessage 
+  });
+}
 } finally {
   setSubmitting(false);
 }
