@@ -119,8 +119,8 @@ function RatingForm() {
         });
       } else if (error.response?.status === 409) {
         setErrorModal({
-          title: 'No podés calificar aún',
-          message: error.response?.data?.message || 'Ya calificaste a este profesional recientemente. Debés esperar antes de volver a calificarlo.',
+          title: 'No podrás calificar a este profesional',
+          message: error.response?.data?.message || 'Aún no transcurrieron 6 meses desde la última vez que lo calificaste',
           onClose: () => {
             setErrorModal(null);
             navigate('/client-dashboard');
