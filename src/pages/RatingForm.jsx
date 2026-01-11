@@ -110,7 +110,7 @@ function RatingForm() {
       if (error.response?.status === 401) {
         setErrorModal({
           title: 'Inicio de sesión requerido',
-          message: 'Para calificar a este profesional necesitás iniciar sesión como Cliente.',
+          message: 'Para calificar a este profesional deberás iniciar sesión como Cliente.',
           actionText: 'Iniciar sesión',
           onAction: () => {
             localStorage.setItem('returnTo', window.location.pathname);
