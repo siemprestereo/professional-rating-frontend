@@ -342,39 +342,60 @@ const refreshDashboardData = async () => {
         </div>
 
         {/* Calificaciones recientes */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200 hover-lift">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <Star className="w-5 h-5 mr-2 text-yellow-500" />
-            Mis últimas calificaciones recibidas
-          </h3>
-          
-          {ratings.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              Aún no tenés calificaciones
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {ratings.map((rating, index) => (
-                <div 
-                  key={rating.id} 
-                  className="border-b border-gray-100 pb-3 last:border-0 animate-slideUp"
-                  style={{ animationDelay: `${(index + 4) * 0.1}s` }}
-                >
-                  <div className="flex items-center mb-1">
-                    {renderStars(rating.score)}
-                    <span className="ml-2 text-xs text-gray-500">
-                      {new Date(rating.createdAt).toLocaleDateString('es-AR')}
-                    </span>
-                  </div>
-                  {rating.comment && (
-                    <p className="text-gray-600 text-sm">{rating.comment}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">{rating.businessName}</p>
-                </div>
-              ))}
+       {/* Calificaciones recientes */}
+<div 
+  onClick={() => {
+    console.log('🔍 Click detectado en calificaciones recientes');
+    navigate('/ratings-history');
+  }}
+  className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200 hover-lift cursor-pointer"
+>
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="text-lg font-bold text-gray-800 flex items-center">
+      <Star className="w-5 h-5 mr-2 text-yellow-500" />
+      Calificaciones Recientes
+    </h3>
+    {ratings.length > 0 && (
+      <span className="text-sm text-purple-600 font-semibold">
+        Ver todas →
+      </span>
+    )}
+  </div>
+  
+  {ratings.length === 0 ? (
+    <p className="text-gray-500 text-center py-4">
+      Aún no tenés calificaciones
+    </p>
+  ) : (
+    <div className="space-y-3">
+      {ratings.slice(0, 5).map((rating, index) => (
+        <div 
+          key={rating.id} 
+          className="border-b border-gray-100 pb-3 last:border-0 animate-slideUp"
+          style={{ animationDelay: `${(index + 4) * 0.1}s` }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {renderStars(rating.score)}
             </div>
-          )}
+            <span className="text-xs text-gray-500">
+              {new Date(rating.createdAt).toLocaleDateString('es-AR')}
+            </span>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            {rating.clientName?.trim() || 'Anónimo'}
+          </p>
         </div>
+      ))}
+      
+      {ratings.length > 5 && (
+        <p className="text-sm text-gray-500 text-center pt-2">
+          + {ratings.length - 5} calificaciones más
+        </p>
+      )}
+    </div>
+  )}
+</div>
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
