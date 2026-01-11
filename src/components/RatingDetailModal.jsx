@@ -2,8 +2,8 @@ import { X, MapPin, Briefcase, Calendar, MessageSquare } from 'lucide-react';
 
 function RatingDetailModal({ rating, onClose, renderStars }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scaleIn shadow-2xl ring-4 ring-purple-200/50">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-br from-blue-500 to-purple-600 px-6 py-4 rounded-t-3xl">
           <div className="flex justify-between items-center">
