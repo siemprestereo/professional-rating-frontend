@@ -37,9 +37,8 @@ function App() {
         <Route path="/client-register" element={<ClientRegister />} />
         <Route path="/font-test" element={<FontWeightTest />} />
         <Route path="/cv/:professionalId" element={<PublicCvView />} />
-        <Route path="/ratings-history" element={<RatingsHistory />} />
 
-        {/* Rutas protegidas - PROFESIONALES */}
+        {/* Rutas protegidas -- PROFESIONALES */}
         <Route 
           path="/dashboard" 
           element={
@@ -89,13 +88,22 @@ function App() {
           } 
         />
         <Route 
-  path="/cv-view" 
-  element={
-    <ProtectedRoute userType="PROFESSIONAL">
-      <CvView />
-    </ProtectedRoute>
-  } 
-/>
+          path="/cv-view" 
+          element={
+            <ProtectedRoute userType="PROFESSIONAL">
+              <CvView />
+            </ProtectedRoute>
+          } 
+        />
+        {/* *** MOVER ESTA RUTA AQUÍ *** */}
+        <Route 
+          path="/ratings-history" 
+          element={
+            <ProtectedRoute userType="PROFESSIONAL">
+              <RatingsHistory />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Rutas protegidas - CLIENTES */}
         <Route 
@@ -118,6 +126,5 @@ function App() {
     </Router>
   );
 }
-
 
 export default App;
