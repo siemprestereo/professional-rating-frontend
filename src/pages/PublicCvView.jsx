@@ -170,7 +170,7 @@ function PublicCvView() {
         {/* Call to Action */}
         <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center">
           <h3 className="text-white text-xl font-bold mb-2">
-            ¿Te interesa contratar este profesional?
+            ¿Te interesa contratar a este profesional?
           </h3>
           <p className="text-white/90 mb-4">
             Contactá directamente al profesional para coordinar
