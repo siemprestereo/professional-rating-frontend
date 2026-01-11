@@ -18,20 +18,74 @@ function ProfessionalDashboard() {
   const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
-    // Primero verificar si hay token en la URL (OAuth redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+  // Primero verificar si hay token en la URL (OAuth redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  
+  if (tokenFromUrl) {
+    console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+    localStorage.setItem('authToken', tokenFromUrl);
     
-    if (tokenFromUrl) {
-      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-      localStorage.setItem('authToken', tokenFromUrl);
-      
-      // Limpiar la URL (quitar el ?token=xxx)
-      window.history.replaceState({}, document.title, window.location.pathname);
+    // Limpiar la URL (quitar el ?token=xxx)
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  
+  loadDashboardData();
+  
+  // Auto-refresh cada 5 minutos
+  const refreshInterval = setInterval(() => {
+    console.log('🔄 Auto-refresh: actualizando datos...');
+    refreshDashboardData();
+  }, 300000); // 300000 ms = 5 minutos
+  
+  // Refresh cuando el usuario vuelve al tab
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      console.log('👁️ Usuario volvió al tab, refrescando...');
+      refreshDashboardData();
     }
+  };
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+  // Limpiar ambos al desmontar
+  return () => {
+    clearInterval(refreshInterval);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, []);
+
+// Nueva función para refresh silencioso
+const refreshDashboardData = async () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) return;
+
+  try {
+    // 1. Actualizar datos del profesional (reputación)
+    const response = await fetch(`${backendUrl}/api/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     
-    loadDashboardData();
-  }, []);
+    if (response.ok) {
+      const professionalData = await response.json();
+      setProfessional(professionalData);
+      localStorage.setItem('professional', JSON.stringify(professionalData));
+      
+      // 2. Actualizar ratings
+      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (ratingsResponse.ok) {
+        const ratingsData = await ratingsResponse.json();
+        setRatings(ratingsData);
+      }
+    }
+  } catch (error) {
+    console.error('Error en auto-refresh:', error);
+    // No mostramos error al usuario para no interrumpir la experiencia
+  }
+};
 
   const loadDashboardData = async () => {
   const token = localStorage.getItem('authToken');
@@ -291,7 +345,7 @@ function ProfessionalDashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200 hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Star className="w-5 h-5 mr-2 text-yellow-500" />
-            Calificaciones Recientes
+            Mis últimas calificaciones recibidas
           </h3>
           
           {ratings.length === 0 ? (
