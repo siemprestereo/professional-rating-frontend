@@ -267,18 +267,23 @@ function ProfessionalDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Botón Más información sobre mi reputación */}
-        <button
-          onClick={() => navigate('/stats')}
-          className="w-full bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift mb-4"
-        >
-          <TrendingUp className="w-10 h-10 text-white mx-auto mb-3" />
-          <p className="font-bold text-white text-lg">Más información sobre mi reputación</p>
-          <p className="text-white/80 text-sm mt-1">Ver estadísticas detalladas</p>
-        </button>
+        {/* Más información sobre mi reputación */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+            Más información sobre mi reputación
+          </h3>
+          
+          <button
+            onClick={() => navigate('/stats')}
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 ripple"
+          >
+            Ver estadísticas detalladas
+          </button>
+        </div>
 
-        {/* Generar QR - Más destacado */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
+        {/* Generar QR */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <QrCode className="w-5 h-5 mr-2 text-purple-600" />
             Código QR para Calificaciones
@@ -342,7 +347,7 @@ function ProfessionalDashboard() {
             console.log('🔍 Click detectado en calificaciones recientes');
             navigate('/ratings-history');
           }}
-          className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift cursor-pointer"
+          className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift cursor-pointer"
         >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center">
@@ -395,7 +400,7 @@ function ProfessionalDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => navigate('/my-profile')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-200 hover-lift"
           >
             <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="font-semibold text-gray-800">Ver mi perfil</p>
@@ -403,7 +408,7 @@ function ProfessionalDashboard() {
 
           <button
             onClick={() => navigate('/cv-view')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-300 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
           >
             <Edit className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="font-semibold text-gray-800">Ver mi CV</p>
