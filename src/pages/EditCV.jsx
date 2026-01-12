@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Trash2, Save, Briefcase, GraduationCap, Award, Home } from 'lucide-react';
+import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home } from 'lucide-react';
 import Toast from '../components/Toast';
 
 function EditCV() {
@@ -15,6 +15,9 @@ function EditCV() {
   const [workExperiences, setWorkExperiences] = useState([]);
   const [education, setEducation] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  
+  // Modal de confirmación
+  const [deleteModal, setDeleteModal] = useState(null);
   
   // Toast
   const [toast, setToast] = useState(null);
@@ -45,17 +48,18 @@ function EditCV() {
         
         setCv({ id: data.id });
         
-        // ✅ MAPEAR CORRECTAMENTE businessName → company
+        // ✅ MAPEAR isFreelance también
         setWorkExperiences((data.workExperiences || []).map(exp => ({
           workHistoryId: exp.workHistoryId,
-          company: exp.businessName || '', // ← MAPEAR AQUÍ
+          company: exp.businessName || '',
           position: exp.position || '',
           startDate: exp.startDate || '',
           endDate: exp.endDate || '',
           currentlyWorking: exp.isActive || false,
+          isFreelance: exp.isFreelance || false,
           description: exp.description || '',
           referenceName: exp.referenceContact || '',
-          referencePhone: '' // Si no existe en backend
+          referencePhone: ''
         })));
         
         setEducation(data.education || []);
@@ -115,6 +119,7 @@ function EditCV() {
       startDate: '',
       endDate: '',
       currentlyWorking: false,
+      isFreelance: false,
       description: '',
       referenceName: '',
       referencePhone: ''
@@ -133,8 +138,18 @@ function EditCV() {
     setWorkExperiences(updated);
   };
 
+  const confirmDeleteWorkExperience = (index) => {
+    setDeleteModal({
+      type: 'work',
+      index: index,
+      title: '¿Eliminar experiencia laboral?',
+      message: 'Esta acción no se puede deshacer.'
+    });
+  };
+
   const removeWorkExperience = (index) => {
     setWorkExperiences(workExperiences.filter((_, i) => i !== index));
+    setDeleteModal(null);
   };
 
   // Education handlers
@@ -153,7 +168,6 @@ function EditCV() {
     const updated = [...education];
     updated[index][field] = value;
     
-    // Si marca "actualmente estudio aquí", limpiar fecha de fin
     if (field === 'currentlyStudying' && value === true) {
       updated[index].endDate = '';
     }
@@ -161,8 +175,18 @@ function EditCV() {
     setEducation(updated);
   };
 
+  const confirmDeleteEducation = (index) => {
+    setDeleteModal({
+      type: 'education',
+      index: index,
+      title: '¿Eliminar educación?',
+      message: 'Esta acción no se puede deshacer.'
+    });
+  };
+
   const removeEducation = (index) => {
     setEducation(education.filter((_, i) => i !== index));
+    setDeleteModal(null);
   };
 
   // Certification handlers
@@ -181,8 +205,34 @@ function EditCV() {
     setCertifications(updated);
   };
 
+  const confirmDeleteCertification = (index) => {
+    setDeleteModal({
+      type: 'certification',
+      index: index,
+      title: '¿Eliminar certificación?',
+      message: 'Esta acción no se puede deshacer.'
+    });
+  };
+
   const removeCertification = (index) => {
     setCertifications(certifications.filter((_, i) => i !== index));
+    setDeleteModal(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteModal) return;
+    
+    switch (deleteModal.type) {
+      case 'work':
+        removeWorkExperience(deleteModal.index);
+        break;
+      case 'education':
+        removeEducation(deleteModal.index);
+        break;
+      case 'certification':
+        removeCertification(deleteModal.index);
+        break;
+    }
   };
 
   if (loading) {
@@ -240,17 +290,37 @@ function EditCV() {
                       Experiencia #{index + 1}
                     </span>
                     <button
-                      onClick={() => removeWorkExperience(index)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={() => confirmDeleteWorkExperience(index)}
+                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      Eliminar experiencia
                     </button>
+                  </div>
+
+                  {/* ✅ NUEVO: Checkbox de trabajo autónomo */}
+                  <div className="mb-3 bg-purple-50 p-3 rounded-xl">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={exp.isFreelance || false}
+                        onChange={(e) => updateWorkExperience(index, 'isFreelance', e.target.checked)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 font-semibold">
+                        💼 Trabajo autónomo / Freelance
+                      </span>
+                    </label>
+                    {exp.isFreelance && (
+                      <p className="text-xs text-gray-500 mt-1 ml-6">
+                        Si no especificás un nombre, se mostrará como "Autónomo"
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                       type="text"
-                      placeholder="Empresa"
+                      placeholder={exp.isFreelance ? "Autónomo" : "Empresa"}
                       value={exp.company || exp.businessName || ''}
                       onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
                       className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
@@ -355,10 +425,10 @@ function EditCV() {
                       Educación #{index + 1}
                     </span>
                     <button
-                      onClick={() => removeEducation(index)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={() => confirmDeleteEducation(index)}
+                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      Eliminar educación
                     </button>
                   </div>
 
@@ -398,7 +468,6 @@ function EditCV() {
                     </div>
                   </div>
 
-                  {/* Checkbox "Actualmente estudio aquí" */}
                   <div className="mt-3">
                     <label className="flex items-center cursor-pointer">
                       <input
@@ -452,10 +521,10 @@ function EditCV() {
                       Certificación #{index + 1}
                     </span>
                     <button
-                      onClick={() => removeCertification(index)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={() => confirmDeleteCertification(index)}
+                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      Eliminar certificación
                     </button>
                   </div>
 
@@ -529,6 +598,35 @@ function EditCV() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              {deleteModal.title}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {deleteModal.message}
+            </p>
+            
+            <div className="flex gap-4">
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition-all"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast notification */}
       {toast && (

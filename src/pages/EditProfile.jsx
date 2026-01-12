@@ -272,7 +272,7 @@ function EditProfile() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
             <Trash2 className="w-5 h-5 mr-2" />
-            Zona de Peligro
+            Atención
           </h3>
           <p className="text-gray-600 mb-4 text-sm">
             Una vez eliminada tu cuenta, no podrás recuperar tus datos.
