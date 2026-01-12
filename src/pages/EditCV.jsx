@@ -34,56 +34,56 @@ function EditCV() {
   }, []);
 
   const loadCV = async () => {
-    try {
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      if (!professional) {
-        navigate('/professional-login');
-        return;
-      }
-
-      const token = localStorage.getItem('authToken');
-      
-      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ CV cargado:', data);
-        
-        setCv({ id: data.id });
-        
-        // Separar freelance y empleados
-        const allJobs = (data.workExperiences || []).map(exp => ({
-          workHistoryId: exp.workHistoryId,
-          company: exp.businessName || '',
-          position: exp.position || '',
-          startDate: exp.startDate || '',
-          endDate: exp.endDate || '',
-          currentlyWorking: exp.isActive || false,
-          isFreelance: exp.isFreelance || false,
-          description: exp.description || '',
-          referenceName: exp.referenceContact || '',
-          referencePhone: ''
-        }));
-        
-        setFreelanceJobs(allJobs.filter(job => job.isFreelance));
-        setEmployeeJobs(allJobs.filter(job => !job.isFreelance));
-        
-        setEducation(data.education || []);
-        setCertifications(data.certifications || []);
-      } else {
-        throw new Error('No se pudo cargar el CV');
-      }
-    } catch (error) {
-      console.error('Error loading CV:', error);
-      setToast({ type: 'error', message: 'Error al cargar CV' });
-    } finally {
-      setLoading(false);
+  try {
+    const professional = JSON.parse(localStorage.getItem('professional'));
+    if (!professional) {
+      navigate('/professional-login');
+      return;
     }
-  };
+
+    const token = localStorage.getItem('authToken');
+    
+    const response = await fetch(`${backendUrl}/api/cv/me/full`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ CV cargado:', data);
+      
+      setCv({ id: data.id });
+      
+      // ✅ ASEGURAR que isFreelance SIEMPRE sea boolean
+      const allJobs = (data.workExperiences || []).map(exp => ({
+        workHistoryId: exp.workHistoryId,
+        company: exp.businessName || '',
+        position: exp.position || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        currentlyWorking: exp.isActive || false,
+        isFreelance: exp.isFreelance === true, // ← FORZAR a boolean
+        description: exp.description || '',
+        referenceName: exp.referenceContact || '',
+        referencePhone: ''
+      }));
+      
+      setFreelanceJobs(allJobs.filter(job => job.isFreelance === true));
+      setEmployeeJobs(allJobs.filter(job => job.isFreelance === false));
+      
+      setEducation(data.education || []);
+      setCertifications(data.certifications || []);
+    } else {
+      throw new Error('No se pudo cargar el CV');
+    }
+  } catch (error) {
+    console.error('Error loading CV:', error);
+    setToast({ type: 'error', message: 'Error al cargar CV' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSave = async () => {
     // Combinar freelance y empleados
