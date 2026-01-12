@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home } from 'lucide-react';
+import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home, ChevronDown, ChevronRight } from 'lucide-react';
 import Toast from '../components/Toast';
 
 function EditCV() {
@@ -12,9 +12,16 @@ function EditCV() {
   const [saving, setSaving] = useState(false);
   
   // Estados para el formulario
-  const [workExperiences, setWorkExperiences] = useState([]);
+  const [freelanceJobs, setFreelanceJobs] = useState([]);
+  const [employeeJobs, setEmployeeJobs] = useState([]);
   const [education, setEducation] = useState([]);
   const [certifications, setCertifications] = useState([]);
+  
+  // Estados de expansión (acordeón)
+  const [expandedFreelance, setExpandedFreelance] = useState(null);
+  const [expandedEmployee, setExpandedEmployee] = useState(null);
+  const [expandedEducation, setExpandedEducation] = useState(null);
+  const [expandedCertification, setExpandedCertification] = useState(null);
   
   // Modal de confirmación
   const [deleteModal, setDeleteModal] = useState(null);
@@ -48,8 +55,8 @@ function EditCV() {
         
         setCv({ id: data.id });
         
-        // ✅ MAPEAR isFreelance también
-        setWorkExperiences((data.workExperiences || []).map(exp => ({
+        // Separar freelance y empleados
+        const allJobs = (data.workExperiences || []).map(exp => ({
           workHistoryId: exp.workHistoryId,
           company: exp.businessName || '',
           position: exp.position || '',
@@ -60,7 +67,10 @@ function EditCV() {
           description: exp.description || '',
           referenceName: exp.referenceContact || '',
           referencePhone: ''
-        })));
+        }));
+        
+        setFreelanceJobs(allJobs.filter(job => job.isFreelance));
+        setEmployeeJobs(allJobs.filter(job => !job.isFreelance));
         
         setEducation(data.education || []);
         setCertifications(data.certifications || []);
@@ -76,7 +86,11 @@ function EditCV() {
   };
 
   const handleSave = async () => {
-    console.log('📤 workExperiences antes de enviar:', workExperiences);
+    // Combinar freelance y empleados
+    const allWorkExperiences = [...freelanceJobs, ...employeeJobs];
+    
+    console.log('📤 workExperiences antes de enviar:', allWorkExperiences);
+    
     if (!cv || !cv.id) {
       setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
       return;
@@ -92,7 +106,7 @@ function EditCV() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          workExperiences,
+          workExperiences: allWorkExperiences,
           education,
           certifications
         })
@@ -111,9 +125,52 @@ function EditCV() {
     }
   };
 
-  // Work Experience handlers
-  const addWorkExperience = () => {
-    setWorkExperiences([...workExperiences, {
+  // Freelance handlers
+  const addFreelanceJob = () => {
+    const newJob = {
+      company: '',
+      position: '',
+      startDate: '',
+      endDate: '',
+      currentlyWorking: false,
+      isFreelance: true,
+      description: '',
+      referenceName: '',
+      referencePhone: ''
+    };
+    setFreelanceJobs([...freelanceJobs, newJob]);
+    setExpandedFreelance(freelanceJobs.length); // Expandir el recién agregado
+  };
+
+  const updateFreelanceJob = (index, field, value) => {
+    const updated = [...freelanceJobs];
+    updated[index][field] = value;
+    
+    if (field === 'currentlyWorking' && value === true) {
+      updated[index].endDate = '';
+    }
+    
+    setFreelanceJobs(updated);
+  };
+
+  const confirmDeleteFreelanceJob = (index) => {
+    setDeleteModal({
+      type: 'freelance',
+      index: index,
+      title: '¿Eliminar trabajo autónomo?',
+      message: 'Esta acción no se puede deshacer.'
+    });
+  };
+
+  const removeFreelanceJob = (index) => {
+    setFreelanceJobs(freelanceJobs.filter((_, i) => i !== index));
+    setDeleteModal(null);
+    setExpandedFreelance(null);
+  };
+
+  // Employee handlers
+  const addEmployeeJob = () => {
+    const newJob = {
       company: '',
       position: '',
       startDate: '',
@@ -123,45 +180,49 @@ function EditCV() {
       description: '',
       referenceName: '',
       referencePhone: ''
-    }]);
+    };
+    setEmployeeJobs([...employeeJobs, newJob]);
+    setExpandedEmployee(employeeJobs.length); // Expandir el recién agregado
   };
 
-  const updateWorkExperience = (index, field, value) => {
-    const updated = [...workExperiences];
+  const updateEmployeeJob = (index, field, value) => {
+    const updated = [...employeeJobs];
     updated[index][field] = value;
     
-    // Si marca "actualmente trabajo aquí", limpiar fecha de fin
     if (field === 'currentlyWorking' && value === true) {
       updated[index].endDate = '';
     }
     
-    setWorkExperiences(updated);
+    setEmployeeJobs(updated);
   };
 
-  const confirmDeleteWorkExperience = (index) => {
+  const confirmDeleteEmployeeJob = (index) => {
     setDeleteModal({
-      type: 'work',
+      type: 'employee',
       index: index,
-      title: '¿Eliminar experiencia laboral?',
+      title: '¿Eliminar trabajo?',
       message: 'Esta acción no se puede deshacer.'
     });
   };
 
-  const removeWorkExperience = (index) => {
-    setWorkExperiences(workExperiences.filter((_, i) => i !== index));
+  const removeEmployeeJob = (index) => {
+    setEmployeeJobs(employeeJobs.filter((_, i) => i !== index));
     setDeleteModal(null);
+    setExpandedEmployee(null);
   };
 
   // Education handlers
   const addEducation = () => {
-    setEducation([...education, {
+    const newEdu = {
       institution: '',
       degree: '',
       startDate: '',
       endDate: '',
       currentlyStudying: false,
       description: ''
-    }]);
+    };
+    setEducation([...education, newEdu]);
+    setExpandedEducation(education.length);
   };
 
   const updateEducation = (index, field, value) => {
@@ -187,16 +248,19 @@ function EditCV() {
   const removeEducation = (index) => {
     setEducation(education.filter((_, i) => i !== index));
     setDeleteModal(null);
+    setExpandedEducation(null);
   };
 
   // Certification handlers
   const addCertification = () => {
-    setCertifications([...certifications, {
+    const newCert = {
       name: '',
       issuer: '',
       dateObtained: '',
       expiryDate: ''
-    }]);
+    };
+    setCertifications([...certifications, newCert]);
+    setExpandedCertification(certifications.length);
   };
 
   const updateCertification = (index, field, value) => {
@@ -217,14 +281,18 @@ function EditCV() {
   const removeCertification = (index) => {
     setCertifications(certifications.filter((_, i) => i !== index));
     setDeleteModal(null);
+    setExpandedCertification(null);
   };
 
   const handleConfirmDelete = () => {
     if (!deleteModal) return;
     
     switch (deleteModal.type) {
-      case 'work':
-        removeWorkExperience(deleteModal.index);
+      case 'freelance':
+        removeFreelanceJob(deleteModal.index);
+        break;
+      case 'employee':
+        removeEmployeeJob(deleteModal.index);
         break;
       case 'education':
         removeEducation(deleteModal.index);
@@ -248,7 +316,7 @@ function EditCV() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      {/* Header sin navbar */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
@@ -262,142 +330,261 @@ function EditCV() {
 
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
-        {/* Experiencia Laboral */}
+        
+        {/* TRABAJO AUTÓNOMO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
-              <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
-              Experiencia Laboral
+              <span className="text-2xl mr-2">💼</span>
+              Trabajo Autónomo / Freelance
             </h2>
             <button
-              onClick={addWorkExperience}
+              onClick={addFreelanceJob}
               className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
             >
               <Plus className="w-5 h-5" />
             </button>
           </div>
 
-          {workExperiences.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              No hay experiencia laboral agregada
+          {freelanceJobs.length === 0 ? (
+            <p className="text-gray-500 text-center py-4 text-sm">
+              No hay trabajos autónomos agregados
             </p>
           ) : (
-            <div className="space-y-4">
-              {workExperiences.map((exp, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-2xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm font-semibold text-purple-600">
-                      Experiencia #{index + 1}
-                    </span>
-                    <button
-                      onClick={() => confirmDeleteWorkExperience(index)}
-                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                    >
-                      Eliminar experiencia
-                    </button>
-                  </div>
-
-                  {/* ✅ NUEVO: Checkbox de trabajo autónomo */}
-                  <div className="mb-3 bg-purple-50 p-3 rounded-xl">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={exp.isFreelance || false}
-                        onChange={(e) => updateWorkExperience(index, 'isFreelance', e.target.checked)}
-                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700 font-semibold">
-                        💼 Trabajo autónomo / Freelance
-                      </span>
-                    </label>
-                    {exp.isFreelance && (
-                      <p className="text-xs text-gray-500 mt-1 ml-6">
-                        Si no especificás un nombre, se mostrará como "Autónomo"
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder={exp.isFreelance ? "Autónomo" : "Empresa"}
-                      value={exp.company || exp.businessName || ''}
-                      onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Puesto"
-                      value={exp.position || ''}
-                      onChange={(e) => updateWorkExperience(index, 'position', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                      <input
-                        type="date"
-                        value={exp.startDate || ''}
-                        onChange={(e) => updateWorkExperience(index, 'startDate', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                      <input
-                        type="date"
-                        value={exp.endDate || ''}
-                        onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
-                        disabled={exp.currentlyWorking || exp.isActive}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      />
+            <div className="space-y-2">
+              {freelanceJobs.map((job, index) => (
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  {/* Header colapsable */}
+                  <div
+                    onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedFreelance === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Checkbox "Aún trabajo aquí" */}
-                  <div className="mt-3">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={exp.currentlyWorking || exp.isActive || false}
-                        onChange={(e) => updateWorkExperience(index, 'currentlyWorking', e.target.checked)}
-                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  {/* Contenido expandible */}
+                  {expandedFreelance === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Autónomo"
+                          value={job.company}
+                          onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Puesto / Rol"
+                          value={job.position}
+                          onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <input
+                            type="date"
+                            value={job.startDate}
+                            onChange={(e) => updateFreelanceJob(index, 'startDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <input
+                            type="date"
+                            value={job.endDate}
+                            onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)}
+                            disabled={job.currentlyWorking}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={job.currentlyWorking}
+                            onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                        </label>
+                      </div>
+
+                      <textarea
+                        placeholder="Descripción del proyecto / responsabilidades"
+                        value={job.description}
+                        onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        rows="3"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
-                    </label>
-                  </div>
 
-                  <textarea
-                    placeholder="Descripción de responsabilidades"
-                    value={exp.description || ''}
-                    onChange={(e) => updateWorkExperience(index, 'description', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mt-3 focus:border-purple-500 focus:outline-none"
-                    rows="3"
-                  />
-
-                  {/* Persona de referencia */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                    <input
-                      type="text"
-                      placeholder="Nombre de referencia (opcional)"
-                      value={exp.referenceName || exp.referenceContact || ''}
-                      onChange={(e) => updateWorkExperience(index, 'referenceName', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Teléfono de referencia (opcional)"
-                      value={exp.referencePhone || ''}
-                      onChange={(e) => updateWorkExperience(index, 'referencePhone', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                  </div>
+                      <button
+                        onClick={() => confirmDeleteFreelanceJob(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar trabajo autónomo
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Educación */}
+        {/* TRABAJO EN RELACIÓN DE DEPENDENCIA */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+              <span className="text-2xl mr-2">🏢</span>
+              Trabajo en Relación de Dependencia
+            </h2>
+            <button
+              onClick={addEmployeeJob}
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+
+          {employeeJobs.length === 0 ? (
+            <p className="text-gray-500 text-center py-4 text-sm">
+              No hay trabajos en relación de dependencia agregados
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {employeeJobs.map((job, index) => (
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  {/* Header colapsable */}
+                  <div
+                    onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedEmployee === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contenido expandible */}
+                  {expandedEmployee === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Empresa"
+                          value={job.company}
+                          onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Puesto"
+                          value={job.position}
+                          onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <input
+                            type="date"
+                            value={job.startDate}
+                            onChange={(e) => updateEmployeeJob(index, 'startDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <input
+                            type="date"
+                            value={job.endDate}
+                            onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)}
+                            disabled={job.currentlyWorking}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={job.currentlyWorking}
+                            onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                        </label>
+                      </div>
+
+                      <textarea
+                        placeholder="Descripción de responsabilidades"
+                        value={job.description}
+                        onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        rows="3"
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Nombre de referencia (opcional)"
+                          value={job.referenceName}
+                          onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Teléfono de referencia (opcional)"
+                          value={job.referencePhone}
+                          onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => confirmDeleteEmployeeJob(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar trabajo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Educación - TAMBIÉN con acordeón */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
@@ -413,88 +600,108 @@ function EditCV() {
           </div>
 
           {education.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
+            <p className="text-gray-500 text-center py-4 text-sm">
               No hay educación agregada
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {education.map((edu, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-2xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm font-semibold text-purple-600">
-                      Educación #{index + 1}
-                    </span>
-                    <button
-                      onClick={() => confirmDeleteEducation(index)}
-                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                    >
-                      Eliminar educación
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Institución"
-                      value={edu.institution || ''}
-                      onChange={(e) => updateEducation(index, 'institution', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Título/Grado"
-                      value={edu.degree || ''}
-                      onChange={(e) => updateEducation(index, 'degree', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                      <input
-                        type="date"
-                        value={edu.startDate || ''}
-                        onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                      <input
-                        type="date"
-                        value={edu.endDate || ''}
-                        onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
-                        disabled={edu.currentlyStudying}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      />
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  <div
+                    onClick={() => setExpandedEducation(expandedEducation === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedEducation === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-3">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={edu.currentlyStudying || false}
-                        onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)}
-                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Actualmente estudio aquí</span>
-                    </label>
-                  </div>
+                  {expandedEducation === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Institución"
+                          value={edu.institution}
+                          onChange={(e) => updateEducation(index, 'institution', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Título/Grado"
+                          value={edu.degree}
+                          onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <input
+                            type="date"
+                            value={edu.startDate}
+                            onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <input
+                            type="date"
+                            value={edu.endDate}
+                            onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
+                            disabled={edu.currentlyStudying}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
 
-                  <textarea
-                    placeholder="Descripción"
-                    value={edu.description || ''}
-                    onChange={(e) => updateEducation(index, 'description', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mt-3 focus:border-purple-500 focus:outline-none"
-                    rows="2"
-                  />
+                      <div className="mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={edu.currentlyStudying}
+                            onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Actualmente estudio aquí</span>
+                        </label>
+                      </div>
+
+                      <textarea
+                        placeholder="Descripción"
+                        value={edu.description}
+                        onChange={(e) => updateEducation(index, 'description', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        rows="2"
+                      />
+
+                      <button
+                        onClick={() => confirmDeleteEducation(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar educación
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Certificaciones */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
+        {/* Certificaciones - TAMBIÉN con acordeón */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
               <Award className="w-6 h-6 mr-2 text-purple-600" />
@@ -509,59 +716,79 @@ function EditCV() {
           </div>
 
           {certifications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
+            <p className="text-gray-500 text-center py-4 text-sm">
               No hay certificaciones agregadas
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {certifications.map((cert, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-2xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="text-sm font-semibold text-purple-600">
-                      Certificación #{index + 1}
-                    </span>
-                    <button
-                      onClick={() => confirmDeleteCertification(index)}
-                      className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                    >
-                      Eliminar certificación
-                    </button>
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  <div
+                    onClick={() => setExpandedCertification(expandedCertification === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedCertification === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {cert.name || 'Sin nombre'} {cert.issuer && `- ${cert.issuer}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {cert.dateObtained ? new Date(cert.dateObtained).getFullYear() : 'Sin fecha'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Nombre de la certificación"
-                      value={cert.name || ''}
-                      onChange={(e) => updateCertification(index, 'name', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Emisor"
-                      value={cert.issuer || ''}
-                      onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
-                      className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                    />
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha obtenida</label>
-                      <input
-                        type="date"
-                        value={cert.dateObtained || ''}
-                        onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                      />
+                  {expandedCertification === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Nombre de la certificación"
+                          value={cert.name}
+                          onChange={(e) => updateCertification(index, 'name', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Emisor"
+                          value={cert.issuer}
+                          onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha obtenida</label>
+                          <input
+                            type="date"
+                            value={cert.dateObtained}
+                            onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
+                          <input
+                            type="date"
+                            value={cert.expiryDate}
+                            onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => confirmDeleteCertification(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar certificación
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
-                      <input
-                        type="date"
-                        value={cert.expiryDate || ''}
-                        onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -588,7 +815,7 @@ function EditCV() {
         </button>
       </div>
 
-      {/* Botón Home flotante fijo abajo centrado */}
+      {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
           onClick={() => navigate('/professional-dashboard')}
@@ -599,7 +826,7 @@ function EditCV() {
         </button>
       </div>
 
-      {/* Modal de confirmación de eliminación */}
+      {/* Modal de confirmación */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -628,7 +855,7 @@ function EditCV() {
         </div>
       )}
 
-      {/* Toast notification */}
+      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}
