@@ -1,103 +1,67 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2, Home, Share2, Edit, Briefcase, GraduationCap, Award, Calendar, Download } from 'lucide-react';
-import Toast from '../components/Toast';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Star, Briefcase, GraduationCap, Award, Loader2, Home, ChevronRight } from 'lucide-react';
 
 function CvView() {
   const navigate = useNavigate();
+  const { professionalId } = useParams();
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   
   const [cv, setCv] = useState(null);
-  const [professional, setProfessional] = useState(null);
-  const [workExperiences, setWorkExperiences] = useState([]);
-  const [education, setEducation] = useState([]);
-  const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [downloadingPDF, setDownloadingPDF] = useState(false);
-  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    loadCV();
-  }, []);
+    loadCv();
+  }, [professionalId]);
 
-  const loadCV = async () => {
+  const loadCv = async () => {
     try {
-      const professionalData = JSON.parse(localStorage.getItem('professional'));
-      if (!professionalData) {
+      const token = localStorage.getItem('authToken');
+      const professional = JSON.parse(localStorage.getItem('professional'));
+      
+      if (!professional) {
         navigate('/professional-login');
         return;
       }
 
-      setProfessional(professionalData);
-
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const idToLoad = professionalId || professional.id;
+      
+      const response = await fetch(`${backendUrl}/api/cv/professional/${idToLoad}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('✅ CV cargado:', data);
-        
         setCv(data);
-        setWorkExperiences(data.workExperiences || []);
-        setEducation(data.education || []);
-        setCertifications(data.certifications || []);
+      } else {
+        throw new Error('No se pudo cargar el CV');
       }
     } catch (error) {
       console.error('Error loading CV:', error);
-      setToast({ type: 'error', message: 'Error al cargar CV' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownloadPDF = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/professional-login');
-      return;
-    }
-
-    setDownloadingPDF(true);
-    try {
-      const response = await fetch(`${backendUrl}/api/cv/${professional.id}/download-pdf`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al descargar PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `CV_${professional.name.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      setToast({ type: 'success', message: 'CV descargado exitosamente' });
-      
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      setToast({ type: 'error', message: 'Error al descargar el CV' });
-    } finally {
-      setDownloadingPDF(false);
-    }
+  const renderStars = (score) => {
+    return [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`w-5 h-5 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+      />
+    ));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Presente';
-    const date = new Date(dateString);
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
     return date.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+  };
+
+  const handleWorkClick = (workHistoryId, businessName) => {
+    console.log('🔍 Click en trabajo:', { workHistoryId, businessName });
+    navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
   };
 
   if (loading) {
@@ -111,91 +75,155 @@ function CvView() {
     );
   }
 
+  if (!cv) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">No se pudo cargar el CV</p>
+      </div>
+    );
+  }
+
+  // Separar trabajos por tipo y estado
+  const freelanceActive = (cv.workHistory || []).filter(w => w.isFreelance && w.isActive);
+  const employeeActive = (cv.workHistory || []).filter(w => !w.isFreelance && w.isActive);
+  const pastJobs = (cv.workHistory || []).filter(w => !w.isActive);
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      {/* Header sin navbar */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-            {professional?.name?.charAt(0) || 'P'}
+            {cv.professionalName.charAt(0)}
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
-            {professional?.name || 'Mi CV'}
+            {cv.professionalName}
           </h1>
-          {professional?.professionalTitle && (
-            <p className="text-white/90 text-lg animate-slideUp delay-100">
-              {professional.professionalTitle}
-            </p>
-          )}
+          <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
+            {renderStars(Math.round(cv.reputationScore || 0))}
+            <span className="ml-2 text-white font-semibold text-lg">
+              {(cv.reputationScore || 0).toFixed(1)}
+            </span>
+          </div>
+          <p className="text-white/90 animate-slideUp delay-200">
+            {cv.totalRatings || 0} calificaciones
+          </p>
         </div>
       </div>
 
       {/* Contenido */}
-      <div className="max-w-4xl mx-auto px-4 -mt-16">
+      <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
-        {/* Botones de acción - Grid 3 columnas */}
-        <div className="mb-4">
-          <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
-            <button
-              onClick={() => navigate('/edit-cv')}
-              className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
-            >
-              <Edit className="w-10 h-10 text-purple-600 mx-auto mb-3" />
-              <p className="font-semibold text-gray-800 text-sm">Editar CV</p>
-            </button>
-
-            <button
-              onClick={() => setShowShareModal(true)}
-              className="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift"
-            >
-              <Share2 className="w-10 h-10 text-white mx-auto mb-3" />
-              <p className="font-semibold text-white text-sm">Compartir</p>
-            </button>
-
-            <button
-              onClick={handleDownloadPDF}
-              disabled={downloadingPDF}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift disabled:opacity-50"
-            >
-              {downloadingPDF ? (
-                <>
-                  <Loader2 className="w-10 h-10 text-white mx-auto mb-3 animate-spin" />
-                  <p className="font-semibold text-white text-sm">Generando...</p>
-                </>
-              ) : (
-                <>
-                  <Download className="w-10 h-10 text-white mx-auto mb-3" />
-                  <p className="font-semibold text-white text-sm">Descargar PDF</p>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-       
-        {/* Experiencia Laboral */}
-        {workExperiences.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
+        {/* TRABAJO AUTÓNOMO ACTUAL */}
+        {freelanceActive.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
-              Experiencia Laboral
+              <span className="text-2xl mr-2">💼</span>
+              Trabajo Autónomo Actual
             </h2>
-            <div className="space-y-6">
-              {workExperiences.map((exp, index) => (
-                <div key={index} className="border-l-4 border-purple-500 pl-4">
-                  <h3 className="font-bold text-gray-800 text-lg">{exp.position}</h3>
-                  <p className="text-purple-600 font-semibold">{exp.businessName}</p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {formatDate(exp.startDate)} - {exp.isActive ? 'Presente' : formatDate(exp.endDate)}
+            <div className="space-y-2">
+              {freelanceActive.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId, work.businessName)}
+                  className="border-2 border-purple-200 rounded-xl p-4 cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                          <p className="font-bold text-gray-800 text-lg">
+                            {work.position}
+                          </p>
+                          {work.businessName && work.businessName !== 'Autónomo' && (
+                            <p className="text-purple-600 font-semibold">
+                              {work.businessName}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-500">
+                            📅 {formatDate(work.startDate)} - Presente
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  {exp.description && (
-                    <p className="text-gray-600 mt-2">{exp.description}</p>
-                  )}
-                  {exp.referenceContact && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      📞 Referencia: {exp.referenceContact}
-                    </p>
-                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TRABAJOS ACTUALES (Relación de dependencia) */}
+        {employeeActive.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="text-2xl mr-2">🏢</span>
+              Trabajos Actuales
+            </h2>
+            <div className="space-y-2">
+              {employeeActive.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId, work.businessName)}
+                  className="border-2 border-blue-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <ChevronRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                          <p className="font-bold text-gray-800 text-lg">
+                            {work.position}
+                          </p>
+                          <p className="text-blue-600 font-semibold">
+                            {work.businessName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            📅 {formatDate(work.startDate)} - Presente
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* EXPERIENCIAS PASADAS */}
+        {pastJobs.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="text-2xl mr-2">📋</span>
+              Experiencias Laborales Pasadas
+            </h2>
+            <div className="space-y-2">
+              {pastJobs.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId, work.businessName)}
+                  className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                          <p className="font-bold text-gray-800 text-lg">
+                            {work.position}
+                          </p>
+                          <p className="text-gray-600 font-semibold">
+                            {work.businessName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            📅 {formatDate(work.startDate)} - {formatDate(work.endDate)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -203,23 +231,22 @@ function CvView() {
         )}
 
         {/* Educación */}
-        {education.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250 hover-lift">
+        {cv.education && cv.education.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <GraduationCap className="w-6 h-6 mr-2 text-blue-600" />
+              <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
               Educación
             </h2>
-            <div className="space-y-6">
-              {education.map((edu, index) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4">
-                  <h3 className="font-bold text-gray-800 text-lg">{edu.degree}</h3>
-                  <p className="text-blue-600 font-semibold">{edu.institution}</p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
+            <div className="space-y-4">
+              {cv.education.map((edu, index) => (
+                <div key={index} className="border-l-4 border-purple-600 pl-4">
+                  <p className="font-bold text-gray-800">{edu.degree}</p>
+                  <p className="text-purple-600">{edu.institution}</p>
+                  <p className="text-sm text-gray-500">
                     {formatDate(edu.startDate)} - {edu.currentlyStudying ? 'Presente' : formatDate(edu.endDate)}
-                  </div>
+                  </p>
                   {edu.description && (
-                    <p className="text-gray-600 mt-2">{edu.description}</p>
+                    <p className="text-gray-600 mt-2 text-sm">{edu.description}</p>
                   )}
                 </div>
               ))}
@@ -228,145 +255,69 @@ function CvView() {
         )}
 
         {/* Certificaciones */}
-        {certifications.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-300 hover-lift">
+        {cv.certifications && cv.certifications.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Award className="w-6 h-6 mr-2 text-yellow-600" />
+              <Award className="w-6 h-6 mr-2 text-purple-600" />
               Certificaciones
             </h2>
             <div className="space-y-4">
-              {certifications.map((cert, index) => (
-                <div key={index} className="border-l-4 border-yellow-500 pl-4">
-                  <h3 className="font-bold text-gray-800">{cert.name}</h3>
-                  <p className="text-yellow-600 text-sm">{cert.issuer}</p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
+              {cv.certifications.map((cert, index) => (
+                <div key={index} className="border-l-4 border-green-500 pl-4">
+                  <p className="font-bold text-gray-800">{cert.name}</p>
+                  <p className="text-green-600">{cert.issuer}</p>
+                  <p className="text-sm text-gray-500">
                     Obtenida: {formatDate(cert.dateObtained)}
-                    {cert.expiryDate && ` • Vence: ${formatDate(cert.expiryDate)}`}
-                  </div>
+                    {cert.expiryDate && ` | Expira: ${formatDate(cert.expiryDate)}`}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Estado vacío */}
-        {workExperiences.length === 0 && education.length === 0 && certifications.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-slideUp">
-            <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              Tu CV está vacío
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Agregá tu experiencia laboral, educación y certificaciones para completar tu perfil profesional
-            </p>
-            <button
-              onClick={() => navigate('/edit-cv')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-6 rounded-2xl hover:scale-105 transition-all"
-            >
-              Completar mi CV
-            </button>
-          </div>
-        )}
+        {/* Botones de acción */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <button
+            onClick={() => navigate('/edit-cv')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+          >
+            <Briefcase className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800">Editar CV</p>
+          </button>
+
+          <button
+            onClick={() => {/* TODO: Implementar compartir */}}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+          >
+            <svg className="w-8 h-8 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <p className="font-semibold text-gray-800">Compartir</p>
+          </button>
+
+          <button
+            onClick={() => window.open(`${backendUrl}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+          >
+            <svg className="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <p className="font-semibold text-gray-800">Descargar PDF</p>
+          </button>
+        </div>
       </div>
 
-     {/* Botón Home flotante fijo abajo centrado */}
-<div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-  <button 
-    onClick={() => navigate('/professional-dashboard')}
-    className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-    aria-label="Volver al inicio"
-  >
-    <Home className="w-7 h-7 text-white" />
-  </button>
-</div>
-
-      {/* Toast */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
-      {/* Modal de compartir */}
-      {showShareModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn"
-          onClick={() => setShowShareModal(false)}
+      {/* Botón Home flotante */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={() => navigate('/professional-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Volver al inicio"
         >
-          <div 
-            className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Compartir CV</h2>
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <p className="text-gray-600 mb-6">
-              Compartí tu CV profesional con clientes o empleadores
-            </p>
-
-            {/* Opción 1: Copiar URL */}
-            <div className="bg-gray-50 rounded-2xl p-4 mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-800">Link directo</h3>
-                <button
-                  onClick={async () => {
-                    const cvUrl = `${window.location.origin}/cv/${professional?.id}`;
-                    try {
-                      await navigator.clipboard.writeText(cvUrl);
-                      setToast({ type: 'success', message: 'Link copiado al portapapeles' });
-                    } catch (error) {
-                      setToast({ type: 'error', message: 'Error al copiar URL' });
-                    }
-                  }}
-                  className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-green-600 hover:to-teal-700 transition-all hover:scale-105"
-                >
-                  Copiar link
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 break-all">
-                {window.location.origin}/cv/{professional?.id}
-              </p>
-            </div>
-
-            {/* Opción 2: Mostrar QR */}
-            <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-2xl p-4">
-              <h3 className="font-semibold text-gray-800 mb-3 text-center">
-                Código QR
-              </h3>
-              <div className="bg-white rounded-xl p-4 flex justify-center">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/cv/' + professional?.id)}`}
-                  alt="QR Code del CV"
-                  className="w-48 h-48"
-                />
-              </div>
-              <p className="text-xs text-gray-600 text-center mt-3">
-                Desde este QR podrán ver tu CV
-              </p>
-            </div>
-
-            {/* Botón cerrar */}
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold py-3 rounded-2xl mt-6 hover:from-red-600 hover:to-rose-700 transition-all hover:scale-105"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
+          <Home className="w-7 h-7 text-white" />
+        </button>
+      </div>
     </div>
   );
 }
