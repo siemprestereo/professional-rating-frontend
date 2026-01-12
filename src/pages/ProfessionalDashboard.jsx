@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, Users, TrendingUp, LogOut, User, Loader2, Edit } from 'lucide-react';
+import { Star, QrCode, LogOut, User, Loader2, Edit, TrendingUp } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -18,137 +18,137 @@ function ProfessionalDashboard() {
   const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
-  // Primero verificar si hay token en la URL (OAuth redirect)
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenFromUrl = urlParams.get('token');
-  
-  if (tokenFromUrl) {
-    console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-    localStorage.setItem('authToken', tokenFromUrl);
+    // Primero verificar si hay token en la URL (OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
     
-    // Limpiar la URL (quitar el ?token=xxx)
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-  
-  loadDashboardData();
-  
-  // Auto-refresh cada 5 minutos
-  const refreshInterval = setInterval(() => {
-    console.log('🔄 Auto-refresh: actualizando datos...');
-    refreshDashboardData();
-  }, 300000); // 300000 ms = 5 minutos
-  
-  // Refresh cuando el usuario vuelve al tab
-  const handleVisibilityChange = () => {
-    if (!document.hidden) {
-      console.log('👁️ Usuario volvió al tab, refrescando...');
-      refreshDashboardData();
-    }
-  };
-  
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  
-  // Limpiar ambos al desmontar
-  return () => {
-    clearInterval(refreshInterval);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, []);
-
-// Nueva función para refresh silencioso
-const refreshDashboardData = async () => {
-  const token = localStorage.getItem('authToken');
-  if (!token) return;
-
-  try {
-    // 1. Actualizar datos del profesional (reputación)
-    const response = await fetch(`${backendUrl}/api/auth/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    if (response.ok) {
-      const professionalData = await response.json();
-      setProfessional(professionalData);
-      localStorage.setItem('professional', JSON.stringify(professionalData));
+    if (tokenFromUrl) {
+      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
+      localStorage.setItem('authToken', tokenFromUrl);
       
-      // 2. Actualizar ratings
-      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+      // Limpiar la URL (quitar el ?token=xxx)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    loadDashboardData();
+    
+    // Auto-refresh cada 5 minutos
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refresh: actualizando datos...');
+      refreshDashboardData();
+    }, 300000); // 300000 ms = 5 minutos
+    
+    // Refresh cuando el usuario vuelve al tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Usuario volvió al tab, refrescando...');
+        refreshDashboardData();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Limpiar ambos al desmontar
+    return () => {
+      clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Nueva función para refresh silencioso
+  const refreshDashboardData = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    try {
+      // 1. Actualizar datos del profesional (reputación)
+      const response = await fetch(`${backendUrl}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (ratingsResponse.ok) {
-        const ratingsData = await ratingsResponse.json();
-        setRatings(ratingsData);
-      }
-    }
-  } catch (error) {
-    console.error('Error en auto-refresh:', error);
-    // No mostramos error al usuario para no interrumpir la experiencia
-  }
-};
-
-  const loadDashboardData = async () => {
-  const token = localStorage.getItem('authToken');
-  
-  if (!token) {
-    console.log('No hay token, redirigiendo al login');
-    navigate('/professional-login');
-    setLoading(false);
-    return;
-  }
-
-  try {
-    // 1. Cargar datos del profesional
-    const response = await fetch(`${backendUrl}/api/auth/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (response.ok) {
-      const professionalData = await response.json();
-      console.log('✅ Datos del profesional:', professionalData);
-      
-      setProfessional(professionalData);
-      localStorage.setItem('professional', JSON.stringify(professionalData));
-      
-      // *** 2. AGREGAR ESTA PARTE: Cargar ratings del profesional ***
-      try {
+      if (response.ok) {
+        const professionalData = await response.json();
+        setProfessional(professionalData);
+        localStorage.setItem('professional', JSON.stringify(professionalData));
+        
+        // 2. Actualizar ratings
         const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (ratingsResponse.ok) {
           const ratingsData = await ratingsResponse.json();
-          console.log('✅ Ratings cargados:', ratingsData);
           setRatings(ratingsData);
-        } else {
-          console.error('Error al cargar ratings:', ratingsResponse.status);
+        }
+      }
+    } catch (error) {
+      console.error('Error en auto-refresh:', error);
+      // No mostramos error al usuario para no interrumpir la experiencia
+    }
+  };
+
+  const loadDashboardData = async () => {
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      console.log('No hay token, redirigiendo al login');
+      navigate('/professional-login');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // 1. Cargar datos del profesional
+      const response = await fetch(`${backendUrl}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const professionalData = await response.json();
+        console.log('✅ Datos del profesional:', professionalData);
+        
+        setProfessional(professionalData);
+        localStorage.setItem('professional', JSON.stringify(professionalData));
+        
+        // 2. Cargar ratings del profesional
+        try {
+          const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (ratingsResponse.ok) {
+            const ratingsData = await ratingsResponse.json();
+            console.log('✅ Ratings cargados:', ratingsData);
+            setRatings(ratingsData);
+          } else {
+            console.error('Error al cargar ratings:', ratingsResponse.status);
+            setRatings([]);
+          }
+        } catch (error) {
+          console.error('Error al cargar ratings:', error);
           setRatings([]);
         }
-      } catch (error) {
-        console.error('Error al cargar ratings:', error);
-        setRatings([]);
+        
+      } else if (response.status === 401) {
+        console.log('Token inválido, redirigiendo al login');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('professional');
+        navigate('/professional-login');
+      } else {
+        throw new Error('Error al cargar datos del profesional');
       }
       
-    } else if (response.status === 401) {
-      console.log('Token inválido, redirigiendo al login');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('professional');
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
       navigate('/professional-login');
-    } else {
-      throw new Error('Error al cargar datos del profesional');
+    } finally {
+      setLoading(false);
     }
-    
-  } catch (error) {
-    console.error('Error loading dashboard:', error);
-    navigate('/professional-login');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleGenerateQR = async () => {
     const token = localStorage.getItem('authToken');
@@ -194,7 +194,7 @@ const refreshDashboardData = async () => {
       }
       
       setQrCode(data);
-      setToast({ type: 'success', message: 'QR generado exitosamente' });{/* es necesario este toast?*/}
+      setToast({ type: 'success', message: 'QR generado exitosamente' });
       
     } catch (error) {
       console.error('❌ Error generating QR:', error);
@@ -267,20 +267,15 @@ const refreshDashboardData = async () => {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Estadísticas */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp hover-lift">
-            <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{(professional.reputationScore || 0).toFixed(1)}</p>
-            <p className="text-sm text-gray-600">Promedio</p>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-100 hover-lift">
-            <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-800">{professional.totalRatings || 0}</p>
-            <p className="text-sm text-gray-600">Calificaciones</p>
-          </div>
-        </div>
+        {/* Botón Más información sobre mi reputación */}
+        <button
+          onClick={() => navigate('/stats')}
+          className="w-full bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift mb-4"
+        >
+          <TrendingUp className="w-10 h-10 text-white mx-auto mb-3" />
+          <p className="font-bold text-white text-lg">Más información sobre mi reputación</p>
+          <p className="text-white/80 text-sm mt-1">Ver estadísticas detalladas</p>
+        </button>
 
         {/* Generar QR - Más destacado */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
@@ -342,60 +337,59 @@ const refreshDashboardData = async () => {
         </div>
 
         {/* Calificaciones recientes */}
-       {/* Calificaciones recientes */}
-<div 
-  onClick={() => {
-    console.log('🔍 Click detectado en calificaciones recientes');
-    navigate('/ratings-history');
-  }}
-  className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-200 hover-lift cursor-pointer"
->
-  <div className="flex justify-between items-center mb-4">
-    <h3 className="text-lg font-bold text-gray-800 flex items-center">
-      <Star className="w-5 h-5 mr-2 text-yellow-500" />
-      Calificaciones Recientes
-    </h3>
-    {ratings.length > 0 && (
-      <span className="text-sm text-purple-600 font-semibold">
-        Ver todas →
-      </span>
-    )}
-  </div>
-  
-  {ratings.length === 0 ? (
-    <p className="text-gray-500 text-center py-4">
-      Aún no tenés calificaciones
-    </p>
-  ) : (
-    <div className="space-y-3">
-      {ratings.slice(0, 5).map((rating, index) => (
         <div 
-          key={rating.id} 
-          className="border-b border-gray-100 pb-3 last:border-0 animate-slideUp"
-          style={{ animationDelay: `${(index + 4) * 0.1}s` }}
+          onClick={() => {
+            console.log('🔍 Click detectado en calificaciones recientes');
+            navigate('/ratings-history');
+          }}
+          className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift cursor-pointer"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {renderStars(rating.score)}
-            </div>
-            <span className="text-xs text-gray-500">
-              {new Date(rating.createdAt).toLocaleDateString('es-AR')}
-            </span>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <Star className="w-5 h-5 mr-2 text-yellow-500" />
+              Calificaciones Recientes
+            </h3>
+            {ratings.length > 0 && (
+              <span className="text-sm text-purple-600 font-semibold">
+                Ver todas →
+              </span>
+            )}
           </div>
-          <p className="text-sm text-gray-600 mt-1">
-            {rating.clientName?.trim() || 'Anónimo'}
-          </p>
+          
+          {ratings.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">
+              Aún no tenés calificaciones
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {ratings.slice(0, 5).map((rating, index) => (
+                <div 
+                  key={rating.id} 
+                  className="border-b border-gray-100 pb-3 last:border-0 animate-slideUp"
+                  style={{ animationDelay: `${(index + 4) * 0.1}s` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {renderStars(rating.score)}
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(rating.createdAt).toLocaleDateString('es-AR')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {rating.clientName?.trim() || 'Anónimo'}
+                  </p>
+                </div>
+              ))}
+              
+              {ratings.length > 5 && (
+                <p className="text-sm text-gray-500 text-center pt-2">
+                  + {ratings.length - 5} calificaciones más
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      ))}
-      
-      {ratings.length > 5 && (
-        <p className="text-sm text-gray-500 text-center pt-2">
-          + {ratings.length - 5} calificaciones más
-        </p>
-      )}
-    </div>
-  )}
-</div>
 
         {/* Acciones rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
