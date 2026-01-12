@@ -36,7 +36,9 @@ function App() {
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-register" element={<ClientRegister />} />
         <Route path="/font-test" element={<FontWeightTest />} />
-        <Route path="/cv/:professionalId" element={<PublicCvView />} />
+        
+        {/* CV PÚBLICO - Accesible para compartir */}
+        <Route path="/cv/:professionalId" element={<CvView />} />
 
         {/* Rutas protegidas -- PROFESIONALES */}
         <Route 
@@ -87,6 +89,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* MI CV - Requiere login, muestra el CV del usuario logueado */}
         <Route 
           path="/cv-view" 
           element={
@@ -95,7 +99,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        {/* *** MOVER ESTA RUTA AQUÍ *** */}
+        
+        {/* Ratings History - Protegido */}
         <Route 
           path="/ratings-history" 
           element={
