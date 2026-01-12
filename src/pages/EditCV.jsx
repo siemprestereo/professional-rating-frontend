@@ -86,44 +86,59 @@ function EditCV() {
 };
 
   const handleSave = async () => {
-    // Combinar freelance y empleados
-    const allWorkExperiences = [...freelanceJobs, ...employeeJobs];
-    
-    console.log('📤 workExperiences antes de enviar:', allWorkExperiences);
-    
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
-      return;
-    }
+  // Combinar freelance y empleados
+  const allWorkExperiences = [...freelanceJobs, ...employeeJobs];
+  
+  // 🔍 VER CADA TRABAJO Y SU isFreelance
+  console.log('📤 Total trabajos a enviar:', allWorkExperiences.length);
+  allWorkExperiences.forEach((job, index) => {
+    console.log(`Trabajo ${index}:`, {
+      position: job.position,
+      company: job.company,
+      isFreelance: job.isFreelance,
+      isFreelanceType: typeof job.isFreelance,
+      workHistoryId: job.workHistoryId
+    });
+  });
+  
+  console.log('📤 workExperiences completo:', JSON.stringify(allWorkExperiences, null, 2));
+  
+  if (!cv || !cv.id) {
+    setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+    return;
+  }
 
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          workExperiences: allWorkExperiences,
-          education,
-          certifications
-        })
-      });
+  setSaving(true);
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        workExperiences: allWorkExperiences,
+        education,
+        certifications
+      })
+    });
 
-      if (response.ok) {
-        setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      } else {
-        throw new Error('Error al guardar CV');
-      }
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      setToast({ type: 'error', message: 'Error al guardar CV' });
-    } finally {
-      setSaving(false);
+    if (response.ok) {
+      setToast({ type: 'success', message: 'CV actualizado correctamente' });
+    } else {
+      // 🔍 VER QUÉ DICE EL BACKEND
+      const errorData = await response.json();
+      console.error('❌ Error del backend:', errorData);
+      throw new Error('Error al guardar CV');
     }
-  };
+  } catch (error) {
+    console.error('Error saving CV:', error);
+    setToast({ type: 'error', message: 'Error al guardar CV' });
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Freelance handlers
   const addFreelanceJob = () => {
