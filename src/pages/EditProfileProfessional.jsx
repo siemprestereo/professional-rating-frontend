@@ -157,22 +157,9 @@ function EditProfileProfessional() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 animate-fadeIn">
-      {/* Navbar */}
-      <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/professional-dashboard')}
-            className="w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center transition-all hover:scale-110 border border-white/20"
-            aria-label="Volver al inicio"
-          >
-            <Home className="w-6 h-6 text-white" />
-          </button>
-        </div>
-      </nav>
-
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+    <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
+      {/* Header sin navbar */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
             {name.charAt(0)}
@@ -329,7 +316,7 @@ function EditProfileProfessional() {
         </div>
 
         {/* Zona de peligro - Eliminar cuenta */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-red-200 animate-slideUp delay-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center">
             <Trash2 className="w-5 h-5 mr-2" />
             Atención
@@ -344,6 +331,17 @@ function EditProfileProfessional() {
             Eliminar mi cuenta
           </button>
         </div>
+      </div>
+
+      {/* Botón Home flotante fijo abajo centrado */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={() => navigate('/professional-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Volver al inicio"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
       </div>
 
       {/* Modal de confirmación eliminación */}
