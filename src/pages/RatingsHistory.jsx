@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, Loader2 } from 'lucide-react';
+import { Star, Home, Loader2 } from 'lucide-react';
 import RatingDetailModal from '../components/RatingDetailModal';
 
 function RatingsHistory() {
@@ -56,16 +56,9 @@ function RatingsHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
-        <button
-          onClick={() => navigate('/professional-dashboard')}
-          className="text-white flex items-center mb-4 hover:scale-110 transition-transform"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Volver
-        </button>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8">
         <h1 className="text-white text-2xl font-bold">
           Historial de Calificaciones
         </h1>
@@ -117,6 +110,17 @@ function RatingsHistory() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Botón Home flotante fijo abajo centrado */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={() => navigate('/professional-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Volver al inicio"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
       </div>
 
       {/* Modal de detalle */}
