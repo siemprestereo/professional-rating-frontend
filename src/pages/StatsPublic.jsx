@@ -77,7 +77,7 @@ function StatsPublic() {
             <span className="font-semibold">Volver al CV</span>
           </button>
           <h1 className="text-3xl font-bold text-white mb-2">Estadísticas Profesionales</h1>
-          <p className="text-white/90">Métricas y desempeño</p>
+          <p className="text-white/90">Métricas, análisis y desempeño</p>
         </div>
       </div>
 
