@@ -20,6 +20,7 @@ import FontWeightTest from './pages/FontWeightTest';
 import CvView from './pages/CvView';
 import PublicCvView from './pages/PublicCvView';
 import RatingsHistory from './pages/RatingsHistory';
+import StatsPublic from './pages/StatsPublic';
 
 function App() {
   return (
