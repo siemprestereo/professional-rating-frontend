@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, Briefcase, GraduationCap, Award, Calendar, Star, ArrowLeft } from 'lucide-react';
+import { Loader2, Briefcase, GraduationCap, Award, Star, ArrowLeft, ChevronRight } from 'lucide-react';
 
 function PublicCvView() {
   const { professionalId } = useParams();
@@ -50,12 +50,17 @@ function PublicCvView() {
     ));
   };
 
+  const handleWorkClick = (workHistoryId) => {
+    console.log('🔍 Click en trabajo, navegando a ratings con workHistoryId:', workHistoryId);
+    navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-xl font-light">Cargando CV...</p>
+          <p className="text-white text-xl font-light">Cargando C.V...</p>
         </div>
       </div>
     );
@@ -83,8 +88,19 @@ function PublicCvView() {
     );
   }
 
+  // Separar trabajos por tipo y estado
+  const freelanceActive = (cvData.workHistory || []).filter(w => w.isFreelance && w.isActive);
+  const employeeActive = (cvData.workHistory || []).filter(w => !w.isFreelance && w.isActive);
+  const pastJobs = (cvData.workHistory || []).filter(w => !w.isActive);
+
+  console.log('📊 Trabajos separados:', {
+    freelanceActive,
+    employeeActive,
+    pastJobs
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-8">
       {/* Navbar simple */}
       <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center">
@@ -116,7 +132,7 @@ function PublicCvView() {
           {/* Reputación */}
           <div className="flex items-center justify-center mb-2">
             {renderStars(cvData.reputationScore || 0)}
-            <span className="ml-2 text-white font-semibold">
+            <span className="ml-2 text-white font-semibold text-lg">
               {(cvData.reputationScore || 0).toFixed(1)}
             </span>
           </div>
@@ -131,35 +147,135 @@ function PublicCvView() {
         
         {/* Descripción */}
         {cvData.description && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl font-bold text-gray-800 mb-3">Sobre mí</h2>
             <p className="text-gray-600">{cvData.description}</p>
           </div>
         )}
 
-        {/* Experiencia Laboral */}
-        {cvData.workHistory && cvData.workHistory.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+        {/* TRABAJO AUTÓNOMO ACTUAL */}
+        {freelanceActive.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
-              Experiencia Laboral
+              <span className="text-2xl mr-2">💼</span>
+              Trabajo Autónomo Actual
             </h2>
-            <div className="space-y-6">
-              {cvData.workHistory.map((exp, index) => (
-                <div key={index} className="border-l-4 border-purple-500 pl-4">
-                  <h3 className="font-bold text-gray-800 text-lg">{exp.position}</h3>
-                  <p className="text-purple-600 font-semibold">{exp.businessName}</p>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    {formatDate(exp.startDate)} - {exp.isActive ? 'Presente' : formatDate(exp.endDate)}
+            <div className="space-y-2">
+              {freelanceActive.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId)}
+                  className="border-2 border-purple-200 rounded-xl p-4 cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all group"
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-800 text-lg">
+                          {work.position || work.businessName || 'Autónomo'}
+                        </p>
+                        <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">
+                          Autónomo
+                        </span>
+                      </div>
+                      {work.businessName && work.position && (
+                        <p className="text-purple-600 font-semibold">{work.businessName}</p>
+                      )}
+                      <p className="text-sm text-gray-500">
+                        📅 {formatDate(work.startDate)} - Presente
+                      </p>
+                    </div>
                   </div>
-                  {exp.description && (
-                    <p className="text-gray-600 mt-2">{exp.description}</p>
-                  )}
-                  {exp.referenceContact && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      📞 Referencia: {exp.referenceContact}
-                    </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TRABAJOS ACTUALES */}
+        {employeeActive.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="text-2xl mr-2">🏢</span>
+              Trabajos Actuales
+            </h2>
+            <div className="space-y-2">
+              {employeeActive.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId)}
+                  className="border-2 border-blue-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group"
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                    <div>
+                      <p className="font-bold text-gray-800 text-lg">{work.position}</p>
+                      <p className="text-blue-600 font-semibold">{work.businessName}</p>
+                      <p className="text-sm text-gray-500">
+                        📅 {formatDate(work.startDate)} - Presente
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* EXPERIENCIAS PASADAS */}
+        {pastJobs.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <span className="text-2xl mr-2">📋</span>
+              Experiencias Laborales Pasadas
+            </h2>
+            <div className="space-y-2">
+              {pastJobs.map((work) => (
+                <div
+                  key={work.workHistoryId}
+                  onClick={() => handleWorkClick(work.workHistoryId)}
+                  className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group"
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-800 text-lg">{work.position}</p>
+                        {work.isFreelance && (
+                          <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
+                            Autónomo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600 font-semibold">{work.businessName}</p>
+                      <p className="text-sm text-gray-500">
+                        📅 {formatDate(work.startDate)} - {formatDate(work.endDate)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Educación */}
+        {cvData.education && cvData.education.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
+              Educación
+            </h2>
+            <div className="space-y-4">
+              {cvData.education.map((edu, index) => (
+                <div key={index} className="border-l-4 border-purple-600 pl-4">
+                  <p className="font-bold text-gray-800">{edu.degree}</p>
+                  <p className="text-purple-600">{edu.institution}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatDate(edu.startDate)} - {edu.currentlyStudying ? 'Presente' : formatDate(edu.endDate)}
+                  </p>
+                  {edu.description && (
+                    <p className="text-gray-600 mt-2 text-sm">{edu.description}</p>
                   )}
                 </div>
               ))}
@@ -167,23 +283,27 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* Call to Action */}
-        <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl shadow-lg p-6 text-center">
-          <h3 className="text-white text-xl font-bold mb-2">
-            ¿Te interesa contratar a este profesional?
-          </h3>
-          <p className="text-white/90 mb-4">
-            Contactá directamente al profesional para coordinar
-          </p>
-          {cvData.professionalEmail && (
-            <a>
-              href={`mailto:${cvData.professionalEmail}`}
-              className="inline-block bg-white text-green-600 font-bold px-8 py-3 rounded-2xl hover:scale-105 transition-all"
-            
-              Enviar Email
-            </a>
-          )}
-        </div>
+        {/* Certificaciones */}
+        {cvData.certifications && cvData.certifications.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <Award className="w-6 h-6 mr-2 text-purple-600" />
+              Certificaciones
+            </h2>
+            <div className="space-y-4">
+              {cvData.certifications.map((cert, index) => (
+                <div key={index} className="border-l-4 border-green-500 pl-4">
+                  <p className="font-bold text-gray-800">{cert.name}</p>
+                  <p className="text-green-600">{cert.issuer}</p>
+                  <p className="text-sm text-gray-500">
+                    Obtenida: {formatDate(cert.dateObtained)}
+                    {cert.expiryDate && ` | Expira: ${formatDate(cert.expiryDate)}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
