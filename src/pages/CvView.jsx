@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Star, Briefcase, GraduationCap, Award, Loader2, Home, ChevronRight } from 'lucide-react';
+import ShareModal from '../components/ShareModal';
 
 function CvView() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ function CvView() {
   
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     loadCv();
@@ -19,12 +21,12 @@ function CvView() {
       const token = localStorage.getItem('authToken');
       const professional = JSON.parse(localStorage.getItem('professional'));
       
-      if (!professional) {
+      if (!professional && !professionalId) {
         navigate('/professional-login');
         return;
       }
 
-      const idToLoad = professionalId || professional.id;
+      const idToLoad = professionalId || professional?.id;
       
       const response = await fetch(`${backendUrl}/api/cv/professional/${idToLoad}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -132,10 +134,15 @@ function CvView() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
-                        <div>
-                          <p className="font-bold text-gray-800 text-lg">
-                            {work.position}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-bold text-gray-800 text-lg">
+                              {work.position}
+                            </p>
+                            <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">
+                              Autónomo
+                            </span>
+                          </div>
                           {work.businessName && work.businessName !== 'Autónomo' && (
                             <p className="text-purple-600 font-semibold">
                               {work.businessName}
@@ -210,10 +217,17 @@ function CvView() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <ChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
-                        <div>
-                          <p className="font-bold text-gray-800 text-lg">
-                            {work.position}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-bold text-gray-800 text-lg">
+                              {work.position}
+                            </p>
+                            {work.isFreelance && (
+                              <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
+                                Autónomo
+                              </span>
+                            )}
+                          </div>
                           <p className="text-gray-600 font-semibold">
                             {work.businessName}
                           </p>
@@ -287,7 +301,7 @@ function CvView() {
           </button>
 
           <button
-            onClick={() => {/* TODO: Implementar compartir */}}
+            onClick={() => setShowShareModal(true)}
             className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
           >
             <svg className="w-8 h-8 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,6 +332,15 @@ function CvView() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
+
+      {/* Modal de compartir */}
+      {showShareModal && (
+        <ShareModal
+          professionalId={cv.professionalId}
+          professionalName={cv.professionalName}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }
