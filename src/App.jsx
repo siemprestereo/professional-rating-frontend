@@ -36,6 +36,7 @@ function App() {
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/client-register" element={<ClientRegister />} />
         <Route path="/font-test" element={<FontWeightTest />} />
+        <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
         
         {/* CV PÚBLICO - Para compartir (sin login) */}
         <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
