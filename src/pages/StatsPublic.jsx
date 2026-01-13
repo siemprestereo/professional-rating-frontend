@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { TrendingUp, Award, Calendar, Building2, ArrowLeft, Loader2 } from 'lucide-react';
+import { TrendingUp, Award, Calendar, Building2, ArrowLeft, Loader2, Home } from 'lucide-react';
 
 function StatsPublic() {
   const { professionalId } = useParams();
@@ -167,7 +167,7 @@ function StatsPublic() {
       {/* Botón Home flotante fijo abajo centrado */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
-          onClick={() => navigate('/public-cv')}
+          onClick={() => navigate(-1)}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
           aria-label="Volver"
         >
