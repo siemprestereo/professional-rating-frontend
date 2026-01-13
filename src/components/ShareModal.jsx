@@ -6,7 +6,7 @@ function ShareModal({ professionalId, professionalName, onClose }) {
   const [copied, setCopied] = useState(false);
   const [qrImage, setQrImage] = useState(null);
   
-  const publicUrl = `${window.location.origin}/cv/${professionalId}`;
+  const publicUrl = `${window.location.origin}/public-cv/${professionalId}`;
 
   useEffect(() => {
     generateQR();
