@@ -24,29 +24,60 @@ function RatingsHistory() {
   }, [ratings, workHistoryIdFilter]);
 
   const loadRatings = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/professional-login');
-      return;
-    }
-
+  const token = localStorage.getItem('authToken');
+  const workHistoryIdFilter = searchParams.get('workHistoryId');
+  
+  // Si viene workHistoryId, cargar ratings públicos por workHistoryId
+  if (workHistoryIdFilter) {
     try {
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      const response = await fetch(`${backendUrl}/api/ratings/professional/${professional.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // Endpoint público para obtener ratings por workHistoryId
+      const response = await fetch(
+        `${backendUrl}/api/ratings/work-history/${workHistoryIdFilter}`,
+        {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Ratings cargados:', data);
+        console.log('✅ Ratings públicos cargados:', data);
         setRatings(data);
       }
     } catch (error) {
-      console.error('Error loading ratings:', error);
+      console.error('Error loading public ratings:', error);
     } finally {
       setLoading(false);
     }
-  };
+    return;
+  }
+
+  // Si NO hay workHistoryId, requiere login (modo privado)
+  if (!token) {
+    navigate('/professional-login');
+    return;
+  }
+
+  // Cargar todos los ratings del profesional (modo privado)
+  try {
+    const professional = JSON.parse(localStorage.getItem('professional'));
+    const response = await fetch(
+      `${backendUrl}/api/ratings/professional/${professional.id}`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Ratings privados cargados:', data);
+      setRatings(data);
+    }
+  } catch (error) {
+    console.error('Error loading ratings:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const applyFilter = () => {
     if (!workHistoryIdFilter) {
