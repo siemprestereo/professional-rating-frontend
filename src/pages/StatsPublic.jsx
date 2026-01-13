@@ -81,7 +81,7 @@ function StatsPublic() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 -mt-8">
+      <div className="max-w-6xl mx-auto px-4 mt-4">
         {/* Resumen General */}
         {professionData && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
