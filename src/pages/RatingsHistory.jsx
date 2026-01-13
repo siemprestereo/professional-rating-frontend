@@ -10,104 +10,77 @@ function RatingsHistory() {
   const workHistoryIdFilter = searchParams.get('workHistoryId');
   
   const [ratings, setRatings] = useState([]);
-  const [filteredRatings, setFilteredRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRating, setSelectedRating] = useState(null);
   const [filterInfo, setFilterInfo] = useState(null);
 
   useEffect(() => {
     loadRatings();
-  }, []);
-
-  useEffect(() => {
-    applyFilter();
-  }, [ratings, workHistoryIdFilter]);
+  }, [workHistoryIdFilter]);
 
   const loadRatings = async () => {
-  const token = localStorage.getItem('authToken');
-  const workHistoryIdFilter = searchParams.get('workHistoryId');
-  
-  // Si viene workHistoryId, cargar ratings públicos por workHistoryId
-  if (workHistoryIdFilter) {
+    const token = localStorage.getItem('authToken');
+    
+    // Si viene workHistoryId, cargar ratings públicos por workHistoryId
+    if (workHistoryIdFilter) {
+      try {
+        const response = await fetch(
+          `${backendUrl}/api/ratings/work-history/${workHistoryIdFilter}`,
+          {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Ratings públicos cargados:', data);
+          setRatings(data);
+          
+          // Establecer info del filtro
+          if (data.length > 0) {
+            setFilterInfo({
+              position: data[0].workplacePosition,
+              businessName: data[0].businessName || data[0].workplaceName
+            });
+          } else {
+            setFilterInfo({ position: 'Trabajo', businessName: 'Sin especificar' });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading public ratings:', error);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Si NO hay workHistoryId, requiere login (modo privado)
+    if (!token) {
+      navigate('/professional-login');
+      return;
+    }
+
+    // Cargar todos los ratings del profesional (modo privado)
     try {
-      // Endpoint público para obtener ratings por workHistoryId
+      const professional = JSON.parse(localStorage.getItem('professional'));
       const response = await fetch(
-        `${backendUrl}/api/ratings/work-history/${workHistoryIdFilter}`,
+        `${backendUrl}/api/ratings/professional/${professional.id}`,
         {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          headers: { 'Authorization': `Bearer ${token}` }
         }
       );
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Ratings públicos cargados:', data);
+        console.log('✅ Ratings privados cargados:', data);
         setRatings(data);
+        setFilterInfo(null);
       }
     } catch (error) {
-      console.error('Error loading public ratings:', error);
+      console.error('Error loading ratings:', error);
     } finally {
       setLoading(false);
     }
-    return;
-  }
-
-  // Si NO hay workHistoryId, requiere login (modo privado)
-  if (!token) {
-    navigate('/professional-login');
-    return;
-  }
-
-  // Cargar todos los ratings del profesional (modo privado)
-  try {
-    const professional = JSON.parse(localStorage.getItem('professional'));
-    const response = await fetch(
-      `${backendUrl}/api/ratings/professional/${professional.id}`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Ratings privados cargados:', data);
-      setRatings(data);
-    }
-  } catch (error) {
-    console.error('Error loading ratings:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const applyFilter = () => {
-    if (!workHistoryIdFilter) {
-      setFilteredRatings(ratings);
-      setFilterInfo(null);
-      return;
-    }
-
-    const filtered = ratings.filter(r => 
-      r.workHistoryId === parseInt(workHistoryIdFilter)
-    );
-
-    setFilteredRatings(filtered);
-
-    // Obtener info del trabajo para mostrar en el header
-    if (filtered.length > 0) {
-      const firstRating = filtered[0];
-      setFilterInfo({
-        position: firstRating.workplacePosition,
-        businessName: firstRating.businessName
-      });
-    } else {
-      setFilterInfo({ position: 'Trabajo', businessName: 'Sin especificar' });
-    }
-
-    console.log('🔍 Filtrado aplicado:', {
-      workHistoryId: workHistoryIdFilter,
-      total: ratings.length,
-      filtered: filtered.length
-    });
   };
 
   const clearFilter = () => {
@@ -156,14 +129,8 @@ function RatingsHistory() {
               {filterInfo.businessName}
             </p>
             <p className="text-white/80 text-sm">
-              {filteredRatings.length} {filteredRatings.length === 1 ? 'calificación' : 'calificaciones'}
+              {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
             </p>
-            <button
-              onClick={clearFilter}
-              className="mt-3 text-white/90 text-sm underline hover:text-white"
-            >
-              Ver todas las calificaciones
-            </button>
           </>
         ) : (
           <>
@@ -171,7 +138,7 @@ function RatingsHistory() {
               Historial de Calificaciones
             </h1>
             <p className="text-white/80 text-sm mt-1">
-              {filteredRatings.length} {filteredRatings.length === 1 ? 'calificación' : 'calificaciones'}
+              {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
             </p>
           </>
         )}
@@ -179,27 +146,19 @@ function RatingsHistory() {
 
       {/* Lista de ratings */}
       <div className="px-4 py-6">
-        {filteredRatings.length === 0 ? (
+        {ratings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             {workHistoryIdFilter ? (
-              <>
-                <p className="text-gray-500 mb-4">
-                  No hay calificaciones para este trabajo aún
-                </p>
-                <button
-                  onClick={clearFilter}
-                  className="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition-all"
-                >
-                  Ver todas las calificaciones
-                </button>
-              </>
+              <p className="text-gray-500 mb-4">
+                No hay calificaciones para este trabajo aún
+              </p>
             ) : (
               <p className="text-gray-500">Aún no tenés calificaciones</p>
             )}
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredRatings.map((rating) => (
+            {ratings.map((rating) => (
               <div
                 key={rating.id}
                 onClick={() => setSelectedRating(rating)}
@@ -241,9 +200,9 @@ function RatingsHistory() {
       {/* Botón Home flotante fijo abajo centrado */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
-          onClick={() => navigate('/professional-dashboard')}
+          onClick={() => navigate(-1)}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Volver al inicio"
+          aria-label="Volver"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
