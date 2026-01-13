@@ -397,16 +397,16 @@ function EditCV() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <input
                           type="text"
-                          placeholder="Autónomo"
-                          value={job.company}
-                          onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
+                          placeholder="Título profesional (Electricista, diseñador,peluquero, etc)"
+                          value={job.position}
+                          onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
                           className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                         />
                         <input
                           type="text"
-                          placeholder="Puesto / Rol"
-                          value={job.position}
-                          onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
+                          placeholder="Autónomo"
+                          value={job.company}
+                          onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
                           className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                         />
                         <div>
