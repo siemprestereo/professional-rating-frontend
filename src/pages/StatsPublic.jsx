@@ -69,13 +69,6 @@ function StatsPublic() {
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
         <div className="max-w-6xl mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-white hover:text-white/80 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            <span className="font-semibold">Volver al CV</span>
-          </button>
           <h1 className="text-3xl font-bold text-white mb-2">Estadísticas Profesionales</h1>
           <p className="text-white/90">Métricas, análisis y desempeño</p>
         </div>
@@ -143,7 +136,7 @@ function StatsPublic() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Building2 className="w-6 h-6 mr-2 text-purple-600" />
-              Desempeño por Lugar de Trabajo
+              Desempeño en cada uno de los sitios de trabajo
             </h2>
             <div className="space-y-3">
               {businessData.map((business, index) => (
