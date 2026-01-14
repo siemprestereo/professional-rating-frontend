@@ -12,6 +12,7 @@ function EditCV() {
   const [saving, setSaving] = useState(false);
   
   // Estados para el formulario
+  const [description, setDescription] = useState('');  // ← AGREGADO
   const [freelanceJobs, setFreelanceJobs] = useState([]);
   const [employeeJobs, setEmployeeJobs] = useState([]);
   const [education, setEducation] = useState([]);
@@ -55,6 +56,9 @@ function EditCV() {
       
       setCv({ id: data.id });
       
+      // ← AGREGAR ESTA LÍNEA:
+      setDescription(data.description || '');
+      
       // ✅ ASEGURAR que isFreelance SIEMPRE sea boolean
       const allJobs = (data.workExperiences || []).map(exp => ({
         workHistoryId: exp.workHistoryId,
@@ -63,7 +67,7 @@ function EditCV() {
         startDate: exp.startDate || '',
         endDate: exp.endDate || '',
         currentlyWorking: exp.isActive || false,
-        isFreelance: exp.isFreelance === true, // ← FORZAR a boolean
+        isFreelance: exp.isFreelance === true,
         description: exp.description || '',
         referenceName: exp.referenceContact || '',
         referencePhone: ''
@@ -118,6 +122,7 @@ function EditCV() {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
+        description,  // ← AGREGADO
         workExperiences: allWorkExperiences,
         education,
         certifications
@@ -154,7 +159,7 @@ function EditCV() {
       referencePhone: ''
     };
     setFreelanceJobs([...freelanceJobs, newJob]);
-    setExpandedFreelance(freelanceJobs.length); // Expandir el recién agregado
+    setExpandedFreelance(freelanceJobs.length);
   };
 
   const updateFreelanceJob = (index, field, value) => {
@@ -197,7 +202,7 @@ function EditCV() {
       referencePhone: ''
     };
     setEmployeeJobs([...employeeJobs, newJob]);
-    setExpandedEmployee(employeeJobs.length); // Expandir el recién agregado
+    setExpandedEmployee(employeeJobs.length);
   };
 
   const updateEmployeeJob = (index, field, value) => {
@@ -346,6 +351,21 @@ function EditCV() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
+        {/* ← SECCIÓN SOBRE MÍ - NUEVA */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <span className="text-2xl mr-2">👤</span>
+            Sobre mí
+          </h2>
+          <textarea
+            placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none"
+            rows="4"
+          />
+        </div>
+
         {/* TRABAJO AUTÓNOMO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <div className="flex items-center justify-between mb-4">
@@ -397,7 +417,7 @@ function EditCV() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <input
                           type="text"
-                          placeholder="Título profesional (Electricista, diseñador,peluquero, etc)"
+                          placeholder="Título profesional (Electricista, diseñador, peluquero, etc)"
                           value={job.position}
                           onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
                           className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
@@ -599,7 +619,7 @@ function EditCV() {
           )}
         </div>
 
-        {/* Educación - TAMBIÉN con acordeón */}
+        {/* Educación */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
@@ -715,7 +735,7 @@ function EditCV() {
           )}
         </div>
 
-        {/* Certificaciones - TAMBIÉN con acordeón */}
+        {/* Certificaciones */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
