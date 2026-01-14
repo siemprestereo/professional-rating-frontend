@@ -61,6 +61,27 @@ function CvView() {
     return date.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
   };
 
+  const translateProfession = (type) => {
+    const translations = {
+      'WAITER': 'Mozo',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
+      'CHEF': 'Chef',
+      'BARISTA': 'Barista',
+      'BARTENDER': 'Bartender',
+      'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
+      'SECURITY': 'Seguridad',
+      'RECEPTIONIST': 'Recepcionista'
+    };
+    return translations[type] || type;
+  };
+
   const handleWorkClick = (workHistoryId, businessName) => {
     console.log('🔍 Click en trabajo:', { workHistoryId, businessName });
     navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
@@ -101,6 +122,11 @@ function CvView() {
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
             {cv.professionalName}
           </h1>
+          {cv.professionType && (
+            <p className="text-white/90 text-lg mb-4 animate-slideUp">
+              {translateProfession(cv.professionType)}
+            </p>
+          )}
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
             {renderStars(Math.round(cv.reputationScore || 0))}
             <span className="ml-2 text-white font-semibold text-lg">
