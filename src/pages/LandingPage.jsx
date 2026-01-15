@@ -20,7 +20,7 @@ const handleGoogleLogin = () => {
             onClick={() => navigate('/')}
             className="text-2xl font-bold text-white cursor-pointer hover:scale-105 transition-transform"
           >
-            ⭐ ProRate
+            ⭐ Calificalo
           </div>
           
           <div className="flex gap-3">
@@ -135,7 +135,7 @@ const handleGoogleLogin = () => {
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-8 mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
-          <p className="mb-2">© 2025 ProRate - Tu reputación profesional</p>
+          <p className="mb-2">© 2025 Calificalo - Tu reputación profesional</p>
           <div className="flex gap-6 justify-center">
             <button onClick={() => navigate('/search')} className="hover:text-white transition-colors">
               Buscar profesional
