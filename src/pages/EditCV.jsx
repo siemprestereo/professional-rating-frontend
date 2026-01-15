@@ -414,7 +414,7 @@ function EditCV() {
                               Campos bloqueados
                             </p>
                             <p className="text-orange-700">
-                              Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar para mantener la integridad de las calificaciones recibidas.
+                              Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar.
                             </p>
                           </div>
                         </div>

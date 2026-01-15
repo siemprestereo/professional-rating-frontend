@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Loader2, ArrowLeft, User, AlertCircle } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -12,8 +12,10 @@ function ClientLogin() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
+  const [loginError, setLoginError] = useState(''); // ← NUEVO: error de credenciales
+  const [shake, setShake] = useState(false); // ← NUEVO: animación shake
 
-  // Capturar token de la URL después del OAuth redirect y detectar errores
+  // Detectar errores de OAuth y capturar token
   useEffect(() => {
     // Detectar errores de OAuth
     const errorParam = searchParams.get('error');
@@ -32,7 +34,6 @@ function ClientLogin() {
       console.log('✅ Token recibido de OAuth:', token);
       localStorage.setItem('authToken', token);
       
-      // Verificar el tipo de usuario y redirigir
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('📦 Payload del token:', payload);
@@ -55,6 +56,8 @@ function ClientLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError(''); // Limpiar error anterior
+    setShake(false); // Reset shake
 
     try {
       const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -66,7 +69,16 @@ function ClientLogin() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Error al iniciar sesión');
+        
+        // ✅ MOSTRAR ERROR INLINE EN LUGAR DE TOAST
+        setLoginError('Email o contraseña incorrectos');
+        setShake(true); // Activar animación shake
+        
+        // Quitar shake después de la animación
+        setTimeout(() => setShake(false), 500);
+        
+        setLoading(false);
+        return;
       }
 
       const data = await response.json();
@@ -74,21 +86,22 @@ function ClientLogin() {
       // Guardar token en localStorage
       localStorage.setItem('authToken', data.token);
       
-      // Guardar datos del usuario (opcional, para mostrar info sin llamar al backend)
+      // Guardar datos del usuario
       localStorage.setItem('client', JSON.stringify({
         id: data.id,
         email: data.email,
         name: data.name
       }));
 
-      console.log('✅ Login exitoso con email/password');
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
       setTimeout(() => {
         navigate('/client-dashboard');
       }, 1000);
     } catch (err) {
-      setToast({ type: 'error', message: err.message });
+      setLoginError('Error de conexión. Intentá nuevamente.');
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     } finally {
       setLoading(false);
     }
@@ -112,7 +125,7 @@ function ClientLogin() {
 
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
-            <ShoppingBag className="w-10 h-10 text-white" />
+            <User className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Login Clientes
@@ -153,31 +166,53 @@ function ClientLogin() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setLoginError(''); // Limpiar error al escribir
+              }}
               placeholder="tu@email.com"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+              className={`w-full border-2 rounded-2xl px-4 py-3 focus:outline-none transition-all ${
+                loginError 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 focus:border-green-500'
+              } ${shake ? 'animate-shake' : ''}`}
             />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-2">
             <label className="block text-gray-700 font-semibold mb-2">
               Password
             </label>
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setLoginError(''); // Limpiar error al escribir
+              }}
               placeholder="••••••••"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+              className={`w-full border-2 rounded-2xl px-4 py-3 focus:outline-none transition-all ${
+                loginError 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 focus:border-green-500'
+              } ${shake ? 'animate-shake' : ''}`}
             />
           </div>
+
+          {/* ✅ MENSAJE DE ERROR INLINE */}
+          {loginError && (
+            <div className="mb-4 flex items-center gap-2 text-red-600 text-sm animate-fadeIn">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple mb-4"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -187,6 +222,18 @@ function ClientLogin() {
             ) : (
               'Iniciar Sesión'
             )}
+          </button>
+
+          {/* ✅ BOTÓN OLVIDASTE TU CONTRASEÑA */}
+          <button
+            type="button"
+            onClick={() => {
+              // TODO: Implementar funcionalidad de recuperación
+              console.log('Recuperar contraseña');
+            }}
+            className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
           </button>
         </form>
 
@@ -220,6 +267,19 @@ function ClientLogin() {
           onClose={() => setErrorModal(null)}
         />
       )}
+
+      {/* ✅ AGREGAR ESTILOS DE ANIMACIÓN SHAKE */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+          20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        
+        .animate-shake {
+          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+      `}</style>
     </div>
   );
 }
