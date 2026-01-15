@@ -17,6 +17,27 @@ function StatsPublic() {
     loadAllStats();
   }, [professionalId]);
 
+  const translateProfession = (type) => {
+    const translations = {
+      'WAITER': 'Mozo',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
+      'CHEF': 'Chef',
+      'BARISTA': 'Barista',
+      'BARTENDER': 'Bartender',
+      'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
+      'SECURITY': 'Seguridad',
+      'RECEPTIONIST': 'Recepcionista'
+    };
+    return translations[type] || type;
+  };
+
   const loadAllStats = async () => {
     try {
       const [monthlyRes, businessRes, professionRes] = await Promise.all([
@@ -93,7 +114,7 @@ function StatsPublic() {
               </div>
               <div className="bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-xl">
                 <p className="text-sm text-gray-600 mb-1">Tipo de Profesión</p>
-                <p className="text-2xl font-bold text-green-600">{professionData.professionType}</p>
+                <p className="text-2xl font-bold text-green-600">{translateProfession(professionData.professionType)}</p>
               </div>
             </div>
           </div>
