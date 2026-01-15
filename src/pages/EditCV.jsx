@@ -57,6 +57,7 @@ function EditCV() {
         setCv({ id: data.id });
         setDescription(data.description || '');
         
+        // Mapear trabajos con información de si tienen calificaciones
         const allJobs = (data.workExperiences || []).map(exp => ({
           workHistoryId: exp.workHistoryId,
           company: exp.businessName || '',
@@ -68,6 +69,7 @@ function EditCV() {
           description: exp.description || '',
           referenceName: exp.referenceContact || '',
           referencePhone: '',
+          hasRatings: exp.totalRatings > 0,
           totalRatings: exp.totalRatings || 0
         }));
         
@@ -115,9 +117,9 @@ function EditCV() {
       if (response.ok) {
         setToast({ type: 'success', message: 'CV actualizado correctamente' });
       } else {
-        // Capturar mensaje de error específico del backend
         const errorData = await response.json();
         console.error('❌ Error del backend:', errorData);
+        
         const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
         setToast({ type: 'error', message: errorMessage });
         return;
@@ -142,6 +144,7 @@ function EditCV() {
       description: '',
       referenceName: '',
       referencePhone: '',
+      hasRatings: false,
       totalRatings: 0
     };
     setFreelanceJobs([...freelanceJobs, newJob]);
@@ -186,6 +189,7 @@ function EditCV() {
       description: '',
       referenceName: '',
       referencePhone: '',
+      hasRatings: false,
       totalRatings: 0
     };
     setEmployeeJobs([...employeeJobs, newJob]);
@@ -374,126 +378,116 @@ function EditCV() {
             </p>
           ) : (
             <div className="space-y-2">
-              {freelanceJobs.map((job, index) => {
-                const hasRatings = job.workHistoryId && job.totalRatings > 0;
-                
-                return (
-                  <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                    {/* Header colapsable */}
-                    <div
-                      onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)}
-                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {expandedFreelance === index ? (
-                          <ChevronDown className="w-5 h-5 text-purple-600" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        )}
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-800">
-                              {job.position || 'Sin título'} {job.company && `- ${job.company}`}
-                            </p>
-                            {hasRatings && (
-                              <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">
-                                <Lock className="w-3 h-3" />
-                                <span>{job.totalRatings} calificaciones</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
-                          </p>
-                        </div>
+              {freelanceJobs.map((job, index) => (
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  {/* Header colapsable */}
+                  <div
+                    onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedFreelance === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
+                          {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
+                        </p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Contenido expandible */}
-                    {expandedFreelance === index && (
-                      <div className="p-4 pt-0 border-t border-gray-100">
-                        {hasRatings && (
-                          <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                            <p className="text-sm text-yellow-800 flex items-center gap-2">
-                              <Lock className="w-4 h-4" />
-                              <span>Este trabajo tiene calificaciones. El puesto y empresa no pueden modificarse.</span>
+                  {/* Contenido expandible */}
+                  {expandedFreelance === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      {job.hasRatings && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+                          <Lock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                          <div className="text-sm">
+                            <p className="font-semibold text-orange-800 mb-1">
+                              Campos bloqueados
+                            </p>
+                            <p className="text-orange-700">
+                              Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar para mantener la integridad de las calificaciones recibidas.
                             </p>
                           </div>
-                        )}
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                          <input
-                            type="text"
-                            placeholder="Título profesional (Electricista, diseñador, peluquero, etc)"
-                            value={job.position}
-                            onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
-                            disabled={hasRatings}
-                            className={`border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none ${
-                              hasRatings ? 'bg-gray-100 cursor-not-allowed text-gray-600' : ''
-                            }`}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Autónomo"
-                            value={job.company}
-                            onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
-                            disabled={hasRatings}
-                            className={`border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none ${
-                              hasRatings ? 'bg-gray-100 cursor-not-allowed text-gray-600' : ''
-                            }`}
-                          />
-                          <div>
-                            <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                            <input
-                              type="date"
-                              value={job.startDate}
-                              onChange={(e) => updateFreelanceJob(index, 'startDate', e.target.value)}
-                              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                            <input
-                              type="date"
-                              value={job.endDate}
-                              onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)}
-                              disabled={job.currentlyWorking}
-                              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                          </div>
                         </div>
-
-                        <div className="mb-3">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={job.currentlyWorking}
-                              onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)}
-                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
-                          </label>
-                        </div>
-
-                        <textarea
-                          placeholder="Descripción del proyecto / responsabilidades"
-                          value={job.description}
-                          onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)}
-                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
-                          rows="3"
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Título profesional (Electricista, diseñador, peluquero, etc)"
+                          value={job.position}
+                          onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
+                          disabled={job.hasRatings}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
-
-                        <button
-                          onClick={() => confirmDeleteFreelanceJob(index)}
-                          className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                        >
-                          Eliminar trabajo autónomo
-                        </button>
+                        <input
+                          type="text"
+                          placeholder="Autónomo"
+                          value={job.company}
+                          onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
+                          disabled={job.hasRatings}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <input
+                            type="date"
+                            value={job.startDate}
+                            onChange={(e) => updateFreelanceJob(index, 'startDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <input
+                            type="date"
+                            value={job.endDate}
+                            onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)}
+                            disabled={job.currentlyWorking}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      <div className="mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={job.currentlyWorking}
+                            onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                        </label>
+                      </div>
+
+                      <textarea
+                        placeholder="Descripción del proyecto / responsabilidades"
+                        value={job.description}
+                        onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        rows="3"
+                      />
+
+                      <button
+                        onClick={() => confirmDeleteFreelanceJob(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar trabajo autónomo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -519,148 +513,138 @@ function EditCV() {
             </p>
           ) : (
             <div className="space-y-2">
-              {employeeJobs.map((job, index) => {
-                const hasRatings = job.workHistoryId && job.totalRatings > 0;
-                
-                return (
-                  <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                    {/* Header colapsable */}
-                    <div
-                      onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)}
-                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {expandedEmployee === index ? (
-                          <ChevronDown className="w-5 h-5 text-purple-600" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        )}
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-800">
-                              {job.position || 'Sin título'} {job.company && `- ${job.company}`}
-                            </p>
-                            {hasRatings && (
-                              <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">
-                                <Lock className="w-3 h-3" />
-                                <span>{job.totalRatings} calificaciones</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
-                          </p>
-                        </div>
+              {employeeJobs.map((job, index) => (
+                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                  {/* Header colapsable */}
+                  <div
+                    onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {expandedEmployee === index ? (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">
+                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
+                          {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
+                        </p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Contenido expandible */}
-                    {expandedEmployee === index && (
-                      <div className="p-4 pt-0 border-t border-gray-100">
-                        {hasRatings && (
-                          <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                            <p className="text-sm text-yellow-800 flex items-center gap-2">
-                              <Lock className="w-4 h-4" />
-                              <span>Este trabajo tiene calificaciones. El puesto y empresa no pueden modificarse.</span>
+                  {/* Contenido expandible */}
+                  {expandedEmployee === index && (
+                    <div className="p-4 pt-0 border-t border-gray-100">
+                      {job.hasRatings && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+                          <Lock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                          <div className="text-sm">
+                            <p className="font-semibold text-orange-800 mb-1">
+                              Campos bloqueados
+                            </p>
+                            <p className="text-orange-700">
+                              Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar para mantener la integridad de las calificaciones recibidas.
                             </p>
                           </div>
-                        )}
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                          <input
-                            type="text"
-                            placeholder="Empresa"
-                            value={job.company}
-                            onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)}
-                            disabled={hasRatings}
-                            className={`border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none ${
-                              hasRatings ? 'bg-gray-100 cursor-not-allowed text-gray-600' : ''
-                            }`}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Puesto"
-                            value={job.position}
-                            onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)}
-                            disabled={hasRatings}
-                            className={`border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none ${
-                              hasRatings ? 'bg-gray-100 cursor-not-allowed text-gray-600' : ''
-                            }`}
-                          />
-                          <div>
-                            <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                            <input
-                              type="date"
-                              value={job.startDate}
-                              onChange={(e) => updateEmployeeJob(index, 'startDate', e.target.value)}
-                              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                            <input
-                              type="date"
-                              value={job.endDate}
-                              onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)}
-                              disabled={job.currentlyWorking}
-                              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                          </div>
                         </div>
-
-                        <div className="mb-3">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={job.currentlyWorking}
-                              onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)}
-                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
-                          </label>
-                        </div>
-
-                        <textarea
-                          placeholder="Descripción de responsabilidades"
-                          value={job.description}
-                          onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)}
-                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
-                          rows="3"
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Empresa"
+                          value={job.company}
+                          onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)}
+                          disabled={job.hasRatings}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                         />
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Puesto"
+                          value={job.position}
+                          onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)}
+                          disabled={job.hasRatings}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
                           <input
-                            type="text"
-                            placeholder="Nombre de referencia (opcional)"
-                            value={job.referenceName}
-                            onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)}
-                            className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-                          />
-                          <input
-                            type="tel"
-                            placeholder="Teléfono de referencia (opcional)"
-                            value={job.referencePhone}
-                            onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)}
-                            className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            type="date"
+                            value={job.startDate}
+                            onChange={(e) => updateEmployeeJob(index, 'startDate', e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                           />
                         </div>
-
-                        <button
-                          onClick={() => confirmDeleteEmployeeJob(index)}
-                          className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                        >
-                          Eliminar trabajo
-                        </button>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <input
+                            type="date"
+                            value={job.endDate}
+                            onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)}
+                            disabled={job.currentlyWorking}
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      <div className="mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={job.currentlyWorking}
+                            onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                        </label>
+                      </div>
+
+                      <textarea
+                        placeholder="Descripción de responsabilidades"
+                        value={job.description}
+                        onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        rows="3"
+                      />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder="Nombre de referencia (opcional)"
+                          value={job.referenceName}
+                          onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Teléfono de referencia (opcional)"
+                          value={job.referencePhone}
+                          onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)}
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => confirmDeleteEmployeeJob(index)}
+                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                      >
+                        Eliminar trabajo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Educación - código igual que antes, sin cambios */}
+        {/* Educación */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
@@ -776,7 +760,7 @@ function EditCV() {
           )}
         </div>
 
-        {/* Certificaciones - código igual que antes, sin cambios */}
+        {/* Certificaciones */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
