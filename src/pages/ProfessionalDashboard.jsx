@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, LogOut, User, Loader2, Edit, TrendingUp } from 'lucide-react';
+import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -407,12 +407,12 @@ function ProfessionalDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('/cv-view')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
-          >
-            <Edit className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Ver mi CV</p>
-          </button>
+  onClick={() => navigate('/cv-view')}
+  className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
+>
+  <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+  <p className="font-semibold text-gray-800">Ver mi CV</p>
+</button>
         </div>
       </div>
 

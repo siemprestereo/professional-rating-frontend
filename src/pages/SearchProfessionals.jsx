@@ -97,9 +97,9 @@ function SearchProfessionals() {
         ) : professionals.length === 0 ? (
           <div className="text-center py-12 animate-scaleIn">
             <Search className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-slideUp" />
-            <p className="text-gray-600 animate-slideUp delay-100">Buscá profesionales por nombre</p>
+            <p className="text-gray-600 animate-slideUp delay-100">¿Necesitas alguna clase de servicio?</p>
             <p className="text-sm text-gray-500 mt-2 animate-slideUp delay-200">
-              o por el lugar donde trabajan
+              Buscá según la profesión que necesites.
             </p>
           </div>
         ) : (
