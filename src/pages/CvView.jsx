@@ -116,26 +116,39 @@ function CvView() {
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-            {cv.professionalName.charAt(0)}
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
-            {cv.professionalName}
-          </h1>
-          {cv.professionType && (
-            <p className="text-white/90 text-lg mb-4 animate-slideUp">
-              {translateProfession(cv.professionType)}
+          {/* Área clickeable: Avatar + Nombre → /my-profile */}
+          <button 
+            onClick={() => navigate('/my-profile')}
+            className="w-full hover:opacity-90 transition-opacity focus:outline-none"
+          >
+            <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
+              {cv.professionalName.charAt(0)}
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+              {cv.professionalName}
+            </h1>
+            {cv.professionType && (
+              <p className="text-white/90 text-lg mb-4 animate-slideUp">
+                {translateProfession(cv.professionType)}
+              </p>
+            )}
+          </button>
+
+          {/* Área clickeable: Estrellas + Calificaciones → /stats */}
+          <button 
+            onClick={() => navigate('/stats')}
+            className="w-full hover:opacity-90 transition-opacity focus:outline-none"
+          >
+            <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
+              {renderStars(Math.round(cv.reputationScore || 0))}
+              <span className="ml-2 text-white font-semibold text-lg">
+                {(cv.reputationScore || 0).toFixed(1)}
+              </span>
+            </div>
+            <p className="text-white/90 animate-slideUp delay-200">
+              {cv.totalRatings || 0} calificaciones
             </p>
-          )}
-          <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
-            {renderStars(Math.round(cv.reputationScore || 0))}
-            <span className="ml-2 text-white font-semibold text-lg">
-              {(cv.reputationScore || 0).toFixed(1)}
-            </span>
-          </div>
-          <p className="text-white/90 animate-slideUp delay-200">
-            {cv.totalRatings || 0} calificaciones
-          </p>
+          </button>
         </div>
       </div>
 
