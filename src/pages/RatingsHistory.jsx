@@ -45,12 +45,22 @@ function RatingsHistory() {
               businessName: data[0].businessName || data[0].workplaceName
             };
             console.log('✅ filterInfo set:', filter);
-            filterInfoRef.current = filter; // ← Guardar en ref también
+            
+            // ✅ SETEAR EN REF Y STATE SIMULTÁNEAMENTE
+            filterInfoRef.current = filter;
             setFilterInfo(filter);
+            
+            // ✅ FORZAR UN RE-RENDER ADICIONAL
+            setTimeout(() => {
+              if (!filterInfo && filterInfoRef.current) {
+                console.log('🔄 Forcing re-render with filterInfo');
+                setFilterInfo(filterInfoRef.current);
+              }
+            }, 100);
           } else {
             const filter = { position: 'Trabajo', businessName: 'Sin especificar' };
             console.log('✅ filterInfo set (empty):', filter);
-            filterInfoRef.current = filter; // ← Guardar en ref también
+            filterInfoRef.current = filter;
             setFilterInfo(filter);
           }
         }
@@ -112,6 +122,13 @@ function RatingsHistory() {
       </div>
     );
   }
+
+  console.log('🎨 RENDER START');
+  console.log('   workHistoryIdFilter:', workHistoryIdFilter);
+  console.log('   ratings.length:', ratings.length);
+  console.log('   filterInfo:', filterInfo);
+  console.log('   filterInfoRef.current:', filterInfoRef.current);
+  console.log('   loading:', loading);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
