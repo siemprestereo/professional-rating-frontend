@@ -202,7 +202,7 @@ function ClientDashboard() {
           <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
               <p className="text-2xl font-bold mb-1">{stats.total}</p>
-              <p className="text-xs opacity-90">Calificaciones</p>
+              <p className="text-xs opacity-90">Calificaciones otorgadas</p>
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
               <p className="text-2xl font-bold mb-1">{stats.average}</p>
@@ -226,7 +226,7 @@ function ClientDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center">
               <Star className="w-5 h-5 mr-2 text-yellow-500" />
-              Calificaciones Recientes
+              Calificaciones recientes
             </h3>
             {myRatings.length > 3 && (
               <button
@@ -290,7 +290,7 @@ function ClientDashboard() {
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-150 hover-lift"
           >
             <BarChart3 className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Estadísticas</p>
+            <p className="text-xs font-semibold text-gray-800">Mis estadísticas</p>
           </button>
 
           <button

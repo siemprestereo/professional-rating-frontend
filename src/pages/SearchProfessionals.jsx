@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, MapPin, User, Loader2 } from 'lucide-react';
+import { Search, Star, MapPin, User, Loader2, Home } from 'lucide-react';
 
 function SearchProfessionals() {
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ function SearchProfessionals() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 animate-fadeIn">
+    <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6 animate-slideDown">
         <h1 className="text-2xl font-bold text-white mb-4">Buscar Profesionales</h1>
@@ -143,6 +143,17 @@ function SearchProfessionals() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Botón Home flotante fijo abajo centrado */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={() => navigate('/client-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Volver al inicio"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
       </div>
     </div>
   );
