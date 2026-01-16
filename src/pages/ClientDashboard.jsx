@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User, TrendingUp, Award, BarChart3 } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -185,9 +185,13 @@ function ClientDashboard() {
             {client.name.charAt(0)}
           </div>
           <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{client.name}</h2>
-          <p className="text-white/90 text-sm animate-slideUp delay-100">
-            {myRatings.length} {myRatings.length === 1 ? 'calificación dada' : 'calificaciones dadas'}
-          </p>
+          {/* Medalla del usuario */}
+          {topBadges.length > 0 && (
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full animate-slideUp delay-100">
+              <span className="text-2xl">{topBadges[0].icon}</span>
+              <span className="text-white text-sm font-semibold">{topBadges[0].name}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -195,18 +199,14 @@ function ClientDashboard() {
       <div className="px-4 -mt-16">
         {/* Quick Stats */}
         {stats && stats.total > 0 && (
-          <div className="grid grid-cols-3 gap-3 mb-4 animate-slideUp">
+          <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-2xl font-bold mb-1">{stats.total}</p>
               <p className="text-xs opacity-90">Calificaciones</p>
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold">{stats.average}</p>
+              <p className="text-2xl font-bold mb-1">{stats.average}</p>
               <p className="text-xs opacity-90">Tu Promedio</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold">{stats.categories}</p>
-              <p className="text-xs opacity-90">Categorías</p>
             </div>
           </div>
         )}
@@ -220,35 +220,6 @@ function ClientDashboard() {
             Para calificar a un profesional, pídele que te muestre su código QR.
           </p>
         </div>
-
-        {/* Medallas Preview */}
-        {topBadges.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                <Award className="w-5 h-5 mr-2 text-purple-600" />
-                Tus Medallas
-              </h3>
-              <button
-                onClick={() => navigate('/client-stats')}
-                className="text-purple-600 text-sm font-semibold hover:text-purple-700"
-              >
-                Ver todas →
-              </button>
-            </div>
-            <div className="flex gap-3 justify-center">
-              {topBadges.map((badge, index) => (
-                <div
-                  key={index}
-                  className="flex-1 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-xl p-3 text-center"
-                >
-                  <div className="text-3xl mb-1">{badge.icon}</div>
-                  <p className="text-xs font-semibold text-gray-800">{badge.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Calificaciones Recientes */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
@@ -326,16 +297,16 @@ function ClientDashboard() {
             onClick={() => navigate('/edit-profile')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
           >
-            <Edit className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Editar Perfil</p>
+            <User className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-gray-800">Mi Perfil</p>
           </button>
 
           <button
             onClick={() => navigate('/search')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-250 hover-lift"
           >
-            <User className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Buscar</p>
+            <Search className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
           </button>
         </div>
       </div>
