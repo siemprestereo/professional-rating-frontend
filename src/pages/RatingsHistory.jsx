@@ -118,7 +118,7 @@ function RatingsHistory() {
       {/* ✅ NUEVO HEADER CON CARD FLOTANTE */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-32 relative">
         {/* Botón X flotante - FUERA del condicional */}
-        {filterInfo && (
+        {(filterInfo || filterInfoRef.current) && (
           <button
             onClick={clearFilter}
             className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all hover:scale-110 z-50"
@@ -127,17 +127,17 @@ function RatingsHistory() {
           </button>
         )}
         
-        {filterInfo ? (
+        {(filterInfo || filterInfoRef.current) ? (
           /* Card flotante con glassmorphism */
           <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white animate-scaleIn">
             <p className="text-sm font-semibold opacity-80 mb-2">
               Calificaciones de:
             </p>
             <h1 className="text-3xl font-black mb-2">
-              {filterInfo.position}
+              {(filterInfo || filterInfoRef.current)?.position}
             </h1>
             <p className="text-xl opacity-90 mb-4">
-              {filterInfo.businessName}
+              {(filterInfo || filterInfoRef.current)?.businessName}
             </p>
             <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
               <p className="text-sm font-semibold">
