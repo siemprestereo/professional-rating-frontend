@@ -105,49 +105,56 @@ function RatingsHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8">
+    <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
+      {/* ✅ NUEVO HEADER CON CARD FLOTANTE */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-32 relative">
         {filterInfo ? (
           <>
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-white text-xl font-bold">
+            {/* Botón X flotante */}
+            <button
+              onClick={clearFilter}
+              className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all hover:scale-110"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Card flotante con glassmorphism */}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white animate-scaleIn">
+              <p className="text-sm font-semibold opacity-80 mb-2">
                 Calificaciones de:
+              </p>
+              <h1 className="text-3xl font-black mb-2">
+                {filterInfo.position}
               </h1>
-              <button
-                onClick={clearFilter}
-                className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all"
-                aria-label="Cerrar filtro"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <p className="text-xl opacity-90 mb-4">
+                {filterInfo.businessName}
+              </p>
+              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                <p className="text-sm font-semibold">
+                  {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
+                </p>
+              </div>
             </div>
-            <p className="text-white text-lg font-semibold mb-1">
-              {filterInfo.position}
-            </p>
-            <p className="text-white/90 text-base mb-3">
-              {filterInfo.businessName}
-            </p>
-            <p className="text-white/80 text-sm">
-              {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
-            </p>
           </>
         ) : (
-          <>
-            <h1 className="text-white text-2xl font-bold">
+          /* Card para vista sin filtro */
+          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white animate-scaleIn">
+            <h1 className="text-3xl font-black mb-2">
               Historial de Calificaciones
             </h1>
-            <p className="text-white/80 text-sm mt-1">
-              {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
-            </p>
-          </>
+            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+              <p className="text-sm font-semibold">
+                {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Lista de ratings */}
-      <div className="px-4 py-6">
+      {/* ✅ CONTENIDO CON -MT PARA "EMPUJAR" EL CARD */}
+      <div className="px-4 -mt-20">
         {ratings.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center animate-slideUp">
             {workHistoryIdFilter ? (
               <p className="text-gray-500 mb-4">
                 No hay calificaciones para este trabajo aún
@@ -158,11 +165,12 @@ function RatingsHistory() {
           </div>
         ) : (
           <div className="space-y-3">
-            {ratings.map((rating) => (
+            {ratings.map((rating, index) => (
               <div
                 key={rating.id}
                 onClick={() => setSelectedRating(rating)}
-                className="bg-white rounded-2xl shadow-lg p-4 hover-lift cursor-pointer"
+                className="bg-white rounded-2xl shadow-lg p-4 hover-lift cursor-pointer animate-slideUp"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
