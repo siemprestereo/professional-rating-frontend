@@ -146,7 +146,7 @@ function RatingsHistory() {
         
         {(filterInfo || filterInfoRef.current) ? (
           /* Card flotante con glassmorphism */
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white animate-scaleIn">
+          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white">
             <p className="text-sm font-semibold opacity-80 mb-2">
               Calificaciones de:
             </p>
@@ -164,7 +164,7 @@ function RatingsHistory() {
           </div>
         ) : (
           /* Card para vista sin filtro */
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white animate-scaleIn">
+          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white">
             <h1 className="text-3xl font-black mb-2">
               Historial de Calificaciones
             </h1>
