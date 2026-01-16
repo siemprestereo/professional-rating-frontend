@@ -146,17 +146,17 @@ function RatingsHistory() {
         
         {(filterInfo || filterInfoRef.current) ? (
           /* Card flotante con glassmorphism */
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white">
-            <p className="text-sm font-semibold opacity-80 mb-2">
+          <div className="bg-purple-600 rounded-3xl p-6 text-white" style={{ backgroundColor: 'rgba(139, 92, 246, 0.9)' }}>
+            <p className="text-sm font-semibold mb-2">
               Calificaciones de:
             </p>
             <h1 className="text-3xl font-black mb-2">
               {(filterInfo || filterInfoRef.current)?.position}
             </h1>
-            <p className="text-xl opacity-90 mb-4">
+            <p className="text-xl mb-4">
               {(filterInfo || filterInfoRef.current)?.businessName}
             </p>
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="inline-block bg-white/30 px-4 py-2 rounded-full">
               <p className="text-sm font-semibold">
                 {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
               </p>
@@ -164,11 +164,11 @@ function RatingsHistory() {
           </div>
         ) : (
           /* Card para vista sin filtro */
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white">
+          <div className="bg-purple-600 rounded-3xl p-6 text-white" style={{ backgroundColor: 'rgba(139, 92, 246, 0.9)' }}>
             <h1 className="text-3xl font-black mb-2">
               Historial de Calificaciones
             </h1>
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="inline-block bg-white/30 px-4 py-2 rounded-full">
               <p className="text-sm font-semibold">
                 {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
               </p>
