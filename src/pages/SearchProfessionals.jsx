@@ -67,7 +67,7 @@ function SearchProfessionals() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Buscar por nombre o lugar de trabajo..."
+            placeholder="Buscar por profesión u oficio..."
             className="w-full px-4 py-3 pr-12 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
           />
           <button
