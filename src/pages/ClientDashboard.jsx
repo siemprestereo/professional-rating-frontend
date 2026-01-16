@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User , Home } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, Edit, User, TrendingUp, Award, BarChart3 } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -8,6 +8,8 @@ function ClientDashboard() {
   const [client, setClient] = useState(null);
   const [myRatings, setMyRatings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [topBadges, setTopBadges] = useState([]);
 
   useEffect(() => {
     // Primero verificar si hay token en la URL (OAuth redirect)
@@ -77,11 +79,58 @@ function ClientDashboard() {
       if (response.ok) {
         const data = await response.json();
         setMyRatings(data);
+        calculateQuickStats(data);
+        calculateTopBadges(data);
       }
     } catch (error) {
       console.error('Error loading ratings:', error);
       setMyRatings([]);
     }
+  };
+
+  const calculateQuickStats = (ratingsData) => {
+    if (ratingsData.length === 0) {
+      setStats({ total: 0, average: 0, categories: 0 });
+      return;
+    }
+
+    const total = ratingsData.length;
+    const average = ratingsData.reduce((sum, r) => sum + r.score, 0) / total;
+    const categories = new Set(ratingsData.map(r => r.professionalType || 'general')).size;
+
+    setStats({
+      total,
+      average: average.toFixed(1),
+      categories
+    });
+  };
+
+  const calculateTopBadges = (ratingsData) => {
+    const badges = [];
+    const total = ratingsData.length;
+
+    // Obtener las últimas 3 medallas desbloqueadas
+    if (total >= 100) badges.push({ icon: '⭐', name: 'Legendario' });
+    else if (total >= 50) badges.push({ icon: '👑', name: 'Maestro' });
+    else if (total >= 25) badges.push({ icon: '💎', name: 'Experto' });
+    else if (total >= 10) badges.push({ icon: '🥇', name: 'Experimentado' });
+    else if (total >= 5) badges.push({ icon: '🥈', name: 'Activo' });
+    else if (total >= 1) badges.push({ icon: '🥉', name: 'Primera' });
+
+    // Medallas especiales
+    const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
+    const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
+    
+    if (commentPercentage >= 80) {
+      badges.push({ icon: '💬', name: 'Comunicador' });
+    }
+
+    const average = total > 0 ? ratingsData.reduce((sum, r) => sum + r.score, 0) / total : 0;
+    if (average >= 4.5) {
+      badges.push({ icon: '🌟', name: 'Generoso' });
+    }
+
+    setTopBadges(badges.slice(0, 3)); // Solo mostrar las primeras 3
   };
 
   const handleLogout = () => {
@@ -114,6 +163,9 @@ function ClientDashboard() {
     return null;
   }
 
+  // Obtener últimas 3 calificaciones
+  const recentRatings = myRatings.slice(0, 3);
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       {/* Header */}
@@ -141,6 +193,24 @@ function ClientDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
+        {/* Quick Stats */}
+        {stats && stats.total > 0 && (
+          <div className="grid grid-cols-3 gap-3 mb-4 animate-slideUp">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xs opacity-90">Calificaciones</p>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
+              <p className="text-2xl font-bold">{stats.average}</p>
+              <p className="text-xs opacity-90">Tu Promedio</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg">
+              <p className="text-2xl font-bold">{stats.categories}</p>
+              <p className="text-xs opacity-90">Categorías</p>
+            </div>
+          </div>
+        )}
+
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -151,12 +221,51 @@ function ClientDashboard() {
           </p>
         </div>
 
-        {/* Mis calificaciones */}
+        {/* Medallas Preview */}
+        {topBadges.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                <Award className="w-5 h-5 mr-2 text-purple-600" />
+                Tus Medallas
+              </h3>
+              <button
+                onClick={() => navigate('/client-stats')}
+                className="text-purple-600 text-sm font-semibold hover:text-purple-700"
+              >
+                Ver todas →
+              </button>
+            </div>
+            <div className="flex gap-3 justify-center">
+              {topBadges.map((badge, index) => (
+                <div
+                  key={index}
+                  className="flex-1 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-xl p-3 text-center"
+                >
+                  <div className="text-3xl mb-1">{badge.icon}</div>
+                  <p className="text-xs font-semibold text-gray-800">{badge.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Calificaciones Recientes */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <Star className="w-5 h-5 mr-2 text-yellow-500" />
-            Mis Calificaciones
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <Star className="w-5 h-5 mr-2 text-yellow-500" />
+              Calificaciones Recientes
+            </h3>
+            {myRatings.length > 3 && (
+              <button
+                onClick={() => navigate('/client-stats')}
+                className="text-teal-600 text-sm font-semibold hover:text-teal-700"
+              >
+                Ver todas →
+              </button>
+            )}
+          </div>
           
           {myRatings.length === 0 ? (
             <div className="text-center py-8">
@@ -169,12 +278,11 @@ function ClientDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {myRatings.map((rating, index) => (
+            <div className="space-y-3">
+              {recentRatings.map((rating, index) => (
                 <div 
                   key={rating.id} 
-                  className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all animate-slideUp"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -205,21 +313,29 @@ function ClientDashboard() {
         </div>
 
         {/* Acciones rápidas */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <button
+            onClick={() => navigate('/client-stats')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-150 hover-lift"
+          >
+            <BarChart3 className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-gray-800">Estadísticas</p>
+          </button>
+
           <button
             onClick={() => navigate('/edit-profile')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
           >
             <Edit className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800">Editar Perfil</p>
+            <p className="text-xs font-semibold text-gray-800">Editar Perfil</p>
           </button>
 
           <button
             onClick={() => navigate('/search')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-250 hover-lift"
           >
             <User className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800">Buscar Profesionales</p>
+            <p className="text-xs font-semibold text-gray-800">Buscar</p>
           </button>
         </div>
       </div>
