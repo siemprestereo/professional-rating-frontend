@@ -19,6 +19,7 @@ function RatingsHistory() {
   }, [workHistoryIdFilter]);
 
   const loadRatings = async () => {
+    console.log('🔄 loadRatings called, workHistoryIdFilter:', workHistoryIdFilter);
     const token = localStorage.getItem('authToken');
     
     // Si viene workHistoryId, cargar ratings públicos por workHistoryId
@@ -38,16 +39,20 @@ function RatingsHistory() {
           
           // Establecer info del filtro
           if (data.length > 0) {
-            setFilterInfo({
+            const filter = {
               position: data[0].workplacePosition,
               businessName: data[0].businessName || data[0].workplaceName
-            });
+            };
+            console.log('✅ filterInfo set:', filter);
+            setFilterInfo(filter);
           } else {
-            setFilterInfo({ position: 'Trabajo', businessName: 'Sin especificar' });
+            const filter = { position: 'Trabajo', businessName: 'Sin especificar' };
+            console.log('✅ filterInfo set (empty):', filter);
+            setFilterInfo(filter);
           }
         }
       } catch (error) {
-        console.error('Error loading public ratings:', error);
+        console.error('❌ Error loading public ratings:', error);
       } finally {
         setLoading(false);
       }
@@ -74,10 +79,11 @@ function RatingsHistory() {
         const data = await response.json();
         console.log('✅ Ratings privados cargados:', data);
         setRatings(data);
+        console.log('✅ filterInfo cleared (private mode)');
         setFilterInfo(null);
       }
     } catch (error) {
-      console.error('Error loading ratings:', error);
+      console.error('❌ Error loading ratings:', error);
     } finally {
       setLoading(false);
     }
@@ -113,7 +119,7 @@ function RatingsHistory() {
             {/* Botón X flotante */}
             <button
               onClick={clearFilter}
-              className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all hover:scale-110"
+              className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all hover:scale-110 z-50"
             >
               <X className="w-6 h-6" />
             </button>
