@@ -119,7 +119,7 @@ function ClientDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Mi Dashboard</h1>
+          <h1 className="text-2xl font-bold text-white">Panel principal</h1>
           <button
             onClick={handleLogout}
             className="text-white flex items-center hover:scale-110 transition-transform"
