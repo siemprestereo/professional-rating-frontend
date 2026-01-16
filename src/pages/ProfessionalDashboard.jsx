@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import SearchableToggle from '../components/SearchableToggle';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -267,6 +268,9 @@ function ProfessionalDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
+        {/* ✨ NUEVO: SearchableToggle - PRIMERO */}
+        <SearchableToggle />
+
         {/* Más información sobre mi reputación */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
@@ -407,12 +411,12 @@ function ProfessionalDashboard() {
           </button>
 
           <button
-  onClick={() => navigate('/cv-view')}
-  className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
->
-  <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-  <p className="font-semibold text-gray-800">Mi CV</p>
-</button>
+            onClick={() => navigate('/cv-view')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
+          >
+            <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800">Mi CV</p>
+          </button>
         </div>
       </div>
 
