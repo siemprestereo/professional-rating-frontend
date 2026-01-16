@@ -125,33 +125,33 @@ function RatingsHistory() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
-      {/* Header tipo iOS con glassmorphism */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-gray-200">
-        <div className="flex items-center justify-between p-4">
+      {/* Header con gradiente tornasol */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
+        <div className="flex items-center justify-between">
           <div className="flex-1">
-            {filterInfo || filterInfoRef.current ? (
+            {workHistoryIdFilter && (filterInfo || filterInfoRef.current) ? (
               <>
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">CALIFICACIONES</p>
-                <p className="text-lg font-bold text-gray-800">{(filterInfo || filterInfoRef.current)?.position}</p>
-                <p className="text-sm text-gray-600">{(filterInfo || filterInfoRef.current)?.businessName}</p>
-                <p className="text-xs text-purple-600 font-semibold mt-1">
+                <p className="text-xs text-white/80 font-semibold uppercase tracking-wide mb-1">CALIFICACIONES</p>
+                <p className="text-2xl font-bold text-white">{(filterInfo || filterInfoRef.current)?.position}</p>
+                <p className="text-base text-white/90">{(filterInfo || filterInfoRef.current)?.businessName}</p>
+                <p className="text-sm text-white/80 font-semibold mt-1">
                   {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">HISTORIAL</p>
-                <p className="text-lg font-bold text-gray-800">Calificaciones</p>
-                <p className="text-xs text-purple-600 font-semibold mt-1">
+                <p className="text-xs text-white/80 font-semibold uppercase tracking-wide mb-1">HISTORIAL</p>
+                <p className="text-2xl font-bold text-white">Calificaciones</p>
+                <p className="text-sm text-white/80 font-semibold mt-1">
                   {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
                 </p>
               </>
             )}
           </div>
-          {filterInfo && (
+          {workHistoryIdFilter && (
             <button 
               onClick={clearFilter}
-              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-all"
+              className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
