@@ -403,7 +403,7 @@ function ProfessionalDashboard() {
             className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-200 hover-lift"
           >
             <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Ver mi perfil</p>
+            <p className="font-semibold text-gray-800">Mi perfil</p>
           </button>
 
           <button
@@ -411,7 +411,7 @@ function ProfessionalDashboard() {
   className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
 >
   <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-  <p className="font-semibold text-gray-800">Ver mi CV</p>
+  <p className="font-semibold text-gray-800">Mi CV</p>
 </button>
         </div>
       </div>
