@@ -123,62 +123,44 @@ function RatingsHistory() {
     );
   }
 
-  console.log('🎨 RENDER START');
-  console.log('   workHistoryIdFilter:', workHistoryIdFilter);
-  console.log('   ratings.length:', ratings.length);
-  console.log('   filterInfo:', filterInfo);
-  console.log('   filterInfoRef.current:', filterInfoRef.current);
-  console.log('   loading:', loading);
-
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
-      {/* ✅ NUEVO HEADER CON CARD FLOTANTE */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-32 relative">
-        {/* Botón X flotante - FUERA del condicional */}
-        {(filterInfo || filterInfoRef.current) && (
-          <button
-            onClick={clearFilter}
-            className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all hover:scale-110 z-50"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        )}
-        
-        {(filterInfo || filterInfoRef.current) ? (
-          /* Card flotante con glassmorphism */
-          <div className="bg-purple-600 rounded-3xl p-6 text-white" style={{ backgroundColor: 'rgba(139, 92, 246, 0.9)' }}>
-            <p className="text-sm font-semibold mb-2">
-              Calificaciones de:
-            </p>
-            <h1 className="text-3xl font-black mb-2">
-              {(filterInfo || filterInfoRef.current)?.position}
-            </h1>
-            <p className="text-xl mb-4">
-              {(filterInfo || filterInfoRef.current)?.businessName}
-            </p>
-            <div className="inline-block bg-white/30 px-4 py-2 rounded-full">
-              <p className="text-sm font-semibold">
-                {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
-              </p>
-            </div>
+      {/* Header tipo iOS con glassmorphism */}
+      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-gray-200">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex-1">
+            {filterInfo || filterInfoRef.current ? (
+              <>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">CALIFICACIONES</p>
+                <p className="text-lg font-bold text-gray-800">{(filterInfo || filterInfoRef.current)?.position}</p>
+                <p className="text-sm text-gray-600">{(filterInfo || filterInfoRef.current)?.businessName}</p>
+                <p className="text-xs text-purple-600 font-semibold mt-1">
+                  {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">HISTORIAL</p>
+                <p className="text-lg font-bold text-gray-800">Calificaciones</p>
+                <p className="text-xs text-purple-600 font-semibold mt-1">
+                  {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
+                </p>
+              </>
+            )}
           </div>
-        ) : (
-          /* Card para vista sin filtro */
-          <div className="bg-purple-600 rounded-3xl p-6 text-white" style={{ backgroundColor: 'rgba(139, 92, 246, 0.9)' }}>
-            <h1 className="text-3xl font-black mb-2">
-              Historial de Calificaciones
-            </h1>
-            <div className="inline-block bg-white/30 px-4 py-2 rounded-full">
-              <p className="text-sm font-semibold">
-                {ratings.length} calificación{ratings.length !== 1 ? 'es' : ''}
-              </p>
-            </div>
-          </div>
-        )}
+          {filterInfo && (
+            <button 
+              onClick={clearFilter}
+              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* ✅ CONTENIDO CON -MT PARA "EMPUJAR" EL CARD */}
-      <div className="px-4 -mt-20">
+      {/* ✅ CONTENIDO */}
+      <div className="px-4 py-6">
         {ratings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center animate-slideUp">
             {workHistoryIdFilter ? (
