@@ -102,21 +102,21 @@ function ClientStats() {
     // Medallas por cantidad
     if (total >= 1) earnedBadges.push({ 
       icon: '🥉', 
-      name: 'Primera Calificación', 
+      name: 'Primera calificación', 
       description: 'Has dado tu primera calificación',
       unlocked: true
     });
     
     if (total >= 5) earnedBadges.push({ 
       icon: '🥈', 
-      name: 'Calificador Activo', 
+      name: 'Calificador activo', 
       description: '5 calificaciones otorgadas',
       unlocked: true
     });
     
     if (total >= 10) earnedBadges.push({ 
       icon: '🥇', 
-      name: 'Calificador Experimentado', 
+      name: 'Calificador experimentado', 
       description: '10 calificaciones otorgadas',
       unlocked: true
     });
@@ -256,15 +256,15 @@ function ClientStats() {
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp">
-            <p className="text-3xl font-bold">{stats?.total || 0}</p>
+            <p className="text-3xl font-bold mb-1">{stats?.total || 0}</p>
             <p className="text-sm opacity-90">Calificaciones</p>
           </div>
           <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp delay-50">
-            <p className="text-3xl font-bold">{stats?.average || 0}</p>
+            <p className="text-3xl font-bold mb-1">{stats?.average || 0}</p>
             <p className="text-sm opacity-90">Tu Promedio</p>
           </div>
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp delay-100">
-            <p className="text-3xl font-bold">{stats?.categoriesCount || 0}</p>
+            <p className="text-3xl font-bold mb-1">{stats?.categoriesCount || 0}</p>
             <p className="text-sm opacity-90">Categorías</p>
           </div>
         </div>
@@ -272,14 +272,14 @@ function ClientStats() {
         {/* Gráfico de Actividad */}
         {stats && stats.monthlyActivity.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
               Actividad (últimos 6 meses)
             </h3>
             
-            <div className="relative h-48">
+            <div className="relative h-48 mt-4">
               {/* Eje Y */}
-              <div className="absolute left-0 top-0 bottom-8 w-8 flex flex-col justify-between text-xs text-gray-500">
+              <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
                 {[...Array(6)].map((_, i) => {
                   const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                   const value = Math.ceil(maxCount * (5 - i) / 5);
@@ -287,64 +287,66 @@ function ClientStats() {
                 })}
               </div>
 
-              {/* Gráfico */}
-              <svg className="absolute left-8 top-0 right-0 bottom-8 w-full" viewBox="0 0 500 180" preserveAspectRatio="none">
-                {/* Líneas de cuadrícula */}
-                {[...Array(6)].map((_, i) => (
-                  <line
-                    key={i}
-                    x1="0"
-                    y1={i * 36}
-                    x2="500"
-                    y2={i * 36}
-                    stroke="#e5e7eb"
-                    strokeWidth="1"
-                  />
-                ))}
+              {/* Contenedor del gráfico con overflow hidden */}
+              <div className="absolute left-10 top-0 right-2 bottom-10 overflow-hidden">
+                <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
+                  {/* Líneas de cuadrícula */}
+                  {[...Array(6)].map((_, i) => (
+                    <line
+                      key={i}
+                      x1="0"
+                      y1={i * 32}
+                      x2="500"
+                      y2={i * 32}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                    />
+                  ))}
 
-                {/* Línea del gráfico */}
-                <polyline
-                  points={stats.monthlyActivity.map((m, i) => {
+                  {/* Línea del gráfico */}
+                  <polyline
+                    points={stats.monthlyActivity.map((m, i) => {
+                      const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
+                      const x = (i * 500) / (stats.monthlyActivity.length - 1);
+                      const y = 10 + ((maxCount - m.count) / maxCount) * 140; // Invertido y con margen
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="url(#gradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Puntos */}
+                  {stats.monthlyActivity.map((m, i) => {
                     const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                     const x = (i * 500) / (stats.monthlyActivity.length - 1);
-                    const y = 180 - (m.count / maxCount) * 180;
-                    return `${x},${y}`;
-                  }).join(' ')}
-                  fill="none"
-                  stroke="url(#gradient)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                    const y = 10 + ((maxCount - m.count) / maxCount) * 140;
+                    return (
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r="5"
+                        fill="#10b981"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                    );
+                  })}
 
-                {/* Puntos */}
-                {stats.monthlyActivity.map((m, i) => {
-                  const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
-                  const x = (i * 500) / (stats.monthlyActivity.length - 1);
-                  const y = 180 - (m.count / maxCount) * 180;
-                  return (
-                    <circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="5"
-                      fill="#10b981"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                  );
-                })}
-
-                <defs>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#14b8a6" />
-                  </linearGradient>
-                </defs>
-              </svg>
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#14b8a6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
 
               {/* Eje X */}
-              <div className="absolute left-8 right-0 bottom-0 flex justify-between text-xs text-gray-500">
+              <div className="absolute left-10 right-2 bottom-0 flex justify-between text-xs text-gray-500">
                 {stats.monthlyActivity.map((m, i) => (
                   <span key={i} className="capitalize">{m.month}</span>
                 ))}
