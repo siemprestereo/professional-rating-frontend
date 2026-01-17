@@ -104,7 +104,7 @@ function SearchableToggle() {
           {searchable && (
             <div className="mt-3 flex items-center gap-2 text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg animate-fadeIn">
               <span className="font-semibold">✓</span>
-              <span>Tu perfil aparece en los resultados de búsqueda</span>
+              <span>Tu perfil aparece en todos los resultados de búsqueda</span>
             </div>
           )}
         </div>
