@@ -158,11 +158,18 @@ function SearchProfessionals() {
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="w-full px-4 py-3 pr-16 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
+            className="w-full px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
+            style={{ paddingRight: '3.5rem' }}
           />
           <button
             onClick={handleSearch}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 hover:scale-110 transition-all duration-300 ripple"
+            className="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 hover:scale-110 transition-all duration-300 ripple"
+            style={{
+              position: 'absolute',
+              right: '0.5rem',
+              top: '50%',
+              transform: 'translateY(-50%)'
+            }}
           >
             <Search className="w-5 h-5" />
           </button>
