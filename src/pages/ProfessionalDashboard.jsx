@@ -194,7 +194,6 @@ function ProfessionalDashboard() {
       }
       
       setQrCode(data);
-      setToast({ type: 'success', message: 'QR generado exitosamente' });
       
     } catch (error) {
       console.error('❌ Error generating QR:', error);
@@ -325,7 +324,7 @@ function ProfessionalDashboard() {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <QrCode className="w-4 h-4 md:w-5 md:h-5" />
-                    Generar QR (estará activo por 3 min)
+                    Generar QR (Estará activo por 3 min)
                   </span>
                 )}
               </button>
