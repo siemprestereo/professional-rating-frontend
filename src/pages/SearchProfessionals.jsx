@@ -149,7 +149,7 @@ function SearchProfessionals() {
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6 animate-slideDown">
         <h1 className="text-2xl font-bold text-white mb-4">Buscar profesionales</h1>
         
-        {/* Buscador */}
+        {/* Buscador - CORREGIDO */}
         <div className="relative animate-slideUp">
           <input
             ref={inputRef}
@@ -158,11 +158,11 @@ function SearchProfessionals() {
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="w-full px-4 py-3 pr-14 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
+            className="w-full px-4 py-3 pr-16 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
           />
           <button
             onClick={handleSearch}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 hover:scale-110 transition-all duration-300 ripple"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 hover:scale-110 transition-all duration-300 ripple"
           >
             <Search className="w-5 h-5" />
           </button>
