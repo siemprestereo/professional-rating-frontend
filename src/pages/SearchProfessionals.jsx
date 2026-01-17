@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home } from 'lucide-react';
 
@@ -7,6 +7,77 @@ function SearchProfessionals() {
   const [searchTerm, setSearchTerm] = useState('');
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [placeholder, setPlaceholder] = useState('');
+  const inputRef = useRef(null);
+
+  // Palabras para el placeholder animado
+  const placeholderWords = [
+    'Electricista',
+    'Personal trainer',
+    'Peluquero',
+    'Plomero',
+    'Carpintero',
+    'Mozo',
+    'Chef',
+    'Mecánico',
+    'Pintor',
+    'Jardinero'
+  ];
+
+  // Efecto para placeholder animado
+  useEffect(() => {
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timeoutId;
+
+    const type = () => {
+      // Si el usuario empezó a escribir, detener la animación
+      if (searchTerm.length > 0) {
+        setPlaceholder('');
+        return;
+      }
+
+      const currentWord = placeholderWords[wordIndex];
+      
+      if (isDeleting) {
+        // Borrando
+        setPlaceholder(currentWord.substring(0, charIndex - 1));
+        charIndex--;
+      } else {
+        // Escribiendo
+        setPlaceholder(currentWord.substring(0, charIndex + 1));
+        charIndex++;
+      }
+
+      // Determinar velocidad
+      let typeSpeed = isDeleting ? 50 : 100;
+
+      // Si terminó de escribir la palabra
+      if (!isDeleting && charIndex === currentWord.length) {
+        typeSpeed = 2000; // Pausa de 2 segundos
+        isDeleting = true;
+      }
+      // Si terminó de borrar
+      else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % placeholderWords.length; // Siguiente palabra
+        typeSpeed = 500; // Pequeña pausa antes de empezar la siguiente
+      }
+
+      timeoutId = setTimeout(type, typeSpeed);
+    };
+
+    // Iniciar animación
+    type();
+
+    // Limpiar timeout al desmontar
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [searchTerm]);
 
   // Mock data - en producción esto vendría del backend
   const mockProfessionals = [
@@ -63,11 +134,12 @@ function SearchProfessionals() {
         {/* Buscador */}
         <div className="relative animate-slideUp">
           <input
+            ref={inputRef}
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Buscar por profesión u oficio..."
+            placeholder={placeholder}
             className="w-full px-4 py-3 pr-12 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
           />
           <button
