@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-{/*import SearchableToggle from '../components/SearchableToggle';*/}
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -268,11 +267,86 @@ function ProfessionalDashboard() {
 
       {/* Contenido*/}
       <div className="px-4 -mt-16">
-        {/* ✨ NUEVO: SearchableToggle - PRIMERO */}
-        {/*<SearchableToggle />*/}
 
-        {/* Más información sobre mi reputación */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
+        {/* 🔥 GENERAR QR - PRIMERO Y MÁS DESTACADO */}
+        <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden">
+          {/* Efecto de brillo animado */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 animate-pulse-slow">
+                <QrCode className="w-8 h-8 text-white drop-shadow-lg" />
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-bold text-white text-center mb-2 drop-shadow-md">
+              🎯 Código QR para Calificaciones
+            </h3>
+            <p className="text-white/90 text-center text-sm mb-4">
+              Generá tu QR y recibí calificaciones en tiempo real
+            </p>
+            
+            {!qrCode ? (
+              <button
+                onClick={handleGenerateQR}
+                disabled={generatingQR}
+                className="w-full bg-white text-orange-600 font-bold py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl"
+              >
+                {generatingQR ? (
+                  <span className="flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generando...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <QrCode className="w-5 h-5" />
+                    Generar QR (activo 3 min)
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div className="text-center animate-scaleIn">
+                {qrCode.qrPngBase64 ? (
+                  <>
+                    <div className="bg-white rounded-xl p-4 mb-3 inline-block">
+                      <img
+                        src={`data:image/png;base64,${qrCode.qrPngBase64}`}
+                        alt="QR Code"
+                        className="mx-auto border-2 border-orange-200 rounded-lg max-w-xs animate-pulseGlow"
+                      />
+                    </div>
+                    <p className="text-sm text-white/90 mb-1">
+                      <span className="font-semibold">Código:</span> {qrCode.code}
+                    </p>
+                    <p className="text-sm text-white/90 mb-3">
+                      <span className="font-semibold">Válido hasta las </span>
+                      {qrCode.expiresAt ? 
+                        new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                          timeZone: 'America/Argentina/Buenos_Aires'
+                        }) + ' hs'
+                        : 'Fecha inválida'}
+                    </p>
+                    <button
+                      onClick={handleGenerateQR}
+                      className="bg-white text-orange-600 px-6 py-2 rounded-full font-semibold hover:scale-105 transition-all duration-300 ripple shadow-lg"
+                    >
+                      Generar nuevo QR
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-white animate-shake">Error: No se pudo generar la imagen del QR</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Ver estadísticas - SEGUNDO */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50 hover-lift">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
             Más información sobre mi reputación
@@ -286,72 +360,13 @@ function ProfessionalDashboard() {
           </button>
         </div>
 
-        {/* Generar QR */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <QrCode className="w-5 h-5 mr-2 text-purple-600" />
-            Código QR para Calificaciones
-          </h3>
-          
-          {!qrCode ? (
-            <button
-              onClick={handleGenerateQR}
-              disabled={generatingQR}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple"
-            >
-              {generatingQR ? (
-                <span className="flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generando...
-                </span>
-              ) : (
-                'Generar QR (activo por 3 minutos)'
-              )}
-            </button>
-          ) : (
-            <div className="text-center animate-scaleIn">
-              {qrCode.qrPngBase64 ? (
-                <>
-                  <img
-                    src={`data:image/png;base64,${qrCode.qrPngBase64}`}
-                    alt="QR Code"
-                    className="mx-auto mb-3 border-4 border-gray-200 rounded-lg max-w-xs animate-pulseGlow"
-                  />
-                  <p className="text-sm text-gray-600 mb-1">
-                    <span className="font-semibold">Código:</span> {qrCode.code}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-3">
-                    <span className="font-semibold">Válido hasta las </span>
-                    {qrCode.expiresAt ? 
-                      new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                        timeZone: 'America/Argentina/Buenos_Aires'
-                      }) + ' hs'
-                      : 'Fecha inválida'}
-                  </p>
-                  <button
-                    onClick={handleGenerateQR}
-                    className="bg-purple-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-purple-700 transition-all duration-300 ripple"
-                  >
-                    Generar nuevo QR
-                  </button>
-                </>
-              ) : (
-                <p className="text-red-500 animate-shake">Error: No se pudo generar la imagen del QR</p>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Calificaciones recientes */}
         <div 
           onClick={() => {
             console.log('🔍 Click detectado en calificaciones recientes');
             navigate('/ratings-history');
           }}
-          className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift cursor-pointer"
+          className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift cursor-pointer"
         >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800 flex items-center">
@@ -400,22 +415,22 @@ function ProfessionalDashboard() {
           )}
         </div>
 
-        {/* Acciones rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Acciones rápidas - MODIFICADO: 2 botones en fila */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             onClick={() => navigate('/my-profile')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-200 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-150 hover-lift"
           >
-            <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Mi perfil</p>
+            <User className="w-7 h-7 text-blue-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800 text-sm">Mi perfil</p>
           </button>
 
           <button
             onClick={() => navigate('/cv-view')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-200 hover-lift"
           >
-            <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Mi CV</p>
+            <ClipboardList className="w-7 h-7 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800 text-sm">Mi CV</p>
           </button>
         </div>
       </div>
