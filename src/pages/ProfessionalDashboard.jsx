@@ -270,7 +270,7 @@ function ProfessionalDashboard() {
 
         {/* 🔥 GENERAR QR - PRIMERO Y MÁS DESTACADO */}
         <div 
-          className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden"
+          className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-4 md:p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden"
           onClick={(e) => {
             // Cerrar QR si se hace click fuera del contenido del QR
             if (qrCode && e.target === e.currentTarget) {
@@ -289,7 +289,7 @@ function ProfessionalDashboard() {
                   e.stopPropagation();
                   setQrCode(null);
                 }}
-                className="absolute top-0 right-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
+                className="absolute -top-1 -right-1 md:top-0 md:right-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
                 aria-label="Cerrar QR"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,16 +298,16 @@ function ProfessionalDashboard() {
               </button>
             )}
 
-            <div className="flex items-center justify-center mb-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 animate-pulse-slow">
-                <QrCode className="w-8 h-8 text-white drop-shadow-lg" />
+            <div className="flex items-center justify-center mb-2 md:mb-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 md:p-3 animate-pulse-slow">
+                <QrCode className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-lg" />
               </div>
             </div>
             
-            <h3 className="text-xl font-bold text-white text-center mb-2 drop-shadow-md">
+            <h3 className="text-lg md:text-xl font-bold text-white text-center mb-1 md:mb-2 drop-shadow-md px-2">
               🎯 Código QR para Calificaciones
             </h3>
-            <p className="text-white/90 text-center text-sm mb-4">
+            <p className="text-white/90 text-center text-xs md:text-sm mb-3 md:mb-4 px-2">
               Generá tu QR y recibí calificaciones en tiempo real
             </p>
             
@@ -315,17 +315,17 @@ function ProfessionalDashboard() {
               <button
                 onClick={handleGenerateQR}
                 disabled={generatingQR}
-                className="w-full bg-white text-orange-600 font-bold py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl"
+                className="w-full bg-white text-orange-600 font-bold py-3 md:py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl text-sm md:text-base"
               >
                 {generatingQR ? (
                   <span className="flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
                     Generando...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <QrCode className="w-5 h-5" />
-                    Generar QR (activo 3 min)
+                    <QrCode className="w-4 h-4 md:w-5 md:h-5" />
+                    Generar QR (estará activo por 3 min)
                   </span>
                 )}
               </button>
@@ -336,17 +336,17 @@ function ProfessionalDashboard() {
               >
                 {qrCode.qrPngBase64 ? (
                   <>
-                    <div className="bg-white rounded-xl p-4 mb-3 inline-block">
+                    <div className="bg-white rounded-xl p-3 md:p-4 mb-2 md:mb-3 mx-auto inline-block max-w-full">
                       <img
                         src={`data:image/png;base64,${qrCode.qrPngBase64}`}
                         alt="QR Code"
-                        className="mx-auto border-2 border-orange-200 rounded-lg max-w-xs animate-pulseGlow"
+                        className="mx-auto border-2 border-orange-200 rounded-lg w-full max-w-[240px] md:max-w-xs animate-pulseGlow"
                       />
                     </div>
-                    <p className="text-sm text-white/90 mb-1">
+                    <p className="text-xs md:text-sm text-white/90 mb-1 px-2">
                       <span className="font-semibold">Código:</span> {qrCode.code}
                     </p>
-                    <p className="text-sm text-white/90 mb-3">
+                    <p className="text-xs md:text-sm text-white/90 mb-2 md:mb-3 px-2">
                       <span className="font-semibold">Válido hasta las </span>
                       {qrCode.expiresAt ? 
                         new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
@@ -359,13 +359,13 @@ function ProfessionalDashboard() {
                     </p>
                     <button
                       onClick={handleGenerateQR}
-                      className="bg-white text-orange-600 px-6 py-2 rounded-full font-semibold hover:scale-105 transition-all duration-300 ripple shadow-lg"
+                      className="bg-white text-orange-600 px-4 md:px-6 py-2 rounded-full font-semibold hover:scale-105 transition-all duration-300 ripple shadow-lg text-sm md:text-base"
                     >
                       Generar nuevo QR
                     </button>
                   </>
                 ) : (
-                  <p className="text-white animate-shake">Error: No se pudo generar la imagen del QR</p>
+                  <p className="text-white animate-shake text-sm">Error: No se pudo generar la imagen del QR</p>
                 )}
               </div>
             )}
