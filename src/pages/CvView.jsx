@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Star, Briefcase, GraduationCap, Award, Loader2, Home, ChevronRight } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
+import SearchableToggle from '../components/SearchableToggle';
 
 function CvView() {
   const navigate = useNavigate();
@@ -155,6 +156,9 @@ function CvView() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
+        {/* ✨ NUEVO: SearchableToggle - PRIMERO */}
+        <SearchableToggle />
+
         {/* TRABAJO AUTÓNOMO ACTUAL */}
         {freelanceActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
@@ -329,34 +333,34 @@ function CvView() {
           </div>
         )}
 
-        {/* Botones de acción */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Botones de acción - MODIFICADO: 3 botones en fila */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <button
             onClick={() => navigate('/edit-cv')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
           >
-            <Briefcase className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Editar CV</p>
+            <Briefcase className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800 text-sm">Editar CV</p>
           </button>
 
           <button
             onClick={() => setShowShareModal(true)}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
           >
-            <svg className="w-8 h-8 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
-            <p className="font-semibold text-gray-800">Compartir</p>
+            <p className="font-semibold text-gray-800 text-sm">Compartir</p>
           </button>
 
           <button
             onClick={() => window.open(`${backendUrl}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center hover-lift cursor-pointer"
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
           >
-            <svg className="w-8 h-8 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
-            <p className="font-semibold text-gray-800">Descargar PDF</p>
+            <p className="font-semibold text-gray-800 text-sm">PDF</p>
           </button>
         </div>
       </div>

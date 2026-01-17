@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-import SearchableToggle from '../components/SearchableToggle';
+{/*import SearchableToggle from '../components/SearchableToggle';*/}
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -269,7 +269,7 @@ function ProfessionalDashboard() {
       {/* Contenido*/}
       <div className="px-4 -mt-16">
         {/* ✨ NUEVO: SearchableToggle - PRIMERO */}
-        <SearchableToggle />
+        {/*<SearchableToggle />*/}
 
         {/* Más información sobre mi reputación */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
