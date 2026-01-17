@@ -269,11 +269,35 @@ function ProfessionalDashboard() {
       <div className="px-4 -mt-16">
 
         {/* 🔥 GENERAR QR - PRIMERO Y MÁS DESTACADO */}
-        <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden">
+        <div 
+          className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden"
+          onClick={(e) => {
+            // Cerrar QR si se hace click fuera del contenido del QR
+            if (qrCode && e.target === e.currentTarget) {
+              setQrCode(null);
+            }
+          }}
+        >
           {/* Efecto de brillo animado */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
           
           <div className="relative z-10">
+            {/* Botón X para cerrar (solo visible cuando hay QR) */}
+            {qrCode && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQrCode(null);
+                }}
+                className="absolute top-0 right-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
+                aria-label="Cerrar QR"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+
             <div className="flex items-center justify-center mb-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 animate-pulse-slow">
                 <QrCode className="w-8 h-8 text-white drop-shadow-lg" />
@@ -306,7 +330,10 @@ function ProfessionalDashboard() {
                 )}
               </button>
             ) : (
-              <div className="text-center animate-scaleIn">
+              <div 
+                className="text-center animate-scaleIn"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {qrCode.qrPngBase64 ? (
                   <>
                     <div className="bg-white rounded-xl p-4 mb-3 inline-block">
