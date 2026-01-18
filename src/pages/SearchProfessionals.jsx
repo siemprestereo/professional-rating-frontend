@@ -14,9 +14,11 @@ function SearchProfessionals() {
   // Palabras para el placeholder animado
   const placeholderWords = [
     'Electricista',
-    'Personal trainer',
+    'Instructor de buceo',
     'Peluquero',
-    'Plomero',
+    'Personal trainer',
+        'Plomero',
+    'Instructor de buceo',
     'Carpintero',
     'Mozo',
     'Chef',
@@ -32,7 +34,7 @@ function SearchProfessionals() {
     { name: 'Mozo', emoji: '🍽️', color: 'purple', icon: UtensilsCrossed },
     { name: 'Carpintero', emoji: '🪚', color: 'green', icon: Hammer },
     { name: 'Peluquero', emoji: '💇', color: 'pink', icon: Scissors },
-    { name: 'Pintor', emoji: '🎨', color: 'yellow', icon: Paintbrush }
+    { name: 'Pintor', emoji: '🖌️', color: 'yellow', icon: Paintbrush }
   ];
 
   // Efecto para placeholder animado
