@@ -14,11 +14,9 @@ function SearchProfessionals() {
   // Palabras para el placeholder animado
   const placeholderWords = [
     'Electricista',
-    'Instructor de buceo',
-    'Peluquero',
     'Personal trainer',
-        'Plomero',
-    'Instructor de buceo',
+    'Peluquero',
+    'Plomero',
     'Carpintero',
     'Mozo',
     'Chef',
@@ -148,8 +146,8 @@ function SearchProfessionals() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6 animate-slideDown">
-        <h1 className="text-2xl font-bold text-white mb-4">Buscar profesionales</h1>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-4 pb-6 md:pt-6 animate-slideDown">
+        <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Buscar profesionales</h1>
         
         {/* Buscador - CORREGIDO */}
         <div className="relative animate-slideUp">
