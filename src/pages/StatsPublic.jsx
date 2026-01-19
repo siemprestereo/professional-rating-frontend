@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { TrendingUp, Award, Calendar, Building2, ArrowLeft, Loader2, Home } from 'lucide-react';
+import { TrendingUp, Award, Calendar, Building2, Home, Loader2 } from 'lucide-react';
 
 function StatsPublic() {
   const { professionalId } = useParams();
@@ -72,8 +71,6 @@ function StatsPublic() {
     }
   };
 
-  const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'];
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -123,32 +120,85 @@ function StatsPublic() {
         {/* Evolución Mensual */}
         {monthlyData.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Calendar className="w-6 h-6 mr-2 text-purple-600" />
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+              <TrendingUp className="w-6 h-6 mr-2 text-purple-600" />
               Evolución Mensual
             </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis domain={[0, 5]} />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                          <p className="font-semibold">{payload[0].payload.month}</p>
-                          <p className="text-purple-600">Promedio: {payload[0].value} ⭐</p>
-                          <p className="text-gray-600 text-sm">{payload[0].payload.count} calificaciones</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="average" fill="#8B5CF6" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            
+            <div className="relative h-64 mt-4">
+              {/* Eje Y */}
+              <div className="absolute left-0 top-0 bottom-10 w-10 flex flex-col justify-between text-xs text-gray-500">
+                {[5, 4, 3, 2, 1, 0].map((value) => (
+                  <span key={value}>{value}</span>
+                ))}
+              </div>
+
+              {/* Contenedor del gráfico con overflow hidden */}
+              <div className="absolute left-12 top-0 right-2 bottom-10 overflow-hidden">
+                <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                  {/* Líneas de cuadrícula */}
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <line
+                      key={i}
+                      x1="0"
+                      y1={i * 40}
+                      x2="500"
+                      y2={i * 40}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                    />
+                  ))}
+
+                  {/* Línea del gráfico */}
+                  <polyline
+                    points={monthlyData.map((m, i) => {
+                      const x = monthlyData.length > 1 ? (i * 500) / (monthlyData.length - 1) : 250;
+                      const y = 10 + ((5 - m.average) / 5) * 180; // Escala de 0-5
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="url(#gradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Puntos */}
+                  {monthlyData.map((m, i) => {
+                    const x = monthlyData.length > 1 ? (i * 500) / (monthlyData.length - 1) : 250;
+                    const y = 10 + ((5 - m.average) / 5) * 180;
+                    return (
+                      <g key={i}>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="6"
+                          fill="#8B5CF6"
+                          stroke="white"
+                          strokeWidth="2"
+                        />
+                        {/* Tooltip en hover */}
+                        <title>{`${m.month}: ${m.average} ⭐ (${m.count} calificaciones)`}</title>
+                      </g>
+                    );
+                  })}
+
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#EC4899" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
+              {/* Eje X */}
+              <div className="absolute left-12 right-2 bottom-0 flex justify-between text-xs text-gray-500">
+                {monthlyData.map((m, i) => (
+                  <span key={i} className="capitalize">{m.month}</span>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
