@@ -20,7 +20,7 @@ function LandingPage() {
             onClick={() => navigate('/')}
             className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
           >
-            <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+           {/* <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />*/}
             <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
               Calificalo
             </span>
