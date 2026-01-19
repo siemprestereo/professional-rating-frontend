@@ -18,13 +18,12 @@ function LandingPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div 
             onClick={() => navigate('/')}
-            className="flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform"
+            className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
           >
-            <img 
-               src="/logo-calificalo-transparent.png" 
-  alt="Calificalo" 
-  className="h-20 w-auto object-contain"
-            />
+            <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+            <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
+              Calificalo
+            </span>
           </div>
           
           <div className="flex gap-3">
