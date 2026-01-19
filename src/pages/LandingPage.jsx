@@ -49,9 +49,9 @@ function LandingPage() {
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
         <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
-          Construí tu Reputación
+          Construí tu reputación
           <br />
-          <span className="text-yellow-300">Profesional</span>
+          <span className="text-yellow-300">profesional</span>
         </h1>
         
         <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100">
