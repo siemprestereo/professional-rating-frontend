@@ -158,11 +158,13 @@ function StatsPublic() {
             </h2>
             
             <div className="relative h-48 mt-4">
-              {/* Eje Y - Siempre de 0 a 5 */}
+              {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
-                {[5, 4, 3, 2, 1, 0].map((value) => (
-                  <span key={value}>{value}</span>
-                ))}
+                {[...Array(6)].map((_, i) => {
+                  const maxCount = Math.max(...monthlyData.map(m => m.average), 1);
+                  const value = Math.ceil(maxCount * (5 - i) / 5);
+                  return <span key={i}>{value}</span>;
+                })}
               </div>
 
               {/* Contenedor del gráfico con overflow hidden */}
@@ -184,8 +186,9 @@ function StatsPublic() {
                   {/* Línea del gráfico */}
                   <polyline
                     points={monthlyData.map((m, i) => {
+                      const maxCount = Math.max(...monthlyData.map(m => m.average), 1);
                       const x = (i * 500) / (monthlyData.length - 1);
-                      const y = 10 + ((5 - m.average) / 5) * 140; // Escala fija de 0-5
+                      const y = 10 + ((maxCount - m.average) / maxCount) * 140; // Invertido y con margen
                       return `${x},${y}`;
                     }).join(' ')}
                     fill="none"
@@ -197,8 +200,9 @@ function StatsPublic() {
 
                   {/* Puntos */}
                   {monthlyData.map((m, i) => {
+                    const maxCount = Math.max(...monthlyData.map(m => m.average), 1);
                     const x = (i * 500) / (monthlyData.length - 1);
-                    const y = 10 + ((5 - m.average) / 5) * 140; // Escala fija de 0-5
+                    const y = 10 + ((maxCount - m.average) / maxCount) * 140;
                     return (
                       <circle
                         key={i}
