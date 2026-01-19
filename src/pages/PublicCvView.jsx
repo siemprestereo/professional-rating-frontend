@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, Briefcase, GraduationCap, Award, Star, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Loader2, GraduationCap, Award, Star, ChevronRight, Home } from 'lucide-react';
 
 function PublicCvView() {
   const { professionalId } = useParams();
@@ -76,6 +76,10 @@ function PublicCvView() {
     navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
   };
 
+  const handleHomeClick = () => {
+    window.location.href = 'https://professional-rating-frontend.vercel.app/';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -99,7 +103,7 @@ function PublicCvView() {
             El CV que buscás no existe o ya no está disponible
           </p>
           <button
-            onClick={() => navigate('/')}
+            onClick={handleHomeClick}
             className="bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all"
           >
             Volver al inicio
@@ -109,34 +113,13 @@ function PublicCvView() {
     );
   }
 
-  // Separar trabajos por tipo y estado
   const freelanceActive = (cvData.workHistory || []).filter(w => w.isFreelance && w.isActive);
   const employeeActive = (cvData.workHistory || []).filter(w => !w.isFreelance && w.isActive);
   const pastJobs = (cvData.workHistory || []).filter(w => !w.isActive);
 
-  console.log('📊 Trabajos separados:', {
-    freelanceActive,
-    employeeActive,
-    pastJobs
-  });
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-8">
-      {/* Navbar simple */}
-      <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center">
-          <button 
-            onClick={() => navigate('/')}
-            className="flex items-center text-white hover:text-white/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            <span className="font-semibold">Volver</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Header */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+    <div className="min-h-screen bg-gray-50 pb-24">
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600">
             {cvData.professionalName?.charAt(0) || 'P'}
@@ -150,7 +133,6 @@ function PublicCvView() {
             </p>
           )}
           
-          {/* Reputación */}
           <div className="flex items-center justify-center mb-2">
             {renderStars(cvData.reputationScore || 0)}
             <span className="ml-2 text-white font-semibold text-lg">
@@ -163,10 +145,8 @@ function PublicCvView() {
         </div>
       </div>
 
-      {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
-        {/* Información de Contacto */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <span className="text-2xl mr-2">📞</span>
@@ -174,7 +154,6 @@ function PublicCvView() {
           </h2>
           
           <div className="space-y-3">
-            {/* Email */}
             {cvData.professionalEmail && (
               <a
                 href={`mailto:${cvData.professionalEmail}`}
@@ -195,7 +174,6 @@ function PublicCvView() {
               </a>
             )}
 
-            {/* Teléfono / WhatsApp */}
             {cvData.professionalPhone && (
               <a
                 href={`https://wa.me/${cvData.professionalPhone.replace(/[^0-9]/g, '')}`}
@@ -218,7 +196,6 @@ function PublicCvView() {
               </a>
             )}
 
-            {/* Ubicación */}
             {cvData.professionalLocation && (
               <div className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -236,7 +213,6 @@ function PublicCvView() {
           </div>
         </div>
 
-        {/* Descripción */}
         {cvData.description && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl font-bold text-gray-800 mb-3">Sobre mí</h2>
@@ -244,7 +220,6 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* Botón Ver Estadísticas */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <button
             onClick={() => navigate(`/stats-public/${professionalId}`)}
@@ -259,7 +234,6 @@ function PublicCvView() {
           </button>
         </div>
 
-        {/* TRABAJO AUTÓNOMO ACTUAL */}
         {freelanceActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -298,7 +272,6 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* TRABAJOS ACTUALES */}
         {employeeActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -328,7 +301,6 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* EXPERIENCIAS PASADAS */}
         {pastJobs.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -365,7 +337,6 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* Educación */}
         {cvData.education && cvData.education.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -389,7 +360,6 @@ function PublicCvView() {
           </div>
         )}
 
-        {/* Certificaciones */}
         {cvData.certifications && cvData.certifications.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -410,6 +380,16 @@ function PublicCvView() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={handleHomeClick}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Ir al inicio"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
       </div>
     </div>
   );
