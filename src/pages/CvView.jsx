@@ -52,12 +52,11 @@ function CvView() {
   const loadSearchableStatus = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const professional = JSON.parse(localStorage.getItem('professional'));
       
-      if (!token || !professional?.id) return;
+      if (!token) return;
 
       const response = await fetch(
-        `${backendUrl}/api/professionals/${professional.id}/searchable-status`,
+        `${backendUrl}/api/professionals/me/searchable-status`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -76,12 +75,11 @@ function CvView() {
     try {
       setIsAnimating(true);
       const token = localStorage.getItem('authToken');
-      const professional = JSON.parse(localStorage.getItem('professional'));
       
-      if (!token || !professional?.id) return;
+      if (!token) return;
 
       const response = await fetch(
-        `${backendUrl}/api/professionals/${professional.id}/searchable`,
+        `${backendUrl}/api/professionals/me/searchable`,
         {
           method: 'PUT',
           headers: {
@@ -211,7 +209,7 @@ function CvView() {
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
-        {/* SearchableToggle - MODIFICADO */}
+        {/* SearchableToggle */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           {/* Header centrado */}
           <div className="flex items-center justify-center mb-4">
