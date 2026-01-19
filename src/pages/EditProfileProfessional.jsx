@@ -59,13 +59,16 @@ function EditProfileProfessional() {
     const savedData = localStorage.getItem('professional');
     if (savedData) {
       const data = JSON.parse(savedData);
+      console.log('Professional data:', data); // Debug
+      console.log('professionType value:', data.professionType); // Debug
       setProfessional(data);
       setName(data.name || '');
       setEmail(data.email || '');
       setPhone(data.phone || '');
       setLocation(data.location || '');
       setProfessionalTitle(data.professionalTitle || '');
-      setProfessionType(data.professionType || '');
+      // Asegurarse de que el valor sea string y esté en mayúsculas
+      setProfessionType(data.professionType ? String(data.professionType).toUpperCase() : '');
       setLoading(false);
     } else {
       navigate('/professional-login');
@@ -234,7 +237,9 @@ function EditProfileProfessional() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">Tu área de especialización</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Tu área de especialización {professionType && `(actual: ${professionType})`}
+              </p>
             </div>
 
             {/* Título Profesional */}
