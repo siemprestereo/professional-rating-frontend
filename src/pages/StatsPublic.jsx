@@ -37,6 +37,32 @@ function StatsPublic() {
     return translations[type] || type;
   };
 
+  const fillLast6Months = (data) => {
+    const now = new Date();
+    const monthlyMap = new Map();
+    
+    // Crear mapa con los datos existentes
+    data.forEach(item => {
+      monthlyMap.set(item.month, item.average);
+    });
+    
+    // Generar últimos 6 meses
+    const result = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = month.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit' }); // Formato YYYY-MM
+      const monthName = month.toLocaleDateString('es-AR', { month: 'short' });
+      
+      result.push({
+        month: monthName,
+        average: monthlyMap.get(monthKey) || 0,
+        count: monthlyMap.get(monthKey) ? 1 : 0
+      });
+    }
+    
+    return result;
+  };
+
   const loadAllStats = async () => {
     try {
       const [monthlyRes, businessRes, professionRes] = await Promise.all([
@@ -47,11 +73,17 @@ function StatsPublic() {
 
       if (monthlyRes.ok) {
         const data = await monthlyRes.json();
-        setMonthlyData(data.map(item => ({
+        const mappedData = data.map(item => ({
           month: item.month,
-          average: parseFloat(item.average.toFixed(2)),
-          count: item.count
-        })));
+          average: parseFloat(item.average.toFixed(2))
+        }));
+        
+        // Rellenar con los últimos 6 meses
+        const filledData = fillLast6Months(mappedData);
+        setMonthlyData(filledData);
+      } else {
+        // Si no hay datos, mostrar últimos 6 meses en 0
+        setMonthlyData(fillLast6Months([]));
       }
 
       if (businessRes.ok) {
@@ -122,28 +154,30 @@ function StatsPublic() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
               <TrendingUp className="w-6 h-6 mr-2 text-purple-600" />
-              Evolución Mensual
+              Evolución Mensual (últimos 6 meses)
             </h2>
             
-            <div className="relative h-64 mt-4">
+            <div className="relative h-48 mt-4">
               {/* Eje Y */}
-              <div className="absolute left-0 top-0 bottom-10 w-10 flex flex-col justify-between text-xs text-gray-500">
-                {[5, 4, 3, 2, 1, 0].map((value) => (
-                  <span key={value}>{value}</span>
-                ))}
+              <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
+                {[...Array(6)].map((_, i) => {
+                  const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
+                  const value = Math.ceil(maxAverage * (5 - i) / 5);
+                  return <span key={i}>{value}</span>;
+                })}
               </div>
 
               {/* Contenedor del gráfico con overflow hidden */}
-              <div className="absolute left-12 top-0 right-2 bottom-10 overflow-hidden">
-                <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+              <div className="absolute left-10 top-0 right-2 bottom-10 overflow-hidden">
+                <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
                   {/* Líneas de cuadrícula */}
-                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                  {[...Array(6)].map((_, i) => (
                     <line
                       key={i}
                       x1="0"
-                      y1={i * 40}
+                      y1={i * 32}
                       x2="500"
-                      y2={i * 40}
+                      y2={i * 32}
                       stroke="#e5e7eb"
                       strokeWidth="1"
                     />
@@ -152,8 +186,9 @@ function StatsPublic() {
                   {/* Línea del gráfico */}
                   <polyline
                     points={monthlyData.map((m, i) => {
-                      const x = monthlyData.length > 1 ? (i * 500) / (monthlyData.length - 1) : 250;
-                      const y = 10 + ((5 - m.average) / 5) * 180; // Escala de 0-5
+                      const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
+                      const x = (i * 500) / (monthlyData.length - 1);
+                      const y = 10 + ((maxAverage - m.average) / maxAverage) * 140;
                       return `${x},${y}`;
                     }).join(' ')}
                     fill="none"
@@ -165,21 +200,19 @@ function StatsPublic() {
 
                   {/* Puntos */}
                   {monthlyData.map((m, i) => {
-                    const x = monthlyData.length > 1 ? (i * 500) / (monthlyData.length - 1) : 250;
-                    const y = 10 + ((5 - m.average) / 5) * 180;
+                    const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
+                    const x = (i * 500) / (monthlyData.length - 1);
+                    const y = 10 + ((maxAverage - m.average) / maxAverage) * 140;
                     return (
-                      <g key={i}>
-                        <circle
-                          cx={x}
-                          cy={y}
-                          r="6"
-                          fill="#8B5CF6"
-                          stroke="white"
-                          strokeWidth="2"
-                        />
-                        {/* Tooltip en hover */}
-                        <title>{`${m.month}: ${m.average} ⭐ (${m.count} calificaciones)`}</title>
-                      </g>
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r="5"
+                        fill="#10b981"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
                     );
                   })}
 
@@ -193,7 +226,7 @@ function StatsPublic() {
               </div>
 
               {/* Eje X */}
-              <div className="absolute left-12 right-2 bottom-0 flex justify-between text-xs text-gray-500">
+              <div className="absolute left-10 right-2 bottom-0 flex justify-between text-xs text-gray-500">
                 {monthlyData.map((m, i) => (
                   <span key={i} className="capitalize">{m.month}</span>
                 ))}
