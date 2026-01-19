@@ -4,13 +4,13 @@ import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus } from 'lucide
 function LandingPage() {
   const navigate = useNavigate();
 
-const handleGoogleLogin = () => {
-  // Hardcodeado temporalmente para producción
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  console.log('Backend URL:', backendUrl);
-  console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`);
-  window.location.href = `${backendUrl}/oauth2/authorization/google`;
-};
+  const handleGoogleLogin = () => {
+    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+    console.log('Backend URL:', backendUrl);
+    console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`);
+    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
       {/* Navbar */}
@@ -18,9 +18,13 @@ const handleGoogleLogin = () => {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div 
             onClick={() => navigate('/')}
-            className="text-2xl font-bold text-white cursor-pointer hover:scale-105 transition-transform"
+            className="flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform"
           >
-            ⭐ Calificalo
+            <img 
+              src="/logo-calificalo.jpg" 
+              alt="Calificalo" 
+              className="h-12 w-auto rounded-lg shadow-lg"
+            />
           </div>
           
           <div className="flex gap-3">
