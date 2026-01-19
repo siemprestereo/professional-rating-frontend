@@ -17,13 +17,13 @@ function LandingPage() {
       <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-4 animate-slideDown">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
-          >
-            <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
-              Calificalo
-            </span>
-          </div>
+  onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+  className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
+>
+  <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
+    Calificalo
+  </span>
+</div>
           
           <div className="flex gap-3">
             <button
