@@ -101,7 +101,7 @@ function LandingPage() {
         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-500 hover-lift">
           <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-white mb-3">
-            Conseguí Mejores Trabajos
+            Conseguí más y mejores trabajos
           </h3>
           <p className="text-white/80">
             Los empleadores buscan profesionales con buena reputación
