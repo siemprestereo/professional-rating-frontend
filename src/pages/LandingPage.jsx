@@ -21,9 +21,9 @@ function LandingPage() {
             className="flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform"
           >
             <img 
-              src="/logo-calificalo.jpg" 
-              alt="Calificalo" 
-              className="h-12 w-auto rounded-lg shadow-lg"
+               src="/logo-calificalo-transparent.png" 
+  alt="Calificalo" 
+  className="h-20 w-auto object-contain"
             />
           </div>
           
