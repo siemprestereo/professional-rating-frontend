@@ -158,13 +158,11 @@ function StatsPublic() {
             </h2>
             
             <div className="relative h-48 mt-4">
-              {/* Eje Y */}
+              {/* Eje Y - Siempre de 0 a 5 */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
-                {[...Array(6)].map((_, i) => {
-                  const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
-                  const value = Math.ceil(maxAverage * (5 - i) / 5);
-                  return <span key={i}>{value}</span>;
-                })}
+                {[5, 4, 3, 2, 1, 0].map((value) => (
+                  <span key={value}>{value}</span>
+                ))}
               </div>
 
               {/* Contenedor del gráfico con overflow hidden */}
@@ -186,9 +184,8 @@ function StatsPublic() {
                   {/* Línea del gráfico */}
                   <polyline
                     points={monthlyData.map((m, i) => {
-                      const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
                       const x = (i * 500) / (monthlyData.length - 1);
-                      const y = 10 + ((maxAverage - m.average) / maxAverage) * 140;
+                      const y = 10 + ((5 - m.average) / 5) * 140; // Escala fija de 0-5
                       return `${x},${y}`;
                     }).join(' ')}
                     fill="none"
@@ -200,16 +197,15 @@ function StatsPublic() {
 
                   {/* Puntos */}
                   {monthlyData.map((m, i) => {
-                    const maxAverage = Math.max(...monthlyData.map(m => m.average), 1);
                     const x = (i * 500) / (monthlyData.length - 1);
-                    const y = 10 + ((maxAverage - m.average) / maxAverage) * 140;
+                    const y = 10 + ((5 - m.average) / 5) * 140; // Escala fija de 0-5
                     return (
                       <circle
                         key={i}
                         cx={x}
                         cy={y}
                         r="5"
-                        fill="#10b981"
+                        fill="#8B5CF6"
                         stroke="white"
                         strokeWidth="2"
                       />
