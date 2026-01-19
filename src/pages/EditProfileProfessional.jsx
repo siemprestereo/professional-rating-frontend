@@ -55,23 +55,61 @@ function EditProfileProfessional() {
     loadProfile();
   }, []);
 
-  const loadProfile = () => {
+  const loadProfile = async () => {
     const savedData = localStorage.getItem('professional');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      console.log('Professional data:', data); // Debug
-      console.log('professionType value:', data.professionType); // Debug
-      setProfessional(data);
-      setName(data.name || '');
-      setEmail(data.email || '');
-      setPhone(data.phone || '');
-      setLocation(data.location || '');
-      setProfessionalTitle(data.professionalTitle || '');
-      // Asegurarse de que el valor sea string y esté en mayúsculas
-      setProfessionType(data.professionType ? String(data.professionType).toUpperCase() : '');
-      setLoading(false);
-    } else {
+    const token = localStorage.getItem('authToken');
+    
+    if (!savedData || !token) {
       navigate('/professional-login');
+      return;
+    }
+
+    const localData = JSON.parse(savedData);
+    
+    try {
+      // Cargar datos actualizados desde el backend
+      const response = await fetch(`${backendUrl}/api/professionals/${localData.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Backend data:', data); // Debug
+        
+        setProfessional(data);
+        setName(data.name || '');
+        setEmail(data.email || '');
+        setPhone(data.phone || '');
+        setLocation(data.location || '');
+        setProfessionalTitle(data.professionalTitle || '');
+        setProfessionType(data.professionType || '');
+        
+        // Actualizar localStorage con los datos completos
+        localStorage.setItem('professional', JSON.stringify(data));
+      } else {
+        // Si falla el backend, usar datos locales
+        setProfessional(localData);
+        setName(localData.name || '');
+        setEmail(localData.email || '');
+        setPhone(localData.phone || '');
+        setLocation(localData.location || '');
+        setProfessionalTitle(localData.professionalTitle || '');
+        setProfessionType(localData.professionType || '');
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Si hay error, usar datos locales
+      setProfessional(localData);
+      setName(localData.name || '');
+      setEmail(localData.email || '');
+      setPhone(localData.phone || '');
+      setLocation(localData.location || '');
+      setProfessionalTitle(localData.professionalTitle || '');
+      setProfessionType(localData.professionType || '');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,9 +275,7 @@ function EditProfileProfessional() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Tu área de especialización {professionType && `(actual: ${professionType})`}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Tu área de especialización</p>
             </div>
 
             {/* Título Profesional */}
