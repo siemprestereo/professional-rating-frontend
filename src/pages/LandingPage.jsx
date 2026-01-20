@@ -1,14 +1,23 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus } from 'lucide-react';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    console.log('Backend URL:', backendUrl);
-    console.log('Full OAuth URL:', `${backendUrl}/oauth2/authorization/google`);
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+  const handleSearchClick = () => {
+    // Verificar si hay token de autenticación
+    const token = localStorage.getItem('authToken');
+    
+    if (token) {
+      // Si está logueado, ir a search
+      navigate('/search');
+    } else {
+      // Si no está logueado, mostrar modal
+      setShowLoginModal(true);
+    }
   };
 
   return (
@@ -17,17 +26,17 @@ function LandingPage() {
       <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-4 animate-slideDown">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div 
-  onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-  className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
->
-  <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
-    Calificalo
-  </span>
-</div>
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
+          >
+            <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
+              Calificalo
+            </span>
+          </div>
           
           <div className="flex gap-3">
             <button
-              onClick={() => navigate('/search')}
+              onClick={handleSearchClick}
               className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
             >
               <Search className="w-4 h-4" />
@@ -84,7 +93,7 @@ function LandingPage() {
             Recibí Calificaciones
           </h3>
           <p className="text-white/80">
-            Los clientes escanean tu QR y califican tu el servicio que brindas
+            Los clientes escanean tu QR y califican tu servicio profesional
           </p>
         </div>
 
@@ -101,7 +110,7 @@ function LandingPage() {
         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-500 hover-lift">
           <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-white mb-3">
-            Conseguí más y mejores trabajos
+            Conseguí Mejores Trabajos
           </h3>
           <p className="text-white/80">
             Los empleadores buscan profesionales con buena reputación
@@ -134,7 +143,7 @@ function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
           <p className="mb-2">© 2025 Calificalo - Tu reputación profesional</p>
           <div className="flex gap-6 justify-center">
-            <button onClick={() => navigate('/search')} className="hover:text-white transition-colors">
+            <button onClick={handleSearchClick} className="hover:text-white transition-colors">
               Buscar profesional
             </button>
             <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors">
@@ -143,6 +152,11 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Modal de Login Requerido */}
+      {showLoginModal && (
+        <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
+      )}
     </div>
   );
 }
