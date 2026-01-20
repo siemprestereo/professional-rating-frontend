@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp } from 'lucide-react';
+import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, ChevronDown, FileText } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -12,6 +12,8 @@ function ProfessionalDashboard() {
   const [qrCode, setQrCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
   
   // Toast y ErrorModal
   const [toast, setToast] = useState(null);
@@ -47,11 +49,21 @@ function ProfessionalDashboard() {
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
     
-    // Limpiar ambos al desmontar
+    // Limpiar todos al desmontar
     return () => {
       clearInterval(refreshInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -206,7 +218,13 @@ function ProfessionalDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('professional');
+    setShowUserMenu(false);
     navigate('/');
+  };
+
+  const handleCV = () => {
+    setShowUserMenu(false);
+    navigate('/cv-view');
   };
 
   const renderStars = (score) => {
@@ -233,6 +251,9 @@ function ProfessionalDashboard() {
     return null;
   }
 
+  // Extraer solo el primer nombre
+  const firstName = professional.name.split(' ')[0];
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       {/* Header */}
@@ -245,12 +266,43 @@ function ProfessionalDashboard() {
           >
             Calificalo
           </button>
-          <button
-            onClick={handleLogout}
-            className="text-white flex items-center hover:scale-110 transition-transform duration-300"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          
+          {/* Menú desplegable */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
+            >
+              <User className="w-4 h-4" />
+              <span>{firstName}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                <div className="py-2">
+                  <button
+                    onClick={handleCV}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                  >
+                    <FileText className="w-5 h-5 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Mi CV</span>
+                  </button>
+                  
+                  <div className="border-t border-gray-200 my-2"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="text-center">
