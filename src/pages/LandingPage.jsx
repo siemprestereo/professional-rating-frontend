@@ -11,37 +11,43 @@ function LandingPage() {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Obtener información del usuario del token
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      try {
-        // Decodificar el JWT para obtener el nombre
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('Full payload:', payload); // Para debug
-        
-        const fullName = payload.name || payload.sub || payload.email || 'Usuario';
-        // Extraer solo el primer nombre
-        const firstName = fullName.split(' ')[0].split('@')[0]; // También maneja emails
-        
-        setUserInfo({
-          name: firstName,
-          role: payload.userType || payload.role
-        });
-      } catch (error) {
-        console.error('Error al decodificar token:', error);
-      }
+  // Obtener información del usuario del token
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    try {
+      // Decodificar el JWT para obtener el nombre
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Full payload:', payload); // Para debug
+      
+      // Obtener el nombre y limpiar espacios
+      let fullName = payload.name || payload.sub || payload.email || 'Usuario';
+      fullName = fullName.trim(); // Eliminar espacios al inicio y final
+      
+      // Extraer solo el primer nombre
+      const firstName = fullName.split(' ')[0].split('@')[0];
+      
+      console.log('Nombre extraído:', firstName); // Para debug
+      console.log('User type:', payload.userType); // Para debug
+      
+      setUserInfo({
+        name: firstName,
+        role: payload.userType || payload.role
+      });
+    } catch (error) {
+      console.error('Error al decodificar token:', error);
     }
+  }
 
-    // Cerrar dropdown al hacer click fuera
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
+  // Cerrar dropdown al hacer click fuera
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setShowUserMenu(false);
+    }
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
