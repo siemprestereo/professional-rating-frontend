@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3, ArrowRight } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
@@ -83,21 +83,22 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
-      {/* Navbar */}
-      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-4 animate-slideDown">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div 
-            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-            className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
-          >
-            <span className="text-3xl sm:text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
-              Calificalo
-            </span>
-          </div>
-          
-          <div className="flex gap-2 sm:gap-3 items-center">
-            {userInfo ? (
-              // Usuario logueado - Mostrar nombre con dropdown
+      {/* Navbar - Solo visible cuando hay usuario logueado */}
+      {userInfo && (
+        <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-4 animate-slideDown">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div 
+              onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+              className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
+            >
+              <img 
+                src="/Logo-calificalo.png" 
+                alt="Calificalo" 
+                className="h-10 sm:h-12"
+              />
+            </div>
+            
+            <div className="flex gap-2 sm:gap-3 items-center">
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -155,20 +156,10 @@ function LandingPage() {
                   </div>
                 )}
               </div>
-            ) : (
-              // Usuario no logueado - Mostrar botón login profesional
-              <button
-                onClick={() => navigate('/professional-login')}
-                className="bg-white text-purple-600 hover:bg-gray-100 px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
-              >
-                <LogIn className="w-4 h-4" />
-                <span className="hidden sm:inline">Soy profesional</span>
-                <span className="sm:hidden">Login</span>
-              </button>
-            )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {/* Hero Section - Condicional según si está logueado */}
       {userInfo ? (
@@ -191,9 +182,21 @@ function LandingPage() {
           </button>
         </div>
       ) : (
-        // Usuario no logueado - Mostrar landing normal
+        // Usuario no logueado - Mostrar landing normal con logo arriba
         <>
-          <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+          <div className="max-w-6xl mx-auto px-4 pt-16 pb-8 text-center">
+            {/* Logo arriba del título */}
+            <div 
+              onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+              className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-12 animate-slideDown"
+            >
+              <img 
+                src="/Logo-calificalo.png" 
+                alt="Calificalo" 
+                className="h-24 sm:h-32 md:h-40"
+              />
+            </div>
+
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
               Construí tu reputación
               <br />
@@ -218,7 +221,7 @@ function LandingPage() {
                 className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <span className="text-2xl">⭐</span>
-                Soy cliente y quiero calificar
+                Soy cliente
               </button>
 
               <button
@@ -294,11 +297,6 @@ function LandingPage() {
             <button onClick={handleSearchClick} className="hover:text-white transition-colors text-sm sm:text-base">
               Buscar profesional
             </button>
-            {!userInfo && (
-              <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors text-sm sm:text-base">
-                Login Profesionales
-              </button>
-            )}
           </div>
         </div>
       </footer>
