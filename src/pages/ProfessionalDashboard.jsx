@@ -238,7 +238,13 @@ function ProfessionalDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-white text-xl font-light">Panel principal</h1>
+          <button
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="text-white text-2xl hover:scale-105 transition-transform"
+            style={{ fontFamily: 'Playball, cursive' }}
+          >
+            Calificalo
+          </button>
           <button
             onClick={handleLogout}
             className="text-white flex items-center hover:scale-110 transition-transform duration-300"
