@@ -65,7 +65,7 @@ function LandingPage() {
             <img 
               src="/Logo-calificalo.png" 
               alt="Calificalo" 
-              className="h-40 sm:h-48 md:h-56 lg:h-64 w-auto logo-pulse"
+              className="h-46 sm:h-56 md:h-64 lg:h-72 w-auto logo-pulse-intense"
             />
           </div>
                   
