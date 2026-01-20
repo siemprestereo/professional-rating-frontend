@@ -1,14 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
     // Obtener información del usuario del token
@@ -33,16 +31,6 @@ function LandingPage() {
         console.error('Error al decodificar token:', error);
       }
     }
-
-    // Cerrar dropdown al hacer click fuera
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSearchClick = () => {
@@ -55,15 +43,7 @@ function LandingPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    setUserInfo(null);
-    setShowUserMenu(false);
-    window.location.href = '/';
-  };
-
   const handleDashboard = () => {
-    setShowUserMenu(false);
     if (userInfo?.role === 'PROFESSIONAL') {
       navigate('/professional-dashboard');
     } else {
@@ -71,96 +51,25 @@ function LandingPage() {
     }
   };
 
-  const handleCV = () => {
-    setShowUserMenu(false);
-    navigate('/cv-view');
-  };
-
-  const handleStats = () => {
-    setShowUserMenu(false);
-    navigate('/client-stats');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
       {/* Hero Section - Condicional según si está logueado */}
       {userInfo ? (
         // Usuario logueado - Mostrar bienvenida con logo grande
-        <div className="max-w-6xl mx-auto px-4 py-16 sm:py-24 text-center min-h-screen flex flex-col justify-center">
-          {/* Menú desplegable flotante arriba a la derecha */}
-          <div className="absolute top-6 right-6 z-50">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base backdrop-blur-md"
-              >
-                <User className="w-4 h-4" />
-                <span>{userInfo.name}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
-                  <div className="py-2">
-                    <button
-                      onClick={handleDashboard}
-                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                    >
-                      <User className="w-5 h-5 text-purple-600" />
-                      <span className="font-medium text-sm sm:text-base">Panel principal</span>
-                    </button>
-                    
-                    {/* Opciones para PROFESSIONAL */}
-                    {userInfo.role === 'PROFESSIONAL' && (
-                      <button
-                        onClick={handleCV}
-                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                      >
-                        <FileText className="w-5 h-5 text-purple-600" />
-                        <span className="font-medium text-sm sm:text-base">Mi CV</span>
-                      </button>
-                    )}
-                    
-                    {/* Opciones para CLIENT */}
-                    {userInfo.role === 'CLIENT' && (
-                      <button
-                        onClick={handleStats}
-                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                      >
-                        <BarChart3 className="w-5 h-5 text-purple-600" />
-                        <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
-                      </button>
-                    )}
-                    
-                    <div className="border-t border-gray-200 my-2"></div>
-                    
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
+        <div className="h-screen flex flex-col justify-center items-center px-4 text-center">
           {/* Logo grande arriba del mensaje */}
           <div 
             onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-            className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-8 sm:mb-12 animate-slideDown"
+            className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-6 sm:mb-10 animate-slideDown"
           >
             <img 
               src="/Logo-calificalo.png" 
               alt="Calificalo" 
-              className="h-40 sm:h-48 md:h-56 lg:h-64 w-auto logo-pulse"
+              className="h-32 sm:h-40 md:h-48 w-auto logo-pulse"
             />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 animate-slideUp">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 sm:mb-8 animate-slideUp leading-tight">
             ¡Qué bueno tenerte
             <br />
             otra vez acá,
@@ -170,10 +79,10 @@ function LandingPage() {
           
           <button
             onClick={handleDashboard}
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-12 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto hover:brightness-110"
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-10 sm:px-12 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-3 hover:brightness-110"
           >
             Ingresar
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       ) : (
@@ -287,12 +196,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
-          <p className="mb-2 text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
-          <div className="flex gap-4 sm:gap-6 justify-center flex-wrap">
-            <button onClick={handleSearchClick} className="hover:text-white transition-colors text-sm sm:text-base">
-              Buscar profesional
-            </button>
-          </div>
+          <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
         </div>
       </footer>
 
