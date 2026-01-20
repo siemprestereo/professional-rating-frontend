@@ -12,8 +12,8 @@ function ClientLogin() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
-  const [loginError, setLoginError] = useState(''); // ← NUEVO: error de credenciales
-  const [shake, setShake] = useState(false); // ← NUEVO: animación shake
+  const [loginError, setLoginError] = useState('');
+  const [shake, setShake] = useState(false);
 
   // Detectar errores de OAuth y capturar token
   useEffect(() => {
@@ -56,8 +56,8 @@ function ClientLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setLoginError(''); // Limpiar error anterior
-    setShake(false); // Reset shake
+    setLoginError('');
+    setShake(false);
 
     try {
       const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -70,11 +70,9 @@ function ClientLogin() {
       if (!response.ok) {
         const data = await response.json();
         
-        // ✅ MOSTRAR ERROR INLINE EN LUGAR DE TOAST
         setLoginError('Email o contraseña incorrectos');
-        setShake(true); // Activar animación shake
+        setShake(true);
         
-        // Quitar shake después de la animación
         setTimeout(() => setShake(false), 500);
         
         setLoading(false);
@@ -83,10 +81,8 @@ function ClientLogin() {
 
       const data = await response.json();
       
-      // Guardar token en localStorage
       localStorage.setItem('authToken', data.token);
       
-      // Guardar datos del usuario
       localStorage.setItem('client', JSON.stringify({
         id: data.id,
         email: data.email,
@@ -114,23 +110,23 @@ function ClientLogin() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
         <button
           onClick={() => navigate('/')}
-          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors"
+          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver
         </button>
 
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
-            <User className="w-10 h-10 text-white" />
+        <div className="text-center mb-5 sm:mb-6">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
+            <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Login Clientes
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+            Ingreso Clientes
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Accedé para calificar profesionales
           </p>
         </div>
@@ -138,7 +134,7 @@ function ClientLogin() {
         {/* Botón de Google */}
         <button
           onClick={handleGoogleLogin}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift"
+          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -149,18 +145,18 @@ function ClientLogin() {
           Continuar con Google
         </button>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4 sm:mb-5">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
-          <div className="relative flex justify-center text-sm">
+          <div className="relative flex justify-center text-xs sm:text-sm">
             <span className="px-4 bg-white text-gray-500">O ingresá con email</span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Email
             </label>
             <input
@@ -168,11 +164,11 @@ function ClientLogin() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setLoginError(''); // Limpiar error al escribir
+                setLoginError('');
               }}
               placeholder="tu@email.com"
               required
-              className={`w-full border-2 rounded-2xl px-4 py-3 focus:outline-none transition-all ${
+              className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
                 loginError 
                   ? 'border-red-500 focus:border-red-500' 
                   : 'border-gray-200 focus:border-green-500'
@@ -181,7 +177,7 @@ function ClientLogin() {
           </div>
 
           <div className="mb-2">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Password
             </label>
             <input
@@ -189,11 +185,11 @@ function ClientLogin() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setLoginError(''); // Limpiar error al escribir
+                setLoginError('');
               }}
               placeholder="••••••••"
               required
-              className={`w-full border-2 rounded-2xl px-4 py-3 focus:outline-none transition-all ${
+              className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
                 loginError 
                   ? 'border-red-500 focus:border-red-500' 
                   : 'border-gray-200 focus:border-green-500'
@@ -201,9 +197,9 @@ function ClientLogin() {
             />
           </div>
 
-          {/* ✅ MENSAJE DE ERROR INLINE */}
+          {/* Mensaje de error inline */}
           {loginError && (
-            <div className="mb-4 flex items-center gap-2 text-red-600 text-sm animate-fadeIn">
+            <div className="mb-3 sm:mb-4 flex items-center gap-2 text-red-600 text-xs sm:text-sm animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{loginError}</span>
             </div>
@@ -212,7 +208,7 @@ function ClientLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple mb-4"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 sm:py-3.5 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple mb-3 sm:mb-4 text-sm sm:text-base"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -224,21 +220,20 @@ function ClientLogin() {
             )}
           </button>
 
-          {/* ✅ BOTÓN OLVIDASTE TU CONTRASEÑA */}
+          {/* Botón olvidaste tu contraseña */}
           <button
             type="button"
             onClick={() => {
-              // TODO: Implementar funcionalidad de recuperación
               console.log('Recuperar contraseña');
             }}
-            className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors"
+            className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors text-sm sm:text-base"
           >
             ¿Olvidaste tu contraseña?
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
+        <div className="mt-4 sm:mt-5 text-center">
+          <p className="text-gray-600 text-sm sm:text-base">
             ¿No tenés cuenta?{' '}
             <button
               onClick={() => navigate('/client-register')}
@@ -268,7 +263,7 @@ function ClientLogin() {
         />
       )}
 
-      {/* ✅ AGREGAR ESTILOS DE ANIMACIÓN SHAKE */}
+      {/* Estilos de animación shake */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
