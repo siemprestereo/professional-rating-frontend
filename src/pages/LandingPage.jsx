@@ -193,7 +193,7 @@ function LandingPage() {
               <img 
                 src="/Logo-calificalo.png" 
                 alt="Calificalo" 
-                className="h-24 sm:h-32 md:h-40"
+                className="h-48 sm:h-56 md:h-64 lg:h-72 w-auto"
               />
             </div>
 
@@ -221,7 +221,7 @@ function LandingPage() {
                 className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <span className="text-2xl">⭐</span>
-                Soy cliente
+                Soy cliente y quiero calificar
               </button>
 
               <button
