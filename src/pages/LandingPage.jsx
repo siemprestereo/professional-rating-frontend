@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3 } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
@@ -11,43 +11,39 @@ function LandingPage() {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-  // Obtener información del usuario del token
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    try {
-      // Decodificar el JWT para obtener el nombre
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Full payload:', payload); // Para debug
-      
-      // Obtener el nombre y limpiar espacios
-      let fullName = payload.name || payload.sub || payload.email || 'Usuario';
-      fullName = fullName.trim(); // Eliminar espacios al inicio y final
-      
-      // Extraer solo el primer nombre
-      const firstName = fullName.split(' ')[0].split('@')[0];
-      
-      console.log('Nombre extraído:', firstName); // Para debug
-      console.log('User type:', payload.userType); // Para debug
-      
-      setUserInfo({
-        name: firstName,
-        role: payload.userType || payload.role
-      });
-    } catch (error) {
-      console.error('Error al decodificar token:', error);
+    // Obtener información del usuario del token
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      try {
+        // Decodificar el JWT para obtener el nombre
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        
+        // Obtener el nombre y limpiar espacios
+        let fullName = payload.name || payload.sub || payload.email || 'Usuario';
+        fullName = fullName.trim(); // Eliminar espacios al inicio y final
+        
+        // Extraer solo el primer nombre
+        const firstName = fullName.split(' ')[0].split('@')[0];
+        
+        setUserInfo({
+          name: firstName,
+          role: payload.userType || payload.role
+        });
+      } catch (error) {
+        console.error('Error al decodificar token:', error);
+      }
     }
-  }
 
-  // Cerrar dropdown al hacer click fuera
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setShowUserMenu(false);
-    }
-  };
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
@@ -77,12 +73,12 @@ function LandingPage() {
 
   const handleCV = () => {
     setShowUserMenu(false);
-    navigate('/cv-view');
+    navigate('/professional-cv');
   };
 
   const handleStats = () => {
     setShowUserMenu(false);
-    navigate('/client-stats'); // Ajusta esta ruta según tu aplicación
+    navigate('/client-stats');
   };
 
   return (
@@ -174,97 +170,119 @@ function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
-          Construí tu reputación
-          <br />
-          <span className="text-yellow-300">profesional</span>
-        </h1>
-        
-        <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4">
-          La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
-        </p>
-
-        <div className="flex flex-col gap-4 justify-center items-center animate-slideUp delay-200 px-4">
-          <button
-            onClick={() => navigate('/professional-register')}
-            className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
-          >
-            <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
-            Registrarme como profesional
-          </button>
+      {/* Hero Section - Condicional según si está logueado */}
+      {userInfo ? (
+        // Usuario logueado - Mostrar bienvenida
+        <div className="max-w-6xl mx-auto px-4 py-32 text-center">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-8 animate-slideUp">
+            ¡Bienvenido nuevamente,
+            <br />
+            <span className="text-yellow-300">{userInfo.name}!</span>
+          </h1>
           
           <button
-            onClick={() => navigate('/client-login')}
-            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+            onClick={handleDashboard}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-12 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto hover:brightness-110"
           >
-            <span className="text-2xl">⭐</span>
-            Quiero calificar a alguien
-          </button>
-
-          <button
-            onClick={handleSearchClick}
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
-          >
-            <Search className="w-5 sm:w-6 h-5 sm:h-6" />
-            Buscar profesional
+            Ingresar
+            <ArrowRight className="w-6 h-6" />
           </button>
         </div>
-      </div>
+      ) : (
+        // Usuario no logueado - Mostrar landing normal
+        <>
+          <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
+              Construí tu reputación
+              <br />
+              <span className="text-yellow-300">profesional</span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4">
+              La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
+            </p>
 
-      {/* Features */}
-      <div className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-8">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-300 hover-lift">
-          <Star className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-white mb-3">
-            Recibí Calificaciones
-          </h3>
-          <p className="text-white/80">
-            Los clientes escanean tu QR y califican tu servicio profesional
-          </p>
-        </div>
+            <div className="flex flex-col gap-4 justify-center items-center animate-slideUp delay-200 px-4">
+              <button
+                onClick={() => navigate('/professional-register')}
+                className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+              >
+                <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
+                Registrarme como profesional
+              </button>
+              
+              <button
+                onClick={() => navigate('/client-login')}
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+              >
+                <span className="text-2xl">⭐</span>
+                Quiero calificar a alguien
+              </button>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-400 hover-lift">
-          <TrendingUp className="w-16 h-16 text-green-300 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-white mb-3">
-            Construí tu Reputación
-          </h3>
-          <p className="text-white/80">
-            Tu historial y promedio te acompañan a donde vayas
-          </p>
-        </div>
+              <button
+                onClick={handleSearchClick}
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+              >
+                <Search className="w-5 sm:w-6 h-5 sm:h-6" />
+                Buscar profesional
+              </button>
+            </div>
+          </div>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-500 hover-lift">
-          <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-white mb-3">
-            Conseguí Mejores Trabajos
-          </h3>
-          <p className="text-white/80">
-            Los empleadores buscan profesionales con buena reputación
-          </p>
-        </div>
-      </div>
+          {/* Features */}
+          <div className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-8">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-300 hover-lift">
+              <Star className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-3">
+                Recibí Calificaciones
+              </h3>
+              <p className="text-white/80">
+                Los clientes escanean tu QR y califican tu servicio profesional
+              </p>
+            </div>
 
-      {/* CTA Section */}
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 sm:p-12 animate-scaleIn">
-          <QrCode className="w-16 sm:w-20 h-16 sm:h-20 text-white mx-auto mb-6 animate-pulseGlow" />
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            ¿Cómo funciona?
-          </h2>
-          <p className="text-white/90 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
-            Generá tu código QR único, los clientes lo escanean después del servicio, 
-            califican tu atención y construís tu CV profesional con experiencia verificada.
-          </p>
-          <button
-            onClick={() => navigate('/professional-register')}
-            className="w-full sm:w-auto bg-yellow-400 text-purple-900 px-8 sm:px-10 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all ripple"
-          >
-            Empezar Ahora - Es Gratis
-          </button>
-        </div>
-      </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-400 hover-lift">
+              <TrendingUp className="w-16 h-16 text-green-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-3">
+                Construí tu Reputación
+              </h3>
+              <p className="text-white/80">
+                Tu historial y promedio te acompañan a donde vayas
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-500 hover-lift">
+              <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-3">
+                Conseguí Mejores Trabajos
+              </h3>
+              <p className="text-white/80">
+                Los empleadores buscan profesionales con buena reputación
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 sm:p-12 animate-scaleIn">
+              <QrCode className="w-16 sm:w-20 h-16 sm:h-20 text-white mx-auto mb-6 animate-pulseGlow" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                ¿Cómo funciona?
+              </h2>
+              <p className="text-white/90 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
+                Generá tu código QR único, los clientes lo escanean después del servicio, 
+                califican tu atención y construís tu CV profesional con experiencia verificada.
+              </p>
+              <button
+                onClick={() => navigate('/professional-register')}
+                className="w-full sm:w-auto bg-yellow-400 text-purple-900 px-8 sm:px-10 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all ripple"
+              >
+                Empezar Ahora - Es Gratis
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-8 mt-16">
@@ -274,9 +292,11 @@ function LandingPage() {
             <button onClick={handleSearchClick} className="hover:text-white transition-colors text-sm sm:text-base">
               Buscar profesional
             </button>
-            <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors text-sm sm:text-base">
-              Login Profesionales
-            </button>
+            {!userInfo && (
+              <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors text-sm sm:text-base">
+                Login Profesionales
+              </button>
+            )}
           </div>
         </div>
       </footer>
