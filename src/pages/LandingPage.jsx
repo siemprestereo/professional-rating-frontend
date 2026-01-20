@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut, BarChart3 } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
@@ -17,13 +17,15 @@ function LandingPage() {
       try {
         // Decodificar el JWT para obtener el nombre
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const fullName = payload.name || payload.sub;
+        console.log('Full payload:', payload); // Para debug
+        
+        const fullName = payload.name || payload.sub || payload.email || 'Usuario';
         // Extraer solo el primer nombre
-        const firstName = fullName.split(' ')[0];
+        const firstName = fullName.split(' ')[0].split('@')[0]; // También maneja emails
         
         setUserInfo({
           name: firstName,
-          role: payload.userType  // Cambiar a userType
+          role: payload.userType || payload.role
         });
       } catch (error) {
         console.error('Error al decodificar token:', error);
@@ -69,7 +71,12 @@ function LandingPage() {
 
   const handleCV = () => {
     setShowUserMenu(false);
-    navigate('/professional-cv');
+    navigate('/cv-view');
+  };
+
+  const handleStats = () => {
+    setShowUserMenu(false);
+    navigate('/client-stats'); // Ajusta esta ruta según tu aplicación
   };
 
   return (
@@ -111,6 +118,7 @@ function LandingPage() {
                         <span className="font-medium text-sm sm:text-base">Panel principal</span>
                       </button>
                       
+                      {/* Opciones para PROFESSIONAL */}
                       {userInfo.role === 'PROFESSIONAL' && (
                         <button
                           onClick={handleCV}
@@ -118,6 +126,17 @@ function LandingPage() {
                         >
                           <FileText className="w-5 h-5 text-purple-600" />
                           <span className="font-medium text-sm sm:text-base">Mi CV</span>
+                        </button>
+                      )}
+                      
+                      {/* Opciones para CLIENT */}
+                      {userInfo.role === 'CLIENT' && (
+                        <button
+                          onClick={handleStats}
+                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                        >
+                          <BarChart3 className="w-5 h-5 text-purple-600" />
+                          <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
                         </button>
                       )}
                       
