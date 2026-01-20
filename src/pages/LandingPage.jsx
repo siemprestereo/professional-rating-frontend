@@ -209,7 +209,7 @@ function LandingPage() {
 
             <div className="flex flex-col gap-4 justify-center items-center animate-slideUp delay-200 px-4">
               <button
-                onClick={() => navigate('/professional-register')}
+                onClick={() => navigate('/professional-login')}
                 className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
