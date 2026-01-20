@@ -30,7 +30,7 @@ function LoginRequiredModal({ onClose }) {
             Iniciá sesión para continuar
           </h2>
           <p className="text-gray-600">
-            Necesitás estar logueado para buscar profesionales
+            Necesitás iniciar sesión para buscar profesionales
           </p>
         </div>
 
@@ -40,7 +40,7 @@ function LoginRequiredModal({ onClose }) {
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2"
           >
             <span className="text-xl">⭐</span>
-            Entrar como Cliente
+            Ingresar como Cliente
           </button>
 
           <button
@@ -48,7 +48,7 @@ function LoginRequiredModal({ onClose }) {
             className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2"
           >
             <UserPlus className="w-5 h-5" />
-            Entrar como Profesional
+            Ingresar como Profesional
           </button>
 
           <button
