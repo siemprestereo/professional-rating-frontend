@@ -184,7 +184,7 @@ function LandingPage() {
       ) : (
         // Usuario no logueado - Mostrar landing normal con logo arriba
         <>
-          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-6 sm:pb-8 text-center">
+          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
             {/* Logo arriba del título */}
             <div 
               onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
@@ -203,7 +203,7 @@ function LandingPage() {
               <span className="text-yellow-300">profesional</span>
             </h1>
             
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
               La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
             </p>
 
@@ -218,7 +218,7 @@ function LandingPage() {
               
               <button
                 onClick={() => navigate('/client-login')}
-                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110 whitespace-nowrap"
               >
                 <span className="text-2xl">⭐</span>
                 Soy cliente y quiero calificar
