@@ -175,7 +175,9 @@ function LandingPage() {
         // Usuario logueado - Mostrar bienvenida
         <div className="max-w-6xl mx-auto px-4 py-32 text-center">
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-8 animate-slideUp">
-            ¡Bienvenido nuevamente,
+            ¡Qué bueno tenerte
+            <br />
+            otra vez acá,
             <br />
             <span className="text-yellow-300">{userInfo.name}!</span>
           </h1>
