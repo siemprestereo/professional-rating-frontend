@@ -1,15 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Briefcase, Award, Loader2, Edit, Home } from 'lucide-react';
+import { Star, Briefcase, Award, Loader2, Edit, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
 
 function MyProfile() {
   const navigate = useNavigate();
   const [professional, setProfessional] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     loadMyProfile();
+
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadMyProfile = async () => {
@@ -48,6 +60,18 @@ function MyProfile() {
     } catch (error) {
       console.error('Error loading ratings:', error);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('professional');
+    setShowUserMenu(false);
+    navigate('/');
+  };
+
+  const handleCV = () => {
+    setShowUserMenu(false);
+    navigate('/cv-view');
   };
 
   const renderStars = (score) => {
@@ -111,11 +135,61 @@ function MyProfile() {
   const reputationScore = professional.reputationScore || professional.averageRating || 0;
   const totalRatings = professional.totalRatings || 0;
   const professionalName = professional.name || professional.professionalName || 'Mi Perfil';
+  
+  // Extraer solo el primer nombre para el menú
+  const firstName = professionalName.split(' ')[0];
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      {/* Header con perfil */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
+      {/* Header con navbar */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="text-white text-2xl hover:scale-105 transition-transform"
+            style={{ fontFamily: 'Playball, cursive' }}
+          >
+            Calificalo
+          </button>
+          
+          {/* Menú desplegable */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
+            >
+              <User className="w-4 h-4" />
+              <span>{firstName}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                <div className="py-2">
+                  <button
+                    onClick={handleCV}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                  >
+                    <FileText className="w-5 h-5 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Mi CV</span>
+                  </button>
+                  
+                  <div className="border-t border-gray-200 my-2"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
             {professionalName.charAt(0)}

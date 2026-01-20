@@ -1,29 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, TrendingUp, Users, Calendar, Loader2, Home } from 'lucide-react';
+import { Star, TrendingUp, Users, Calendar, Loader2, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
 
 function Stats() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [professional, setProfessional] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     loadStats();
+
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadStats = async () => {
     try {
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      if (!professional) {
+      const professionalData = JSON.parse(localStorage.getItem('professional'));
+      if (!professionalData) {
         navigate('/professional-login');
         return;
       }
 
+      setProfessional(professionalData);
+
       const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
       
       // Cargar ratings
-      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professional.id}`);
+      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`);
       if (ratingsResponse.ok) {
         const ratingsData = await ratingsResponse.json();
         setRatings(ratingsData);
@@ -56,6 +71,18 @@ function Stats() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('professional');
+    setShowUserMenu(false);
+    navigate('/');
+  };
+
+  const handleCV = () => {
+    setShowUserMenu(false);
+    navigate('/cv-view');
+  };
+
   const renderStars = (score) => {
     return [...Array(5)].map((_, i) => (
       <Star
@@ -76,10 +103,60 @@ function Stats() {
     );
   }
 
+  // Extraer solo el primer nombre
+  const firstName = professional?.name?.split(' ')[0] || 'Usuario';
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      {/* Header sin navbar */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
+      {/* Header con navbar */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="text-white text-2xl hover:scale-105 transition-transform"
+            style={{ fontFamily: 'Playball, cursive' }}
+          >
+            Calificalo
+          </button>
+          
+          {/* Menú desplegable */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
+            >
+              <User className="w-4 h-4" />
+              <span>{firstName}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                <div className="py-2">
+                  <button
+                    onClick={handleCV}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                  >
+                    <FileText className="w-5 h-5 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Mi CV</span>
+                  </button>
+                  
+                  <div className="border-t border-gray-200 my-2"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
             Estadísticas

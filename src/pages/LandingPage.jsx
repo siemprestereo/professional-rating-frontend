@@ -73,7 +73,7 @@ function LandingPage() {
 
   const handleCV = () => {
     setShowUserMenu(false);
-    navigate('/professional-cv');
+    navigate('/cv-view');
   };
 
   const handleStats = () => {
@@ -83,89 +83,84 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
-      {/* Navbar - Solo visible cuando hay usuario logueado */}
-      {userInfo && (
-        <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 px-4 py-4 animate-slideDown">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div 
-              onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-              className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
-            >
-              <img 
-                src="/Logo-calificalo.png" 
-                alt="Calificalo" 
-                className="h-10 sm:h-12 logo-pulse"
-              />
-            </div>
-            
-            <div className="flex gap-2 sm:gap-3 items-center">
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
-                >
-                  <User className="w-4 h-4" />
-                  <span>{userInfo.name}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
-                    <div className="py-2">
-                      <button
-                        onClick={handleDashboard}
-                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                      >
-                        <User className="w-5 h-5 text-purple-600" />
-                        <span className="font-medium text-sm sm:text-base">Panel principal</span>
-                      </button>
-                      
-                      {/* Opciones para PROFESSIONAL */}
-                      {userInfo.role === 'PROFESSIONAL' && (
-                        <button
-                          onClick={handleCV}
-                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                        >
-                          <FileText className="w-5 h-5 text-purple-600" />
-                          <span className="font-medium text-sm sm:text-base">Mi CV</span>
-                        </button>
-                      )}
-                      
-                      {/* Opciones para CLIENT */}
-                      {userInfo.role === 'CLIENT' && (
-                        <button
-                          onClick={handleStats}
-                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
-                        >
-                          <BarChart3 className="w-5 h-5 text-purple-600" />
-                          <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
-                        </button>
-                      )}
-                      
-                      <div className="border-t border-gray-200 my-2"></div>
-                      
-                      <button
-                        onClick={handleLogout}
-                        className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </nav>
-      )}
-
       {/* Hero Section - Condicional según si está logueado */}
       {userInfo ? (
-        // Usuario logueado - Mostrar bienvenida
-        <div className="max-w-6xl mx-auto px-4 py-32 text-center">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-8 animate-slideUp">
+        // Usuario logueado - Mostrar bienvenida con logo grande
+        <div className="max-w-6xl mx-auto px-4 py-16 sm:py-24 text-center min-h-screen flex flex-col justify-center">
+          {/* Menú desplegable flotante arriba a la derecha */}
+          <div className="absolute top-6 right-6 z-50">
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base backdrop-blur-md"
+              >
+                <User className="w-4 h-4" />
+                <span>{userInfo.name}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                  <div className="py-2">
+                    <button
+                      onClick={handleDashboard}
+                      className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                    >
+                      <User className="w-5 h-5 text-purple-600" />
+                      <span className="font-medium text-sm sm:text-base">Panel principal</span>
+                    </button>
+                    
+                    {/* Opciones para PROFESSIONAL */}
+                    {userInfo.role === 'PROFESSIONAL' && (
+                      <button
+                        onClick={handleCV}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                      >
+                        <FileText className="w-5 h-5 text-purple-600" />
+                        <span className="font-medium text-sm sm:text-base">Mi CV</span>
+                      </button>
+                    )}
+                    
+                    {/* Opciones para CLIENT */}
+                    {userInfo.role === 'CLIENT' && (
+                      <button
+                        onClick={handleStats}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                      >
+                        <BarChart3 className="w-5 h-5 text-purple-600" />
+                        <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
+                      </button>
+                    )}
+                    
+                    <div className="border-t border-gray-200 my-2"></div>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Logo grande arriba del mensaje */}
+          <div 
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-8 sm:mb-12 animate-slideDown"
+          >
+            <img 
+              src="/Logo-calificalo.png" 
+              alt="Calificalo" 
+              className="h-40 sm:h-48 md:h-56 lg:h-64 w-auto logo-pulse"
+            />
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 animate-slideUp">
             ¡Qué bueno tenerte
             <br />
             otra vez acá,
