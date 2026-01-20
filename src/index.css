@@ -180,16 +180,14 @@
 /* Efecto de pulso suave para el logo */
 @keyframes logo-pulse {
   0%, 100% {
-    /* Un poco más de presencia en el estado base */
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
   }
   50% {
-    /* Resplandor mucho más amplio e intenso */
-    filter: drop-shadow(0 0 35px rgba(255, 255, 255, 1));
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
   }
 }
 
 .logo-pulse {
-  /* Reducido a 1.5s para mayor dinamismo */
-  animation: logo-pulse 1.5s ease-in-out infinite;
+  animation: logo-pulse 2s ease-in-out infinite;
 }
+
