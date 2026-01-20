@@ -210,7 +210,7 @@ function LandingPage() {
                 className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
-                Registrarme como profesional
+                Soy profesional
               </button>
               
               <button
@@ -218,7 +218,7 @@ function LandingPage() {
                 className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <span className="text-2xl">⭐</span>
-                Quiero calificar a alguien
+                Soy cliente y quiero calificar
               </button>
 
               <button
