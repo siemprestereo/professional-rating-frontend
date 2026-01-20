@@ -1,23 +1,71 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Star, Users, TrendingUp, QrCode, Search, LogIn, UserPlus, ChevronDown, User, FileText, LogOut } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    // Obtener información del usuario del token
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      try {
+        // Decodificar el JWT para obtener el nombre
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserInfo({
+          name: payload.name || payload.sub,
+          role: payload.role
+        });
+      } catch (error) {
+        console.error('Error al decodificar token:', error);
+      }
+    }
+
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearchClick = () => {
-    // Verificar si hay token de autenticación
     const token = localStorage.getItem('authToken');
     
     if (token) {
-      // Si está logueado, ir a search
       navigate('/search');
     } else {
-      // Si no está logueado, mostrar modal
       setShowLoginModal(true);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    setUserInfo(null);
+    setShowUserMenu(false);
+    window.location.href = '/';
+  };
+
+  const handleDashboard = () => {
+    setShowUserMenu(false);
+    if (userInfo?.role === 'PROFESSIONAL') {
+      navigate('/professional-dashboard');
+    } else {
+      navigate('/client-dashboard');
+    }
+  };
+
+  const handleCV = () => {
+    setShowUserMenu(false);
+    navigate('/professional-cv');
   };
 
   return (
@@ -34,22 +82,74 @@ function LandingPage() {
             </span>
           </div>
           
-          <div className="flex gap-3">
-            <button
-              onClick={handleSearchClick}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
-            >
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Buscar profesional</span>
-            </button>
-            
-            <button
-              onClick={() => navigate('/professional-login')}
-              className="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
-            >
-              <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Soy profesional</span>
-            </button>
+          <div className="flex gap-3 items-center">
+            {userInfo ? (
+              // Usuario logueado - Mostrar nombre con dropdown
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
+                >
+                  <User className="w-4 h-4" />
+                  <span>{userInfo.name}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                    <div className="py-2">
+                      <button
+                        onClick={handleDashboard}
+                        className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                      >
+                        <User className="w-5 h-5 text-purple-600" />
+                        <span className="font-medium">Panel principal</span>
+                      </button>
+                      
+                      {userInfo.role === 'PROFESSIONAL' && (
+                        <button
+                          onClick={handleCV}
+                          className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
+                        >
+                          <FileText className="w-5 h-5 text-purple-600" />
+                          <span className="font-medium">Mi CV</span>
+                        </button>
+                      )}
+                      
+                      <div className="border-t border-gray-200 my-2"></div>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Cerrar sesión</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Usuario no logueado - Mostrar botones originales
+              <>
+                <button
+                  onClick={handleSearchClick}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="hidden sm:inline">Buscar profesional</span>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/professional-login')}
+                  className="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden sm:inline">Soy profesional</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
