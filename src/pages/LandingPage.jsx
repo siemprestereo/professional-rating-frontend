@@ -184,33 +184,33 @@ function LandingPage() {
       ) : (
         // Usuario no logueado - Mostrar landing normal con logo arriba
         <>
-          <div className="max-w-6xl mx-auto px-4 pt-16 pb-8 text-center">
+          <div className="max-w-6xl mx-auto px-4 pt-8 sm:pt-12 pb-4 sm:pb-6 text-center">
             {/* Logo arriba del título */}
             <div 
               onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-              className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-12 animate-slideDown"
+              className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-6 sm:mb-10 animate-slideDown"
             >
               <img 
                 src="/Logo-calificalo.png" 
                 alt="Calificalo" 
-                className="h-48 sm:h-56 md:h-64 lg:h-72 w-auto"
+                className="h-32 sm:h-48 md:h-56 lg:h-64 w-auto"
               />
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 animate-slideUp">
               Construí tu reputación
               <br />
               <span className="text-yellow-300">profesional</span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4">
               La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
             </p>
 
-            <div className="flex flex-col gap-4 justify-center items-center animate-slideUp delay-200 px-4">
+            <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center animate-slideUp delay-200 px-4">
               <button
-                onClick={() => navigate('/professional-login')}
-                className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                onClick={() => navigate('/professional-register')}
+                className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
                 Soy profesional
@@ -218,15 +218,15 @@ function LandingPage() {
               
               <button
                 onClick={() => navigate('/client-login')}
-                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <span className="text-2xl">⭐</span>
-                Soy cliente y quiero calificar
+                Soy cliente
               </button>
 
               <button
                 onClick={handleSearchClick}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <Search className="w-5 sm:w-6 h-5 sm:h-6" />
                 Buscar profesional
@@ -235,52 +235,52 @@ function LandingPage() {
           </div>
 
           {/* Features */}
-          <div className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-300 hover-lift">
-              <Star className="w-16 h-16 text-yellow-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-3">
+          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 grid md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-300 hover-lift">
+              <Star className="w-12 sm:w-16 h-12 sm:h-16 text-yellow-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                 Recibí Calificaciones
               </h3>
-              <p className="text-white/80">
+              <p className="text-sm sm:text-base text-white/80">
                 Los clientes escanean tu QR y califican tu servicio profesional
               </p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-400 hover-lift">
-              <TrendingUp className="w-16 h-16 text-green-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-3">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-400 hover-lift">
+              <TrendingUp className="w-12 sm:w-16 h-12 sm:h-16 text-green-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                 Construí tu Reputación
               </h3>
-              <p className="text-white/80">
+              <p className="text-sm sm:text-base text-white/80">
                 Tu historial y promedio te acompañan a donde vayas
               </p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center animate-slideUp delay-500 hover-lift">
-              <Users className="w-16 h-16 text-blue-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-3">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-500 hover-lift">
+              <Users className="w-12 sm:w-16 h-12 sm:h-16 text-blue-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                 Conseguí Mejores Trabajos
               </h3>
-              <p className="text-white/80">
+              <p className="text-sm sm:text-base text-white/80">
                 Los empleadores buscan profesionales con buena reputación
               </p>
             </div>
           </div>
 
           {/* CTA Section */}
-          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 sm:p-12 animate-scaleIn">
-              <QrCode className="w-16 sm:w-20 h-16 sm:h-20 text-white mx-auto mb-6 animate-pulseGlow" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+          <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16 text-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-12 animate-scaleIn">
+              <QrCode className="w-12 sm:w-16 md:w-20 h-12 sm:h-16 md:h-20 text-white mx-auto mb-4 sm:mb-6 animate-pulseGlow" />
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
                 ¿Cómo funciona?
               </h2>
-              <p className="text-white/90 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base md:text-lg text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto">
                 Generá tu código QR único, los clientes lo escanean después del servicio, 
                 califican tu atención y construís tu CV profesional con experiencia verificada.
               </p>
               <button
                 onClick={() => navigate('/professional-register')}
-                className="w-full sm:w-auto bg-yellow-400 text-purple-900 px-8 sm:px-10 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all ripple"
+                className="w-full sm:w-auto bg-yellow-400 text-purple-900 px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all ripple"
               >
                 Empezar Ahora - Es Gratis
               </button>
@@ -290,7 +290,7 @@ function LandingPage() {
       )}
 
       {/* Footer */}
-      <footer className="bg-black/20 backdrop-blur-md py-8 mt-16">
+      <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
           <p className="mb-2 text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
           <div className="flex gap-4 sm:gap-6 justify-center flex-wrap">
