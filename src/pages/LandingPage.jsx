@@ -25,6 +25,8 @@ function LandingPage() {
           name: firstName,
           role: payload.role
         });
+        console.log('User role:', payload.role); // Ver qué valor tiene
+console.log('Full payload:', payload); // Ver todo el payload
       } catch (error) {
         console.error('Error al decodificar token:', error);
       }
