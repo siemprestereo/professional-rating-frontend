@@ -178,22 +178,18 @@
 }
 
 /* Efecto de pulso suave para el logo */
-@keyframes logo-pulse-intense {
-  0% {
-    transform: scale(1);
-    filter: brightness(1);
+@keyframes logo-pulse {
+  0%, 100% {
+    /* Un poco más de presencia en el estado base */
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
   }
   50% {
-    transform: scale(1.12); /* Aumento más notable */
-    filter: brightness(1.2); /* Un ligero brillo para dar sensación de energía */
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
+    /* Resplandor mucho más amplio e intenso */
+    filter: drop-shadow(0 0 35px rgba(255, 255, 255, 1));
   }
 }
 
-.logo-pulse-intense {
-  animation: logo-pulse-intense 1.5s ease-in-out infinite;
-  display: inline-block; /* Asegura que la transformación se aplique correctamente */
+.logo-pulse {
+  /* Reducido a 1.5s para mayor dinamismo */
+  animation: logo-pulse 1.5s ease-in-out infinite;
 }
