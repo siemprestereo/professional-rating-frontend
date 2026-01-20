@@ -17,8 +17,12 @@ function LandingPage() {
       try {
         // Decodificar el JWT para obtener el nombre
         const payload = JSON.parse(atob(token.split('.')[1]));
+        const fullName = payload.name || payload.sub;
+        // Extraer solo el primer nombre
+        const firstName = fullName.split(' ')[0];
+        
         setUserInfo({
-          name: payload.name || payload.sub,
+          name: firstName,
           role: payload.role
         });
       } catch (error) {
@@ -77,18 +81,18 @@ function LandingPage() {
             onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
             className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
           >
-            <span className="text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
+            <span className="text-3xl sm:text-4xl text-white" style={{ fontFamily: 'Playball, cursive' }}>
               Calificalo
             </span>
           </div>
           
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 sm:gap-3 items-center">
             {userInfo ? (
               // Usuario logueado - Mostrar nombre con dropdown
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
+                  className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
                 >
                   <User className="w-4 h-4" />
                   <span>{userInfo.name}</span>
@@ -97,14 +101,14 @@ function LandingPage() {
 
                 {/* Dropdown Menu */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
                     <div className="py-2">
                       <button
                         onClick={handleDashboard}
                         className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
                       >
                         <User className="w-5 h-5 text-purple-600" />
-                        <span className="font-medium">Panel principal</span>
+                        <span className="font-medium text-sm sm:text-base">Panel principal</span>
                       </button>
                       
                       {userInfo.role === 'PROFESSIONAL' && (
@@ -113,7 +117,7 @@ function LandingPage() {
                           className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3"
                         >
                           <FileText className="w-5 h-5 text-purple-600" />
-                          <span className="font-medium">Mi CV</span>
+                          <span className="font-medium text-sm sm:text-base">Mi CV</span>
                         </button>
                       )}
                       
@@ -124,31 +128,22 @@ function LandingPage() {
                         className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
                       >
                         <LogOut className="w-5 h-5" />
-                        <span className="font-medium">Cerrar sesión</span>
+                        <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
                       </button>
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              // Usuario no logueado - Mostrar botones originales
-              <>
-                <button
-                  onClick={handleSearchClick}
-                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
-                >
-                  <Search className="w-4 h-4" />
-                  <span className="hidden sm:inline">Buscar profesional</span>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/professional-login')}
-                  className="bg-white text-purple-600 hover:bg-gray-100 px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden sm:inline">Soy profesional</span>
-                </button>
-              </>
+              // Usuario no logueado - Mostrar botón login profesional
+              <button
+                onClick={() => navigate('/professional-login')}
+                className="bg-white text-purple-600 hover:bg-gray-100 px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Soy profesional</span>
+                <span className="sm:hidden">Login</span>
+              </button>
             )}
           </div>
         </div>
@@ -156,31 +151,39 @@ function LandingPage() {
 
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-slideUp">
           Construí tu reputación
           <br />
           <span className="text-yellow-300">profesional</span>
         </h1>
         
-        <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100">
+        <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto animate-slideUp delay-100 px-4">
           La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slideUp delay-200">
+        <div className="flex flex-col gap-4 justify-center items-center animate-slideUp delay-200 px-4">
           <button
             onClick={() => navigate('/professional-register')}
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center gap-2 hover:brightness-110"
+            className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
           >
-            <UserPlus className="w-6 h-6" />
+            <UserPlus className="w-5 sm:w-6 h-5 sm:h-6" />
             Registrarme como profesional
           </button>
           
           <button
             onClick={() => navigate('/client-login')}
-            className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center gap-2 hover:brightness-110"
+            className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
           >
             <span className="text-2xl">⭐</span>
             Quiero calificar a alguien
+          </button>
+
+          <button
+            onClick={handleSearchClick}
+            className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 sm:px-8 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <Search className="w-5 sm:w-6 h-5 sm:h-6" />
+            Buscar profesional
           </button>
         </div>
       </div>
@@ -220,18 +223,18 @@ function LandingPage() {
 
       {/* CTA Section */}
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-12 animate-scaleIn">
-          <QrCode className="w-20 h-20 text-white mx-auto mb-6 animate-pulseGlow" />
-          <h2 className="text-3xl font-bold text-white mb-4">
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 sm:p-12 animate-scaleIn">
+          <QrCode className="w-16 sm:w-20 h-16 sm:h-20 text-white mx-auto mb-6 animate-pulseGlow" />
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
             ¿Cómo funciona?
           </h2>
-          <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-white/90 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
             Generá tu código QR único, los clientes lo escanean después del servicio, 
             califican tu atención y construís tu CV profesional con experiencia verificada.
           </p>
           <button
             onClick={() => navigate('/professional-register')}
-            className="bg-yellow-400 text-purple-900 px-10 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 transition-all ripple"
+            className="w-full sm:w-auto bg-yellow-400 text-purple-900 px-8 sm:px-10 py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-all ripple"
           >
             Empezar Ahora - Es Gratis
           </button>
@@ -241,12 +244,12 @@ function LandingPage() {
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-8 mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
-          <p className="mb-2">© 2025 Calificalo - Tu reputación profesional</p>
-          <div className="flex gap-6 justify-center">
-            <button onClick={handleSearchClick} className="hover:text-white transition-colors">
+          <p className="mb-2 text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
+          <div className="flex gap-4 sm:gap-6 justify-center flex-wrap">
+            <button onClick={handleSearchClick} className="hover:text-white transition-colors text-sm sm:text-base">
               Buscar profesional
             </button>
-            <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors">
+            <button onClick={() => navigate('/professional-login')} className="hover:text-white transition-colors text-sm sm:text-base">
               Login Profesionales
             </button>
           </div>
