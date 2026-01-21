@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search, Menu, X } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [topBadges, setTopBadges] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     // Primero verificar si hay token en la URL (OAuth redirect)
@@ -136,6 +137,7 @@ function ClientDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('client');
+    setMenuOpen(false);
     navigate('/');
   };
 
@@ -168,18 +170,65 @@ function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
+      {/* Navbar */}
+      <nav className="bg-white shadow-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div 
+              onClick={() => navigate('/')}
+              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <img 
+                src="/Logo-calificalo.png" 
+                alt="Calificalo" 
+                className="h-10 w-auto logo-pulse"
+              />
+            </div>
+
+            {/* Menú hamburguesa */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-gray-700 hover:text-teal-600 transition-colors"
+            >
+              {menuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Menú desplegable */}
+        {menuOpen && (
+          <div className="bg-white border-t border-gray-200 shadow-lg animate-slideDown">
+            <div className="max-w-7xl mx-auto px-4 py-2">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/client-stats');
+                }}
+                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3"
+              >
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+                <span className="font-medium">Mis estadísticas</span>
+              </button>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3"
+              >
+                <LogOut className="w-5 h-5 text-red-600" />
+                <span className="font-medium">Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Panel principal</h1>
-          <button
-            onClick={handleLogout}
-            className="text-white flex items-center hover:scale-110 transition-transform"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-        
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
             {client.name.charAt(0)}
