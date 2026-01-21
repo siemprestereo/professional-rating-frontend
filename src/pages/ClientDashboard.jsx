@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search, Menu, X } from 'lucide-react';
+import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown } from 'lucide-react';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -10,7 +10,8 @@ function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [topBadges, setTopBadges] = useState([]);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     // Primero verificar si hay token en la URL (OAuth redirect)
@@ -26,6 +27,19 @@ function ClientDashboard() {
     }
     
     loadClientData();
+
+    // Cerrar dropdown al hacer click fuera
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const loadClientData = async () => {
@@ -137,7 +151,7 @@ function ClientDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('client');
-    setMenuOpen(false);
+    setShowUserMenu(false);
     navigate('/');
   };
 
@@ -165,70 +179,66 @@ function ClientDashboard() {
     return null;
   }
 
+  // Extraer solo el primer nombre
+  const firstName = client.name.split(' ')[0];
+
   // Obtener últimas 3 calificaciones
   const recentRatings = myRatings.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
-      {/* Navbar */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div 
-              onClick={() => navigate('/')}
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src="/Logo-calificalo.png" 
-                alt="Calificalo" 
-                className="h-10 w-auto logo-pulse"
-              />
-            </div>
-
-            {/* Menú hamburguesa */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gray-700 hover:text-teal-600 transition-colors"
-            >
-              {menuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Menú desplegable */}
-        {menuOpen && (
-          <div className="bg-white border-t border-gray-200 shadow-lg animate-slideDown">
-            <div className="max-w-7xl mx-auto px-4 py-2">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate('/client-stats');
-                }}
-                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3"
-              >
-                <BarChart3 className="w-5 h-5 text-blue-600" />
-                <span className="font-medium">Mis estadísticas</span>
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3"
-              >
-                <LogOut className="w-5 h-5 text-red-600" />
-                <span className="font-medium">Cerrar sesión</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
-
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            className="text-white text-2xl hover:scale-105 transition-transform"
+            style={{ fontFamily: 'Playball, cursive' }}
+          >
+            Calificalo
+          </button>
+          
+          {/* Menú desplegable */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all hover-lift text-sm sm:text-base"
+            >
+              <User className="w-4 h-4" />
+              <span>{firstName}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                <div className="py-2">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate('/client-stats');
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-teal-50 transition-colors flex items-center gap-3"
+                  >
+                    <BarChart3 className="w-5 h-5 text-teal-600" />
+                    <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
+                  </button>
+                  
+                  <div className="border-t border-gray-200 my-2"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
             {client.name.charAt(0)}
@@ -263,7 +273,7 @@ function ClientDashboard() {
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h3 className="text-lg font-bold text-gray-800 mb-2">
-            ¡Hola {client.name.split(' ')[0]}! 👋
+            ¡Hola {firstName}! 👋
           </h3>
           <p className="text-gray-600">
             Para calificar a un profesional, pídele que te muestre su código QR.
