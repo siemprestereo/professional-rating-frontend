@@ -195,4 +195,21 @@
 .logo-pulse {
   animation: logo-pulse 3s ease-in-out infinite;
 }
+/* Agregar esto al final de tu archivo index.css */
+
+/* Animación breathe para pantallas de carga */
+@keyframes logo-breathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.logo-breathe {
+  animation: logo-breathe 2s ease-in-out infinite;
+}
 
