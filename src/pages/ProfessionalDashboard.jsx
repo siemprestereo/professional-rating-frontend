@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, ChevronDown, FileText } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import LoadingScreen from '../components/LoadingScreen';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
