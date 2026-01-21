@@ -65,7 +65,7 @@ function LandingPage() {
             <img 
               src="/Logo-calificalo.png" 
               alt="Calificalo" 
-              className="h-46 sm:h-56 md:h-64 lg:h-72 w-auto logo-pulse-intense"
+              className="h-46 sm:h-56 md:h-64 lg:h-72 w-auto logo-pulse"
             />
           </div>
                   
@@ -100,7 +100,7 @@ function LandingPage() {
                 className="h-40 sm:h-48 md:h-56 lg:h-64 w-auto logo-pulse"
               />
             </div>
-
+            
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 sm:mb-5 animate-slideUp leading-tight">
               Construí tu reputación
               <br />
