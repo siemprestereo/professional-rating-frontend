@@ -192,7 +192,7 @@ function ClientDashboard() {
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-            className="text-white text-2xl hover:scale-105 transition-transform"
+            className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >
             Calificalo
