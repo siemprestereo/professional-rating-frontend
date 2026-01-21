@@ -63,6 +63,7 @@ function ClientDashboard() {
 
       if (response.ok) {
         const clientData = await response.json();
+        console.log('✅ Datos del cliente:', clientData);
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
         loadRatings(clientData.id, token);
@@ -179,8 +180,8 @@ function ClientDashboard() {
     return null;
   }
 
-  // Extraer solo el primer nombre
-  const firstName = client.name.split(' ')[0];
+  // Extraer solo el primer nombre con manejo defensivo
+  const firstName = client.name ? client.name.trim().split(' ')[0] : 'Usuario';
 
   // Obtener últimas 3 calificaciones
   const recentRatings = myRatings.slice(0, 3);
@@ -241,9 +242,9 @@ function ClientDashboard() {
         
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
-            {client.name.charAt(0)}
+            {client.name ? client.name.charAt(0) : 'U'}
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{client.name}</h2>
+          <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{client.name || 'Usuario'}</h2>
           {/* Medalla del usuario */}
           {topBadges.length > 0 && (
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full animate-slideUp delay-100">
