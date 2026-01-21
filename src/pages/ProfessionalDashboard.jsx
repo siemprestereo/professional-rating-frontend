@@ -263,7 +263,7 @@ function ProfessionalDashboard() {
   };
 
   if (loading) {
-  return <LoadingScreen message="Cargando panel principal..." />;
+  return <LoadingScreen message="" />;
 }
 
   if (!professional) {
