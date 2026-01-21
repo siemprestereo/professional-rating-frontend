@@ -222,9 +222,34 @@ function ProfessionalDashboard() {
     navigate('/');
   };
 
-  const handleCV = () => {
+  const handleCV = async () => {
     setShowUserMenu(false);
-    navigate('/cv-view');
+    
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    try {
+      // Verificar si el CV existe
+      const response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // CV existe, ir a verlo
+        navigate('/cv-view');
+      } else if (response.status === 400 || response.status === 404) {
+        // CV no existe, ir a crearlo
+        navigate('/edit-cv');
+      } else {
+        console.error('Error al verificar CV:', response.status);
+        navigate('/edit-cv'); // Por defecto ir a editar
+      }
+    } catch (error) {
+      console.error('Error al verificar CV:', error);
+      navigate('/edit-cv'); // Por defecto ir a editar
+    }
   };
 
   const renderStars = (score) => {
@@ -251,8 +276,14 @@ function ProfessionalDashboard() {
     return null;
   }
 
-  // Extraer solo el primer nombre
-  const firstName = professional.name.split(' ')[0];
+  // Extraer solo el primer nombre con capitalización
+  const getFirstName = (fullName) => {
+    if (!fullName) return 'Usuario';
+    const name = fullName.trim().split(' ')[0];
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
+
+  const firstName = getFirstName(professional.name);
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
@@ -261,7 +292,7 @@ function ProfessionalDashboard() {
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-            className="text-white text-2xl hover:scale-105 transition-transform"
+            className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >
             Calificalo
@@ -307,7 +338,7 @@ function ProfessionalDashboard() {
         
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn">
-            {professional.name.charAt(0)}
+            {professional.name.charAt(0).toUpperCase()}
           </div>
           <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{professional.name}</h2>
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
@@ -510,7 +541,7 @@ function ProfessionalDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('/cv-view')}
+            onClick={handleCV}
             className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-200 hover-lift"
           >
             <ClipboardList className="w-7 h-7 text-purple-600 mx-auto mb-2" />
