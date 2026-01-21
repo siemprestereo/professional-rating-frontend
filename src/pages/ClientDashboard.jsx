@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 function ClientDashboard() {
   const navigate = useNavigate();
