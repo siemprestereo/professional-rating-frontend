@@ -237,7 +237,10 @@ function ClientStats() {
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+          <h1 
+            className="text-3xl font-light text-white mb-2 animate-slideUp"
+            style={{ fontFamily: 'Roboto, sans-serif' }}
+          >
             📊 Mis Estadísticas
           </h1>
           <p className="text-white/90 animate-slideUp delay-100">
@@ -247,8 +250,8 @@ function ClientStats() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        {/* Quick Stats - SOLO 2 TARJETAS */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp">
             <p className="text-3xl font-bold mb-1">{stats?.total || 0}</p>
             <p className="text-sm opacity-90">Calificaciones</p>
@@ -256,10 +259,6 @@ function ClientStats() {
           <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp delay-50">
             <p className="text-3xl font-bold mb-1">{stats?.average || 0}</p>
             <p className="text-sm opacity-90">Tu Promedio</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp delay-100">
-            <p className="text-3xl font-bold mb-1">{stats?.categoriesCount || 0}</p>
-            <p className="text-sm opacity-90">Categorías</p>
           </div>
         </div>
 
