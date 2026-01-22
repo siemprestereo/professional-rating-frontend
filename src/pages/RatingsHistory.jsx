@@ -139,13 +139,17 @@ function RatingsHistory() {
                 </p>
               </>
             ) : (
-              <>
-                <p className="text-xs text-white/80 font-semibold uppercase tracking-wide mb-1">HISTORIAL</p>
-                <p className="text-2xl font-bold text-white">Calificaciones</p>
-                <p className="text-sm text-white/80 font-semibold mt-1">
-                  {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
-                </p>
-              </>
+             <>
+  <p className="text-xs text-white/80 font-semibold uppercase tracking-wide mb-1 roboto-regular">
+    HISTORIAL
+  </p>
+  <p className="text-2xl roboto-light text-white">
+    Calificaciones
+  </p>
+  <p className="text-sm text-white/80 font-semibold mt-1 roboto-regular">
+    {ratings.length} {ratings.length === 1 ? 'calificación' : 'calificaciones'}
+  </p>
+</>
             )}
           </div>
           {workHistoryIdFilter && (

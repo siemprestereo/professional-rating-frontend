@@ -237,10 +237,7 @@ function ClientStats() {
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 
-            className="text-3xl font-light text-white mb-2 animate-slideUp"
-            style={{ fontFamily: 'Roboto, sans-serif' }}
-          >
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             📊 Mis Estadísticas
           </h1>
           <p className="text-white/90 animate-slideUp delay-100">

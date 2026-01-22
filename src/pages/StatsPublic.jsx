@@ -112,11 +112,11 @@ function StatsPublic() {
     <div className="min-h-screen bg-gray-50 pb-8">
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-2">Estadísticas Profesionales</h1>
-          <p className="text-white/90">Métricas, análisis y desempeño</p>
-        </div>
-      </div>
+  <div className="max-w-6xl mx-auto">
+    <h1 className="text-3xl roboto-light text-white mb-2">Estadísticas Profesionales</h1>
+    <p className="text-white/90 roboto-regular">Métricas, análisis y desempeño</p>
+  </div>
+</div>
 
       <div className="max-w-6xl mx-auto px-4 mt-4">
         {/* Resumen General */}
