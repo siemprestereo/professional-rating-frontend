@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, Award, Loader2, Home, ChevronRight, Search } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, Award, Home, ChevronRight, Search } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -143,8 +143,8 @@ function CvView() {
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen message="Cargando CV..." />;
+  }
 
   if (!cv) {
     return (
@@ -172,7 +172,7 @@ function CvView() {
             <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
               {cv.professionalName.charAt(0)}
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+            <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
               {cv.professionalName}
             </h1>
             {cv.professionType && (
@@ -208,7 +208,7 @@ function CvView() {
           {/* Header centrado */}
           <div className="flex items-center justify-center mb-4">
             <Search className="w-6 h-6 text-purple-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl roboto-light text-gray-800">
               Visibilidad en Búsquedas
             </h2>
           </div>
@@ -251,7 +251,7 @@ function CvView() {
         {/* TRABAJO AUTÓNOMO ACTUAL */}
         {freelanceActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">💼</span>
               Trabajo Autónomo Actual
             </h2>
@@ -296,7 +296,7 @@ function CvView() {
         {/* TRABAJOS ACTUALES (Relación de dependencia) */}
         {employeeActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">🏢</span>
               Trabajos Actuales
             </h2>
@@ -334,7 +334,7 @@ function CvView() {
         {/* EXPERIENCIAS PASADAS */}
         {pastJobs.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">📋</span>
               Experiencias Laborales Pasadas
             </h2>
@@ -379,7 +379,7 @@ function CvView() {
         {/* Educación */}
         {cv.education && cv.education.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
               Educación
             </h2>
@@ -403,7 +403,7 @@ function CvView() {
         {/* Certificaciones */}
         {cv.certifications && cv.certifications.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <Award className="w-6 h-6 mr-2 text-purple-600" />
               Certificaciones
             </h2>
