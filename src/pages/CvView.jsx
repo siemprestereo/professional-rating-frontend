@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Star, Briefcase, GraduationCap, Award, Loader2, Home, ChevronRight, Search } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
+import LoadingScreen from '../components/LoadingScreen';
 
 function CvView() {
   const navigate = useNavigate();
@@ -142,7 +143,7 @@ function CvView() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   if (!cv) {
