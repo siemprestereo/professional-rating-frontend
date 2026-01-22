@@ -59,11 +59,9 @@ function ClientStats() {
       return;
     }
 
-    // Total y promedio
     const total = ratingsData.length;
     const average = ratingsData.reduce((sum, r) => sum + r.score, 0) / total;
 
-    // Actividad mensual (últimos 6 meses)
     const now = new Date();
     const monthlyData = [];
     
@@ -80,10 +78,7 @@ function ClientStats() {
       monthlyData.push({ month: monthName, count });
     }
 
-    // Categorías únicas
     const categories = new Set(ratingsData.map(r => r.professionalType || 'general'));
-    
-    // Porcentaje con comentario
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
     const withCommentPercentage = (withComment / total) * 100;
 
@@ -100,121 +95,39 @@ function ClientStats() {
     const earnedBadges = [];
     const total = ratingsData.length;
 
-    // Medallas por cantidad
-    if (total >= 1) earnedBadges.push({ 
-      icon: '🥉', 
-      name: 'Primera calificación', 
-      description: 'Has dado tu primera calificación',
-      unlocked: true
-    });
-    
-    if (total >= 5) earnedBadges.push({ 
-      icon: '🥈', 
-      name: 'Calificador activo', 
-      description: '5 calificaciones otorgadas',
-      unlocked: true
-    });
-    
-    if (total >= 10) earnedBadges.push({ 
-      icon: '🥇', 
-      name: 'Calificador experimentado', 
-      description: '10 calificaciones otorgadas',
-      unlocked: true
-    });
-    
-    if (total >= 25) earnedBadges.push({ 
-      icon: '💎', 
-      name: 'Calificador Experto', 
-      description: '25 calificaciones otorgadas',
-      unlocked: true
-    });
-    
-    if (total >= 50) earnedBadges.push({ 
-      icon: '👑', 
-      name: 'Calificador Maestro', 
-      description: '50 calificaciones otorgadas',
-      unlocked: true
-    });
-    
-    if (total >= 100) earnedBadges.push({ 
-      icon: '⭐', 
-      name: 'Calificador Legendario', 
-      description: '100 calificaciones otorgadas',
-      unlocked: true
-    });
+    // Medallas por cantidad (RESTAURADAS)
+    if (total >= 1) earnedBadges.push({ icon: '🥉', name: 'Primera calificación', description: 'Has dado tu primera calificación', unlocked: true });
+    if (total >= 5) earnedBadges.push({ icon: '🥈', name: 'Calificador activo', description: '5 calificaciones otorgadas', unlocked: true });
+    if (total >= 10) earnedBadges.push({ icon: '🥇', name: 'Calificador experimentado', description: '10 calificaciones otorgadas', unlocked: true });
+    if (total >= 25) earnedBadges.push({ icon: '💎', name: 'Calificador Experto', description: '25 calificaciones otorgadas', unlocked: true });
+    if (total >= 50) earnedBadges.push({ icon: '👑', name: 'Calificador Maestro', description: '50 calificaciones otorgadas', unlocked: true });
+    if (total >= 100) earnedBadges.push({ icon: '⭐', name: 'Calificador Legendario', description: '100 calificaciones otorgadas', unlocked: true });
 
-    // Medallas especiales
+    // Medallas especiales (RESTAURADAS)
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
     const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
     
     if (commentPercentage >= 80) {
-      earnedBadges.push({ 
-        icon: '💬', 
-        name: 'Comunicador', 
-        description: '80% de tus calificaciones incluyen comentario',
-        unlocked: true,
-        special: true
-      });
+      earnedBadges.push({ icon: '💬', name: 'Comunicador', description: '80% de tus calificaciones incluyen comentario', unlocked: true, special: true });
     }
 
     const average = total > 0 ? ratingsData.reduce((sum, r) => sum + r.score, 0) / total : 0;
-    
     if (average >= 4.5) {
-      earnedBadges.push({ 
-        icon: '🌟', 
-        name: 'Generoso', 
-        description: 'Promedio mayor a 4.5 estrellas',
-        unlocked: true,
-        special: true
-      });
+      earnedBadges.push({ icon: '🌟', name: 'Generoso', description: 'Promedio mayor a 4.5 estrellas', unlocked: true, special: true });
     }
-    
     if (average >= 3.5 && average <= 4.5) {
-      earnedBadges.push({ 
-        icon: '🎯', 
-        name: 'Preciso', 
-        description: 'Calificaciones equilibradas',
-        unlocked: true,
-        special: true
-      });
+      earnedBadges.push({ icon: '🎯', name: 'Preciso', description: 'Calificaciones equilibradas', unlocked: true, special: true });
     }
 
     const categories = new Set(ratingsData.map(r => r.professionalType || 'general'));
     if (categories.size >= 5) {
-      earnedBadges.push({ 
-        icon: '🔍', 
-        name: 'Explorador', 
-        description: 'Has calificado 5+ categorías diferentes',
-        unlocked: true,
-        special: true
-      });
+      earnedBadges.push({ icon: '🔍', name: 'Explorador', description: 'Has calificado 5+ categorías diferentes', unlocked: true, special: true });
     }
 
-    // Medallas bloqueadas (próximas a desbloquear)
-    if (total < 5) {
-      earnedBadges.push({ 
-        icon: '🥈', 
-        name: 'Calificador Activo', 
-        description: `${5 - total} calificaciones más`,
-        unlocked: false
-      });
-    }
-    if (total < 10 && total >= 5) {
-      earnedBadges.push({ 
-        icon: '🥇', 
-        name: 'Calificador Experimentado', 
-        description: `${10 - total} calificaciones más`,
-        unlocked: false
-      });
-    }
-    if (total < 25 && total >= 10) {
-      earnedBadges.push({ 
-        icon: '💎', 
-        name: 'Calificador Experto', 
-        description: `${25 - total} calificaciones más`,
-        unlocked: false
-      });
-    }
+    // Medallas bloqueadas (RESTAURADAS)
+    if (total < 5) earnedBadges.push({ icon: '🥈', name: 'Calificador Activo', description: `${5 - total} calificaciones más`, unlocked: false });
+    if (total < 10 && total >= 5) earnedBadges.push({ icon: '🥇', name: 'Calificador Experimentado', description: `${10 - total} calificaciones más`, unlocked: false });
+    if (total < 25 && total >= 10) earnedBadges.push({ icon: '💎', name: 'Calificador Experto', description: `${25 - total} calificaciones más`, unlocked: false });
 
     setBadges(earnedBadges);
   };
@@ -246,8 +159,8 @@ function ClientStats() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-8">
-        {/* Quick Stats - SOLO 2 TARJETAS */}
+      <div className="max-w-4xl mx-auto px-4 -mt-4">
+        {/* Quick Stats - Los dos cuadrados con separación corregida */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp">
             <p className="text-3xl font-bold mb-1">{stats?.total || 0}</p>
@@ -259,7 +172,7 @@ function ClientStats() {
           </div>
         </div>
 
-        {/* Gráfico de Actividad - SOLO MOSTRAR SI HAY DATOS */}
+        {/* Gráfico de Actividad */}
         {stats && stats.monthlyActivity.length > 0 && stats.total > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -268,7 +181,6 @@ function ClientStats() {
             </h3>
             
             <div className="relative h-48 mt-4">
-              {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
                 {[...Array(6)].map((_, i) => {
                   const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
@@ -277,23 +189,12 @@ function ClientStats() {
                 })}
               </div>
 
-              {/* Contenedor del gráfico con overflow hidden */}
               <div className="absolute left-10 top-0 right-2 bottom-10 overflow-hidden">
                 <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
-                  {/* Líneas de cuadrícula */}
                   {[...Array(6)].map((_, i) => (
-                    <line
-                      key={i}
-                      x1="0"
-                      y1={i * 32}
-                      x2="500"
-                      y2={i * 32}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                    />
+                    <line key={i} x1="0" y1={i * 32} x2="500" y2={i * 32} stroke="#e5e7eb" strokeWidth="1" />
                   ))}
 
-                  {/* SOLO RENDERIZAR LÍNEA SI HAY MÁS DE 1 PUNTO */}
                   {stats.monthlyActivity.filter(m => m.count > 0).length > 1 && (
                     <polyline
                       points={stats.monthlyActivity.map((m, i) => {
@@ -310,22 +211,11 @@ function ClientStats() {
                     />
                   )}
 
-                  {/* Puntos */}
                   {stats.monthlyActivity.map((m, i) => {
                     const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                     const x = (i * 500) / (stats.monthlyActivity.length - 1);
                     const y = 10 + ((maxCount - m.count) / maxCount) * 140;
-                    return (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={y}
-                        r="5"
-                        fill="#10b981"
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                    );
+                    return <circle key={i} cx={x} cy={y} r="5" fill="#10b981" stroke="white" strokeWidth="2" />;
                   })}
 
                   <defs>
@@ -337,7 +227,6 @@ function ClientStats() {
                 </svg>
               </div>
 
-              {/* Eje X */}
               <div className="absolute left-10 right-2 bottom-0 flex justify-between text-xs text-gray-500">
                 {stats.monthlyActivity.map((m, i) => (
                   <span key={i} className="capitalize">{m.month}</span>
@@ -360,9 +249,7 @@ function ClientStats() {
                 key={index}
                 className={`border-2 rounded-xl p-4 text-center transition-all ${
                   badge.unlocked 
-                    ? badge.special 
-                      ? 'border-purple-300 bg-purple-50' 
-                      : 'border-green-300 bg-green-50'
+                    ? badge.special ? 'border-purple-300 bg-purple-50' : 'border-green-300 bg-green-50'
                     : 'border-gray-200 bg-gray-50 opacity-50'
                 }`}
               >
@@ -382,37 +269,22 @@ function ClientStats() {
           </h3>
           
           {ratings.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              Aún no has dado calificaciones
-            </p>
+            <p className="text-center text-gray-500 py-8">Aún no has dado calificaciones</p>
           ) : (
             <div className="space-y-3">
-              {ratings.map((rating, index) => (
-                <div
-                  key={rating.id}
-                  className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
-                >
+              {ratings.map((rating) => (
+                <div key={rating.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h4 className="font-semibold text-gray-800">{rating.professionalName}</h4>
                       <p className="text-sm text-gray-500">{rating.businessName}</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {renderStars(rating.score)}
-                    </div>
+                    <div className="flex items-center gap-1">{renderStars(rating.score)}</div>
                   </div>
-                  
-                  {rating.comment && (
-                    <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>
-                  )}
-                  
+                  {rating.comment && <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>}
                   <div className="flex items-center text-xs text-gray-400">
                     <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(rating.createdAt).toLocaleDateString('es-AR', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
+                    {new Date(rating.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </div>
                 </div>
               ))}
@@ -421,12 +293,10 @@ function ClientStats() {
         </div>
       </div>
 
-      {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
           onClick={() => navigate('/client-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Volver al inicio"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
