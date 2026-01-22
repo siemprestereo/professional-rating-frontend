@@ -20,19 +20,19 @@ function ProfessionalProfile() {
   const loadProfessionalData = async () => {
     try {
       const [profileData, ratingsData] = await Promise.all([
-  api.getProfessionalProfile(professionalId),
-  api.getProfessionalRatings(professionalId)
-]);
+        api.getProfessionalProfile(professionalId),
+        api.getProfessionalRatings(professionalId)
+      ]);
 
-// Mapear campos del backend al formato esperado
-const mappedProfile = {
-  ...profileData,
-  professionalName: profileData.name,
-  reputationScore: profileData.averageRating || 0
-};
+      // Mapear campos del backend al formato esperado
+      const mappedProfile = {
+        ...profileData,
+        professionalName: profileData.name,
+        reputationScore: profileData.averageRating || 0
+      };
 
-setProfessional(mappedProfile);
-setRatings(ratingsData);
+      setProfessional(mappedProfile);
+      setRatings(ratingsData);
     } catch (error) {
       console.error('Error loading professional:', error);
     } finally {
@@ -125,17 +125,17 @@ setRatings(ratingsData);
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   if (!professional) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
         <div className="bg-white rounded-2xl p-8 text-center animate-scaleIn">
-          <p className="text-gray-600 mb-4">Profesional no encontrado</p>
+          <p className="text-gray-600 mb-4 text-base">Profesional no encontrado</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple"
+            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple text-base"
           >
             Volver al inicio
           </button>
@@ -162,7 +162,7 @@ setRatings(ratingsData);
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/search')}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all"
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all text-base"
             >
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">Buscar</span>
@@ -177,12 +177,12 @@ setRatings(ratingsData);
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
             {professional.professionalName.charAt(0)}
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             {professional.professionalName}
           </h1>
           <div className="flex items-center justify-center mb-4 animate-slideUp delay-100">
             {renderStars(Math.round(professional.reputationScore))}
-            <span className="ml-2 text-white font-semibold">
+            <span className="ml-2 text-white font-semibold text-lg">
               {professional.reputationScore.toFixed(1)}
             </span>
           </div>
@@ -197,16 +197,16 @@ setRatings(ratingsData);
         {/* Descripción */}
         {professional.description && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Sobre mí</h2>
-            <p className="text-gray-600">{professional.description}</p>
+            <h2 className="text-xl roboto-light text-gray-800 mb-3">Sobre mí</h2>
+            <p className="text-gray-600 text-base">{professional.description}</p>
           </div>
         )}
 
         {/* Experiencias */}
         {professional.workHistory && professional.workHistory.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-              <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
               Experiencia
             </h2>
             <div className="space-y-4">
@@ -216,8 +216,8 @@ setRatings(ratingsData);
                   className="border-l-4 border-purple-600 pl-4 animate-slideUp"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <h3 className="font-semibold text-gray-800">{exp.position}</h3>
-                  <p className="text-purple-600 font-medium">{exp.businessName}</p>
+                  <h3 className="font-semibold text-gray-800 text-base">{exp.position}</h3>
+                  <p className="text-purple-600 font-medium text-base">{exp.businessName}</p>
                   <p className="text-sm text-gray-500">
                     {exp.startDate} - {exp.endDate || 'Presente'}
                   </p>
@@ -235,7 +235,7 @@ setRatings(ratingsData);
         {/* Botón para calificar */}
         <button
           onClick={handleRateClick}
-          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg mb-4 flex items-center justify-center animate-scaleIn delay-200 hover-scale ripple"
+          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg mb-4 flex items-center justify-center animate-scaleIn delay-200 hover-scale ripple text-lg"
         >
           <Star className="w-5 h-5 mr-2" />
           Calificar a {professional.professionalName.split(' ')[0]}
@@ -244,8 +244,8 @@ setRatings(ratingsData);
         {/* Calificaciones recientes */}
         {ratings.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-              <Award className="w-5 h-5 mr-2 text-yellow-500" />
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <Award className="w-6 h-6 mr-2 text-yellow-500" />
               Calificaciones Recientes
             </h2>
             <div className="space-y-4">
@@ -262,7 +262,7 @@ setRatings(ratingsData);
                     </span>
                   </div>
                   {rating.comment && (
-                    <p className="text-gray-600 text-sm mb-2">{rating.comment}</p>
+                    <p className="text-gray-600 text-base mb-2">{rating.comment}</p>
                   )}
                   
                   {/* Mostrar workplace específico si existe */}
@@ -302,7 +302,7 @@ setRatings(ratingsData);
               <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
               
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xl font-bold text-gray-800">¿Dónde te atendió?</h3>
+                <h3 className="text-xl roboto-light text-gray-800">¿Dónde te atendió?</h3>
                 <button
                   onClick={() => setShowWorkplaceSelector(false)}
                   className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-all"
@@ -325,7 +325,7 @@ setRatings(ratingsData);
                     <div className="flex items-center">
                       <span className="text-3xl mr-3">{getWorkplaceIcon(work.businessName)}</span>
                       <div className="flex-1">
-                        <p className="font-bold text-gray-800">{work.businessName}</p>
+                        <p className="font-bold text-gray-800 text-base">{work.businessName}</p>
                         <p className="text-sm text-gray-500">{work.position}</p>
                       </div>
                       <span className="text-purple-600">→</span>

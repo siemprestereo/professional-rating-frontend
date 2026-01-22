@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
 
+
 function SearchProfessionals() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,9 +148,9 @@ function SearchProfessionals() {
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-4 pb-6 md:pt-6 animate-slideDown">
-        <h1 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">Buscar profesionales</h1>
+        <h1 className="text-2xl md:text-3xl roboto-light text-white mb-3 md:mb-4">Buscar profesionales</h1>
         
-        {/* Buscador - CORREGIDO */}
+        {/* Buscador */}
         <div className="relative animate-slideUp">
           <input
             ref={inputRef}
@@ -158,7 +159,7 @@ function SearchProfessionals() {
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="w-full px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300"
+            className="w-full px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300 text-base"
             style={{ paddingRight: '3.5rem' }}
           />
           <button
@@ -181,7 +182,7 @@ function SearchProfessionals() {
         <div className="flex">
           <button
             onClick={() => setActiveTab('buscar')}
-            className={`flex-1 py-4 px-6 font-semibold transition-all border-b-2 ${
+            className={`flex-1 py-4 px-6 font-semibold transition-all border-b-2 text-base ${
               activeTab === 'buscar'
                 ? 'text-purple-600 border-purple-600'
                 : 'text-gray-500 border-transparent hover:text-purple-600'
@@ -191,7 +192,7 @@ function SearchProfessionals() {
           </button>
           <button
             onClick={() => setActiveTab('explorar')}
-            className={`flex-1 py-4 px-6 font-semibold transition-all border-b-2 ${
+            className={`flex-1 py-4 px-6 font-semibold transition-all border-b-2 text-base ${
               activeTab === 'explorar'
                 ? 'text-purple-600 border-purple-600'
                 : 'text-gray-500 border-transparent hover:text-purple-600'
@@ -210,7 +211,7 @@ function SearchProfessionals() {
             {loading ? (
               <div className="text-center py-12">
                 <Loader2 className="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4" />
-                <div className="text-gray-600">Buscando...</div>
+                <div className="text-gray-600 text-base">Buscando...</div>
               </div>
             ) : professionals.length > 0 ? (
               <div className="space-y-4">
@@ -256,7 +257,7 @@ function SearchProfessionals() {
               <>
                 {/* Categorías populares */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">¿Qué estás buscando?</h3>
+                  <h3 className="text-xl roboto-light text-gray-800 mb-4">¿Qué estás buscando?</h3>
                   <div className="grid grid-cols-3 gap-3">
                     {popularCategories.map((category) => (
                       <button
@@ -275,7 +276,7 @@ function SearchProfessionals() {
                 {!searchTerm && (
                   <div className="text-center py-6 animate-scaleIn">
                     <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Buscá la profesión que necesites</p>
+                    <p className="text-gray-600 text-base">Buscá la profesión que necesites</p>
                     <p className="text-sm text-gray-500 mt-2">
                       O elegí una categoría popular
                     </p>
@@ -286,7 +287,7 @@ function SearchProfessionals() {
                 {searchTerm && professionals.length === 0 && !loading && (
                   <div className="text-center py-12 animate-scaleIn">
                     <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No se encontraron profesionales</p>
+                    <p className="text-gray-600 text-base">No se encontraron profesionales</p>
                     <p className="text-sm text-gray-500 mt-2">
                       Probá con otra profesión
                     </p>
@@ -302,7 +303,7 @@ function SearchProfessionals() {
           <div className="animate-fadeIn">
             {/* Top profesionales */}
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">🌟 Top Profesionales</h3>
+              <h3 className="text-xl roboto-light text-gray-800 mb-4">🌟 Top Profesionales</h3>
               <div className="space-y-3">
                 {mockProfessionals.map((professional) => (
                   <div
@@ -343,18 +344,18 @@ function SearchProfessionals() {
 
             {/* Por categoría */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Por categoría</h4>
+              <h4 className="text-base font-semibold text-gray-700 mb-3">Por categoría</h4>
               <div className="space-y-2">
                 <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700">🏗️ Construcción</span>
+                  <span className="font-semibold text-gray-700 text-base">🏗️ Construcción</span>
                   <span className="text-sm text-gray-500">12 profesionales</span>
                 </button>
                 <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700">🍳 Gastronomía</span>
+                  <span className="font-semibold text-gray-700 text-base">🍳 Gastronomía</span>
                   <span className="text-sm text-gray-500">8 profesionales</span>
                 </button>
                 <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700">💅 Belleza</span>
+                  <span className="font-semibold text-gray-700 text-base">💅 Belleza</span>
                   <span className="text-sm text-gray-500">5 profesionales</span>
                 </button>
               </div>

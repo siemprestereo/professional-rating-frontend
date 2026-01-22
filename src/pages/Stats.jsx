@@ -93,9 +93,9 @@ function Stats() {
     ));
   };
 
- if (loading) {
-  return <LoadingScreen />;
-}
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   // Extraer solo el primer nombre
   const firstName = professional?.name?.split(' ')[0] || 'Usuario';
@@ -152,10 +152,10 @@ function Stats() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             Estadísticas
           </h1>
-          <p className="text-white/90 animate-slideUp delay-100">
+          <p className="text-white/90 text-lg animate-slideUp delay-100">
             Análisis de tus calificaciones
           </p>
         </div>
@@ -173,7 +173,7 @@ function Stats() {
                 {stats?.totalRatings || 0}
               </span>
             </div>
-            <p className="text-gray-600 text-sm">Total de Calificaciones</p>
+            <p className="text-gray-600">Total de Calificaciones</p>
           </div>
 
           {/* Promedio */}
@@ -184,7 +184,7 @@ function Stats() {
                 {stats?.averageScore?.toFixed(1) || '0.0'}
               </span>
             </div>
-            <p className="text-gray-600 text-sm">Promedio de Estrellas</p>
+            <p className="text-gray-600">Promedio de Estrellas</p>
           </div>
 
           {/* Última calificación */}
@@ -197,13 +197,13 @@ function Stats() {
                   : 'N/A'}
               </span>
             </div>
-            <p className="text-gray-600 text-sm">Última Calificación</p>
+            <p className="text-gray-600">Última Calificación</p>
           </div>
         </div>
 
         {/* Distribución de estrellas */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl roboto-light text-gray-800 mb-4">
             Distribución de Calificaciones
           </h2>
           <div className="space-y-3">
@@ -216,7 +216,7 @@ function Stats() {
               return (
                 <div key={stars} className="flex items-center gap-4">
                   <div className="flex items-center gap-1 w-24">
-                    <span className="font-semibold text-gray-700">{stars}</span>
+                    <span className="font-semibold text-gray-700 text-base">{stars}</span>
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                   </div>
                   <div className="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
@@ -241,7 +241,7 @@ function Stats() {
             className="bg-white rounded-2xl shadow-lg p-6 animate-slideUp delay-400 hover-lift cursor-pointer"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-2xl roboto-light text-gray-800">
                 Calificaciones Recientes
               </h2>
               <span className="text-sm text-purple-600 font-semibold">
@@ -260,7 +260,7 @@ function Stats() {
                     </span>
                   </div>
                   {rating.comment && (
-                    <p className="text-gray-600 text-sm">{rating.comment}</p>
+                    <p className="text-gray-600 text-base">{rating.comment}</p>
                   )}
                 </div>
               ))}
@@ -272,10 +272,10 @@ function Stats() {
         {stats?.totalRatings === 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-slideUp">
             <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
+            <h3 className="text-xl roboto-light text-gray-800 mb-2">
               Aún no tenés calificaciones
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-base">
               Compartí tu código QR con tus clientes para empezar a recibir calificaciones
             </p>
           </div>
