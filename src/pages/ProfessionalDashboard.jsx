@@ -263,8 +263,8 @@ function ProfessionalDashboard() {
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   if (!professional) {
     return null;
@@ -334,14 +334,14 @@ function ProfessionalDashboard() {
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn">
             {professional.name.charAt(0).toUpperCase()}
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{professional.name}</h2>
+          <h2 className="text-2xl roboto-light text-white mb-2 animate-slideUp">{professional.name}</h2>
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
             {renderStars(Math.round(professional.reputationScore || 0))}
-            <span className="ml-2 text-white font-semibold">
+            <span className="ml-2 text-white font-semibold text-lg">
               {(professional.reputationScore || 0).toFixed(1)}
             </span>
           </div>
-          <p className="text-white/90 text-sm animate-slideUp delay-200">
+          <p className="text-white/90 animate-slideUp delay-200">
             {professional.totalRatings || 0} calificaciones
           </p>
         </div>
@@ -386,10 +386,10 @@ function ProfessionalDashboard() {
               </div>
             </div>
             
-            <h3 className="text-lg md:text-xl font-bold text-white text-center mb-1 md:mb-2 drop-shadow-md px-2">
+            <h3 className="text-xl md:text-2xl roboto-light text-white text-center mb-1 md:mb-2 drop-shadow-md px-2">
               🎯 Código QR para Calificaciones
             </h3>
-            <p className="text-white/90 text-center text-xs md:text-sm mb-3 md:mb-4 px-2">
+            <p className="text-white/90 text-center text-sm md:text-base mb-3 md:mb-4 px-2">
               Generá tu QR y recibí calificaciones en tiempo real
             </p>
             
@@ -397,16 +397,16 @@ function ProfessionalDashboard() {
               <button
                 onClick={handleGenerateQR}
                 disabled={generatingQR}
-                className="w-full bg-white text-orange-600 font-bold py-3 md:py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl text-sm md:text-base"
+                className="w-full bg-white text-orange-600 font-bold py-3 md:py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl text-base md:text-lg"
               >
                 {generatingQR ? (
                   <span className="flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 md:w-6 md:h-6 mr-2 animate-spin" />
                     Generando...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <QrCode className="w-4 h-4 md:w-5 md:h-5" />
+                    <QrCode className="w-5 h-5 md:w-6 md:h-6" />
                     Generar QR (Estará activo por 3 min)
                   </span>
                 )}
@@ -425,10 +425,10 @@ function ProfessionalDashboard() {
                         className="mx-auto border-2 border-orange-200 rounded-lg w-full max-w-[240px] md:max-w-xs animate-pulseGlow"
                       />
                     </div>
-                    <p className="text-xs md:text-sm text-white/90 mb-1 px-2">
+                    <p className="text-sm md:text-base text-white/90 mb-1 px-2">
                       <span className="font-semibold">Código:</span> {qrCode.code}
                     </p>
-                    <p className="text-xs md:text-sm text-white/90 mb-2 md:mb-3 px-2">
+                    <p className="text-sm md:text-base text-white/90 mb-2 md:mb-3 px-2">
                       <span className="font-semibold">Válido hasta las </span>
                       {qrCode.expiresAt ? 
                         new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
@@ -447,7 +447,7 @@ function ProfessionalDashboard() {
                     </button>
                   </>
                 ) : (
-                  <p className="text-white animate-shake text-sm">Error: No se pudo generar la imagen del QR</p>
+                  <p className="text-white animate-shake">Error: No se pudo generar la imagen del QR</p>
                 )}
               </div>
             )}
@@ -456,14 +456,14 @@ function ProfessionalDashboard() {
 
         {/* Ver estadísticas - SEGUNDO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50 hover-lift">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+          <h3 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+            <TrendingUp className="w-6 h-6 mr-2 text-green-600" />
             Más información sobre mi reputación
           </h3>
           
           <button
             onClick={() => navigate('/stats')}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 ripple"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 ripple text-base"
           >
             Ver estadísticas detalladas
           </button>
@@ -478,8 +478,8 @@ function ProfessionalDashboard() {
           className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift cursor-pointer"
         >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center">
-              <Star className="w-5 h-5 mr-2 text-yellow-500" />
+            <h3 className="text-xl roboto-light text-gray-800 flex items-center">
+              <Star className="w-6 h-6 mr-2 text-yellow-500" />
               Calificaciones Recientes
             </h3>
             {ratings.length > 0 && (
@@ -531,7 +531,7 @@ function ProfessionalDashboard() {
             className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-150 hover-lift"
           >
             <User className="w-7 h-7 text-blue-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800 text-sm">Mi perfil</p>
+            <p className="font-semibold text-gray-800">Mi perfil</p>
           </button>
 
           <button
@@ -539,7 +539,7 @@ function ProfessionalDashboard() {
             className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-200 hover-lift"
           >
             <ClipboardList className="w-7 h-7 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800 text-sm">Mi CV</p>
+            <p className="font-semibold text-gray-800">Mi CV</p>
           </button>
         </div>
       </div>
