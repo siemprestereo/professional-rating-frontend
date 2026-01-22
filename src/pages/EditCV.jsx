@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home, ChevronDown, ChevronRight, Lock } from 'lucide-react';
 import Toast from '../components/Toast';
+import LoadingScreen from '../components/LoadingScreen';
 
 function EditCV() {
   const navigate = useNavigate();
@@ -315,18 +316,18 @@ function EditCV() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
-}
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             Editar CV
           </h1>
-          <p className="text-white/90 animate-slideUp delay-100">
+          <p className="text-white/90 text-lg animate-slideUp delay-100">
             Agregá tu experiencia, educación y certificaciones
           </p>
         </div>
@@ -337,7 +338,7 @@ function EditCV() {
         
         {/* SOBRE MÍ */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <h2 className="text-2xl roboto-light text-gray-800 mb-4 flex items-center">
             <span className="text-2xl mr-2">👤</span>
             Sobre mí
           </h2>
@@ -345,7 +346,7 @@ function EditCV() {
             placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none"
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none text-base"
             rows="4"
           />
         </div>
@@ -353,7 +354,7 @@ function EditCV() {
         {/* TRABAJO AUTÓNOMO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
               <span className="text-2xl mr-2">💼</span>
               Trabajo Autónomo / Freelance
             </h2>
@@ -366,7 +367,7 @@ function EditCV() {
           </div>
 
           {freelanceJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4 text-sm">
+            <p className="text-gray-500 text-center py-4">
               No hay trabajos autónomos agregados
             </p>
           ) : (
@@ -385,10 +386,10 @@ function EditCV() {
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                       <div>
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-gray-800 text-base">
                           {job.position || 'Sin título'} {job.company && `- ${job.company}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
                           {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
                         </p>
@@ -420,7 +421,7 @@ function EditCV() {
                           value={job.position}
                           onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)}
                           disabled={job.hasRatings}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                         />
                         <input
                           type="text"
@@ -428,25 +429,25 @@ function EditCV() {
                           value={job.company}
                           onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)}
                           disabled={job.hasRatings}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                         />
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
                           <input
                             type="date"
                             value={job.startDate}
                             onChange={(e) => updateFreelanceJob(index, 'startDate', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
                           <input
                             type="date"
                             value={job.endDate}
                             onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)}
                             disabled={job.currentlyWorking}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                           />
                         </div>
                       </div>
@@ -459,7 +460,7 @@ function EditCV() {
                             onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)}
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                          <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
                       </div>
 
@@ -467,13 +468,13 @@ function EditCV() {
                         placeholder="Descripción del proyecto / responsabilidades"
                         value={job.description}
                         onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base"
                         rows="3"
                       />
 
                       <button
                         onClick={() => confirmDeleteFreelanceJob(index)}
-                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold"
                       >
                         Eliminar trabajo autónomo
                       </button>
@@ -488,7 +489,7 @@ function EditCV() {
         {/* TRABAJO EN RELACIÓN DE DEPENDENCIA */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
               <span className="text-2xl mr-2">🏢</span>
               Trabajo en Relación de Dependencia
             </h2>
@@ -501,7 +502,7 @@ function EditCV() {
           </div>
 
           {employeeJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4 text-sm">
+            <p className="text-gray-500 text-center py-4">
               No hay trabajos en relación de dependencia agregados
             </p>
           ) : (
@@ -520,10 +521,10 @@ function EditCV() {
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                       <div>
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-gray-800 text-base">
                           {job.position || 'Sin título'} {job.company && `- ${job.company}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
                           {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
                         </p>
@@ -555,7 +556,7 @@ function EditCV() {
                           value={job.company}
                           onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)}
                           disabled={job.hasRatings}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                         />
                         <input
                           type="text"
@@ -563,25 +564,25 @@ function EditCV() {
                           value={job.position}
                           onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)}
                           disabled={job.hasRatings}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                         />
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
                           <input
                             type="date"
                             value={job.startDate}
                             onChange={(e) => updateEmployeeJob(index, 'startDate', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
                           <input
                             type="date"
                             value={job.endDate}
                             onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)}
                             disabled={job.currentlyWorking}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                           />
                         </div>
                       </div>
@@ -594,7 +595,7 @@ function EditCV() {
                             onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)}
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Aún trabajo aquí</span>
+                          <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
                       </div>
 
@@ -602,7 +603,7 @@ function EditCV() {
                         placeholder="Descripción de responsabilidades"
                         value={job.description}
                         onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base"
                         rows="3"
                       />
 
@@ -612,20 +613,20 @@ function EditCV() {
                           placeholder="Nombre de referencia (opcional)"
                           value={job.referenceName}
                           onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                         <input
                           type="tel"
                           placeholder="Teléfono de referencia (opcional)"
                           value={job.referencePhone}
                           onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                       </div>
 
                       <button
                         onClick={() => confirmDeleteEmployeeJob(index)}
-                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold"
                       >
                         Eliminar trabajo
                       </button>
@@ -640,7 +641,7 @@ function EditCV() {
         {/* Educación */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
               Educación
             </h2>
@@ -653,7 +654,7 @@ function EditCV() {
           </div>
 
           {education.length === 0 ? (
-            <p className="text-gray-500 text-center py-4 text-sm">
+            <p className="text-gray-500 text-center py-4">
               No hay educación agregada
             </p>
           ) : (
@@ -671,10 +672,10 @@ function EditCV() {
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                       <div>
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-gray-800 text-base">
                           {edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}
                         </p>
                       </div>
@@ -689,32 +690,32 @@ function EditCV() {
                           placeholder="Institución"
                           value={edu.institution}
                           onChange={(e) => updateEducation(index, 'institution', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                         <input
                           type="text"
                           placeholder="Título/Grado"
                           value={edu.degree}
                           onChange={(e) => updateEducation(index, 'degree', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
                           <input
                             type="date"
                             value={edu.startDate}
                             onChange={(e) => updateEducation(index, 'startDate', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
                           <input
                             type="date"
                             value={edu.endDate}
                             onChange={(e) => updateEducation(index, 'endDate', e.target.value)}
                             disabled={edu.currentlyStudying}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                           />
                         </div>
                       </div>
@@ -727,7 +728,7 @@ function EditCV() {
                             onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)}
                             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Actualmente estudio aquí</span>
+                          <span className="ml-2 text-base text-gray-700">Actualmente estudio aquí</span>
                         </label>
                       </div>
 
@@ -735,13 +736,13 @@ function EditCV() {
                         placeholder="Descripción"
                         value={edu.description}
                         onChange={(e) => updateEducation(index, 'description', e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none"
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base"
                         rows="2"
                       />
 
                       <button
                         onClick={() => confirmDeleteEducation(index)}
-                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold"
                       >
                         Eliminar educación
                       </button>
@@ -756,7 +757,7 @@ function EditCV() {
         {/* Certificaciones */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+            <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
               <Award className="w-6 h-6 mr-2 text-purple-600" />
               Certificaciones
             </h2>
@@ -769,7 +770,7 @@ function EditCV() {
           </div>
 
           {certifications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4 text-sm">
+            <p className="text-gray-500 text-center py-4">
               No hay certificaciones agregadas
             </p>
           ) : (
@@ -787,10 +788,10 @@ function EditCV() {
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                       <div>
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-gray-800 text-base">
                           {cert.name || 'Sin nombre'} {cert.issuer && `- ${cert.issuer}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
                           {cert.dateObtained ? new Date(cert.dateObtained).getFullYear() : 'Sin fecha'}
                         </p>
                       </div>
@@ -805,38 +806,38 @@ function EditCV() {
                           placeholder="Nombre de la certificación"
                           value={cert.name}
                           onChange={(e) => updateCertification(index, 'name', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                         <input
                           type="text"
                           placeholder="Emisor"
                           value={cert.issuer}
                           onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha obtenida</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha obtenida</label>
                           <input
                             type="date"
                             value={cert.dateObtained}
                             onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
                           <input
                             type="date"
                             value={cert.expiryDate}
                             onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                           />
                         </div>
                       </div>
 
                       <button
                         onClick={() => confirmDeleteCertification(index)}
-                        className="text-red-500 hover:text-red-700 text-sm font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold"
                       >
                         Eliminar certificación
                       </button>
@@ -852,7 +853,7 @@ function EditCV() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4"
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-lg"
         >
           {saving ? (
             <>
@@ -886,20 +887,20 @@ function EditCV() {
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
               {deleteModal.title}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-base">
               {deleteModal.message}
             </p>
             
             <div className="flex gap-4">
               <button
                 onClick={() => setDeleteModal(null)}
-                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all text-base"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition-all"
+                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition-all text-base"
               >
                 Eliminar
               </button>
