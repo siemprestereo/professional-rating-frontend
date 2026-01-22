@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Home, Loader2, TrendingUp, Award, Calendar } from 'lucide-react';
+import { Star, Home, TrendingUp, Award, Calendar } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 function ClientStats() {
   const navigate = useNavigate();
@@ -228,8 +229,8 @@ function ClientStats() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
-}
+    return <LoadingScreen gradient="from-green-500 to-teal-600" />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
@@ -262,8 +263,8 @@ function ClientStats() {
           </div>
         </div>
 
-        {/* Gráfico de Actividad */}
-        {stats && stats.monthlyActivity.length > 0 && (
+        {/* Gráfico de Actividad - SOLO MOSTRAR SI HAY DATOS */}
+        {stats && stats.monthlyActivity.length > 0 && stats.total > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
@@ -296,20 +297,22 @@ function ClientStats() {
                     />
                   ))}
 
-                  {/* Línea del gráfico */}
-                  <polyline
-                    points={stats.monthlyActivity.map((m, i) => {
-                      const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
-                      const x = (i * 500) / (stats.monthlyActivity.length - 1);
-                      const y = 10 + ((maxCount - m.count) / maxCount) * 140; // Invertido y con margen
-                      return `${x},${y}`;
-                    }).join(' ')}
-                    fill="none"
-                    stroke="url(#gradient)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  {/* SOLO RENDERIZAR LÍNEA SI HAY MÁS DE 1 PUNTO */}
+                  {stats.monthlyActivity.filter(m => m.count > 0).length > 1 && (
+                    <polyline
+                      points={stats.monthlyActivity.map((m, i) => {
+                        const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
+                        const x = (i * 500) / (stats.monthlyActivity.length - 1);
+                        const y = 10 + ((maxCount - m.count) / maxCount) * 140;
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="url(#gradient)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
 
                   {/* Puntos */}
                   {stats.monthlyActivity.map((m, i) => {
