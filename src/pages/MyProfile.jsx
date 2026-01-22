@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, Loader2, Edit, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 function MyProfile() {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ function MyProfile() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   if (!professional) {

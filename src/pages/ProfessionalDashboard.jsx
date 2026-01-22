@@ -263,7 +263,7 @@ function ProfessionalDashboard() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   if (!professional) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TrendingUp, Award, Calendar, Building2, Home, Loader2 } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 function StatsPublic() {
   const { professionalId } = useParams();
@@ -104,7 +105,7 @@ function StatsPublic() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   return (

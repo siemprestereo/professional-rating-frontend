@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, TrendingUp, Users, Calendar, Loader2, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
 
 function Stats() {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ function Stats() {
   };
 
  if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   // Extraer solo el primer nombre

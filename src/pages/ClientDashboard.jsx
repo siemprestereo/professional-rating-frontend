@@ -167,7 +167,7 @@ function ClientDashboard() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   if (!client) {

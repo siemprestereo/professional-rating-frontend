@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, ArrowLeft, Loader2, Search, X } from 'lucide-react';
 import api from '../services/api.js';
+import LoadingScreen from '../components/LoadingScreen';
 
 
 function ProfessionalProfile() {
@@ -124,7 +125,7 @@ setRatings(ratingsData);
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
+  return <LoadingScreen />;
 }
 
   if (!professional) {
