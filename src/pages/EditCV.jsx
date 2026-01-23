@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home, ChevronDown, ChevronRight, Lock } from 'lucide-react';
+import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home, ChevronDown, ChevronRight, Lock, AlertTriangle } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -333,6 +333,27 @@ function EditCV() {
         </div>
       </div>
 
+      {/* Banner de advertencia - Solo si no tiene trabajos activos */}
+      {[...freelanceJobs, ...employeeJobs].filter(w => w.currentlyWorking === true).length === 0 && (
+        <div className="max-w-4xl mx-auto px-4 -mt-12 mb-4 animate-slideUp">
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base roboto-light text-orange-900 mb-1">
+                  ⚠️ No podés recibir calificaciones todavía
+                </h3>
+                <p className="text-sm text-orange-800">
+                  Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
@@ -474,7 +495,7 @@ function EditCV() {
 
                       <button
                         onClick={() => confirmDeleteFreelanceJob(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold text-base"
                       >
                         Eliminar trabajo autónomo
                       </button>
@@ -626,7 +647,7 @@ function EditCV() {
 
                       <button
                         onClick={() => confirmDeleteEmployeeJob(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold text-base"
                       >
                         Eliminar trabajo
                       </button>
@@ -742,7 +763,7 @@ function EditCV() {
 
                       <button
                         onClick={() => confirmDeleteEducation(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold text-base"
                       >
                         Eliminar educación
                       </button>
@@ -837,7 +858,7 @@ function EditCV() {
 
                       <button
                         onClick={() => confirmDeleteCertification(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold"
+                        className="text-red-500 hover:text-red-700 font-semibold text-base"
                       >
                         Eliminar certificación
                       </button>
@@ -884,7 +905,7 @@ function EditCV() {
       {deleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl roboto-light text-gray-800 mb-4">
               {deleteModal.title}
             </h2>
             <p className="text-gray-600 mb-6 text-base">

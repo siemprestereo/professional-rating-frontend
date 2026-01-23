@@ -55,9 +55,9 @@ function ProfessionalRegister() {
         console.log('📦 Payload del token:', payload);
         
         if (payload.userType === 'PROFESSIONAL') {
-          setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
+          setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
           setTimeout(() => {
-            navigate('/professional-dashboard', { replace: true });
+            navigate('/edit-cv', { replace: true });
           }, 1000);
         } else {
           navigate('/client-dashboard', { replace: true });
@@ -121,10 +121,10 @@ function ProfessionalRegister() {
         name: data.name
       }));
 
-      setToast({ type: 'success', message: '¡Registro exitoso!' });
+      setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
       
       setTimeout(() => {
-        navigate('/professional-dashboard');
+        navigate('/edit-cv');
       }, 1000);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
@@ -139,24 +139,24 @@ function ProfessionalRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4 animate-fadeIn">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
         <button
           onClick={() => navigate('/professional-login')}
-          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors"
+          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver al login
         </button>
 
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
             <UserPlus className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl roboto-light text-gray-800 mb-2">
             Registro Profesionales
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             Creá tu perfil profesional
           </p>
         </div>
@@ -164,7 +164,7 @@ function ProfessionalRegister() {
         {/* Botón de Google */}
         <button
           onClick={handleGoogleLogin}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift"
+          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-base"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -186,7 +186,7 @@ function ProfessionalRegister() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Nombre Completo
             </label>
             <input
@@ -195,12 +195,12 @@ function ProfessionalRegister() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Juan Pérez"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Email
             </label>
             <input
@@ -209,13 +209,13 @@ function ProfessionalRegister() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
             />
           </div>
 
           {/* Tipo de profesión */}
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+            <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
               <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
               Tipo de profesión *
             </label>
@@ -223,7 +223,7 @@ function ProfessionalRegister() {
               value={professionType}
               onChange={(e) => setProfessionType(e.target.value)}
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
             >
               <option value="">Seleccioná una opción</option>
               {professions.map((prof) => (
@@ -236,7 +236,7 @@ function ProfessionalRegister() {
 
           {/* Título profesional (opcional) */}
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Título profesional (opcional)
             </label>
             <input
@@ -244,12 +244,12 @@ function ProfessionalRegister() {
               value={professionalTitle}
               onChange={(e) => setProfessionalTitle(e.target.value)}
               placeholder="Ej: Mozo Senior, Electricista Matriculado"
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Password
             </label>
             <div className="relative">
@@ -260,7 +260,7 @@ function ProfessionalRegister() {
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-purple-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-base"
               />
               <button
                 type="button"
@@ -273,7 +273,7 @@ function ProfessionalRegister() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Confirmar Password
             </label>
             <div className="relative">
@@ -283,7 +283,7 @@ function ProfessionalRegister() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repetí tu password"
                 required
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-purple-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-base"
               />
               <button
                 type="button"
@@ -298,7 +298,7 @@ function ProfessionalRegister() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-lg"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -312,11 +312,11 @@ function ProfessionalRegister() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             ¿Ya tenés cuenta?{' '}
             <button
               onClick={() => navigate('/professional-login')}
-              className="text-purple-600 font-semibold hover:text-purple-700"
+              className="text-blue-600 font-semibold hover:text-blue-700"
             >
               Iniciá sesión
             </button>
