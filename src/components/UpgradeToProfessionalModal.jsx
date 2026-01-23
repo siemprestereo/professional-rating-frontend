@@ -84,7 +84,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn text-center">
           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Verificando disponibilidad...</p>
+          <p className="text-gray-600 text-base">Verificando disponibilidad...</p>
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
                 <Briefcase className="w-6 h-6 text-blue-600" />
               )}
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl roboto-light text-gray-800">
               {step === 3 ? 'No disponible' : step === 4 ? '¡Listo!' : 'Convertirse en Profesional'}
             </h2>
           </div>
@@ -124,19 +124,19 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
         {/* Step 1: Selección de profesión */}
         {step === 1 && (
           <>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-base">
               Seleccioná tu profesión para empezar a recibir calificaciones de tus clientes.
             </p>
 
             {/* Selector de profesión */}
             <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
+              <label className="block text-gray-700 font-semibold mb-2 text-base">
                 Tipo de profesión *
               </label>
               <select
                 value={professionType}
                 onChange={(e) => setProfessionType(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
               >
                 <option value="">Seleccioná una opción</option>
                 {professions.map((prof) => (
@@ -149,7 +149,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
 
             {/* Título profesional (opcional) */}
             <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2">
+              <label className="block text-gray-700 font-semibold mb-2 text-base">
                 Título profesional (opcional)
               </label>
               <input
@@ -157,7 +157,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
                 value={professionalTitle}
                 onChange={(e) => setProfessionalTitle(e.target.value)}
                 placeholder="Ej: Mozo Senior, Electricista Matriculado"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
               />
             </div>
 
@@ -171,14 +171,14 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all text-base"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => setStep(2)}
                 disabled={!professionType}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all"
+                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all text-base"
               >
                 Continuar
               </button>
@@ -189,7 +189,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
         {/* Step 2: Confirmación con advertencia */}
         {step === 2 && (
           <>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-4 text-base">
               Al convertirte en Profesional:
             </p>
             <ul className="space-y-2 mb-6 text-sm text-gray-600">
@@ -241,14 +241,14 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all text-base"
               >
                 Volver
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 transition-all"
+                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 transition-all text-base"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -268,7 +268,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
           <>
             <div className="text-center mb-6">
               <Calendar className="w-20 h-20 text-orange-500 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">
+              <p className="text-gray-600 mb-2 text-base">
                 No podés cambiar de rol todavía
               </p>
               <p className="text-sm text-gray-500">
@@ -289,7 +289,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
 
             <button
               onClick={onClose}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
             >
               Entendido
             </button>
@@ -301,7 +301,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
           <>
             <div className="text-center mb-6">
               <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4 animate-scaleIn" />
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-4 text-base">
                 ¡Tu cuenta se convirtió en Profesional exitosamente!
               </p>
             </div>

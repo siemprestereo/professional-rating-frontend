@@ -62,7 +62,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn p-4">
         <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn text-center">
           <Loader2 className="w-12 h-12 text-green-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Verificando disponibilidad...</p>
+          <p className="text-gray-600 text-base">Verificando disponibilidad...</p>
         </div>
       </div>
     );
@@ -85,7 +85,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
                 <UserCheck className="w-6 h-6 text-green-600" />
               )}
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl roboto-light text-gray-800">
               {step === 2 ? 'No disponible' : step === 3 ? '¡Listo!' : 'Volver a ser Cliente'}
             </h2>
           </div>
@@ -102,7 +102,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
         {/* Step 1: Confirmación con advertencia */}
         {step === 1 && (
           <>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-4 text-base">
               Al volver a ser Cliente:
             </p>
             <ul className="space-y-2 mb-6 text-sm text-gray-600">
@@ -149,14 +149,14 @@ function SwitchToClientModal({ onClose, onSuccess }) {
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all text-base"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 transition-all"
+                className="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 transition-all text-base"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -176,7 +176,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
           <>
             <div className="text-center mb-6">
               <Calendar className="w-20 h-20 text-orange-500 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">
+              <p className="text-gray-600 mb-2 text-base">
                 No podés cambiar de rol todavía
               </p>
               <p className="text-sm text-gray-500">
@@ -197,7 +197,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
 
             <button
               onClick={onClose}
-              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
             >
               Entendido
             </button>
@@ -209,7 +209,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
           <>
             <div className="text-center mb-6">
               <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4 animate-scaleIn" />
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-4 text-base">
                 ¡Tu cuenta volvió a ser Cliente exitosamente!
               </p>
             </div>
