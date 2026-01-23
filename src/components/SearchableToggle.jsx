@@ -71,7 +71,7 @@ function SearchableToggle() {
         </div>
         
         <div className="flex-1">
-          <h3 className="font-bold text-gray-800 mb-2">
+          <h3 className="text-lg roboto-light text-gray-800 mb-2">
             ¿Estás buscando trabajo?
           </h3>
           <p className="text-sm text-gray-600 mb-4">
