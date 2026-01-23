@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
-
+import LoginRequiredModal from '../components/LoginRequiredModal'; // ← AGREGAR
 
 function SearchProfessionals() {
   const navigate = useNavigate();
@@ -11,8 +11,9 @@ function SearchProfessionals() {
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
-  const [activeTab, setActiveTab] = useState('buscar'); // 'buscar' o 'explorar'
+  const [activeTab, setActiveTab] = useState('buscar');
   const [topProfessionals, setTopProfessionals] = useState([]);
+  const [showLoginModal, setShowLoginModal] = useState(false); // ← AGREGAR
   const inputRef = useRef(null);
 
   // Palabras para el placeholder animado
@@ -144,10 +145,21 @@ function SearchProfessionals() {
   const handleCategoryClick = (categoryName) => {
     setSearchTerm(categoryName);
     setActiveTab('buscar');
-    // Esperar un tick para que se actualice searchTerm
     setTimeout(() => {
       handleSearch();
     }, 100);
+  };
+
+  // ← AGREGAR ESTA FUNCIÓN
+  const checkLoginAndNavigate = (professionalId) => {
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    navigate(`/professional/${professionalId}`);
   };
 
   const renderStars = (score) => {
@@ -195,7 +207,7 @@ function SearchProfessionals() {
   const renderProfessionalCard = (professional, index = 0) => (
     <div
       key={professional.id}
-      onClick={() => navigate(`/professional/${professional.id}`)}
+      onClick={() => checkLoginAndNavigate(professional.id)} // ← CAMBIAR ESTA LÍNEA
       className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
@@ -412,11 +424,16 @@ function SearchProfessionals() {
         <button 
           onClick={() => navigate(-1)}
           className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Volver al inicio"
+          aria-label="Volver atrás"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
+
+      {/* ← AGREGAR ESTE MODAL AL FINAL */}
+      {showLoginModal && (
+        <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
+      )}
     </div>
   );
 }
