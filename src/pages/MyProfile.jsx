@@ -140,7 +140,7 @@ function MyProfile() {
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
-            className="text-white text-2xl hover:scale-105 transition-transform"
+            className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >
             Calificalo
@@ -197,7 +197,7 @@ function MyProfile() {
               {reputationScore.toFixed(1)}
             </span>
           </div>
-          <p className="text-white/90 animate-slideUp delay-200">
+          <p className="text-white/90 animate-slideUp delay-200 text-base">
             {totalRatings} {totalRatings === 1 ? 'calificación' : 'calificaciones'}
           </p>
         </div>
@@ -205,20 +205,9 @@ function MyProfile() {
 
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
-        {/* Acciones de edición */}
-        <div className="mb-4 flex justify-center">
-          <button
-            onClick={() => navigate('/edit-profile-professional')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp hover-lift max-w-xs w-full"
-          >
-            <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
-            <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
-          </button>
-        </div>
-
         {/* Tipo de profesión */}
         {professional.professionType && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
             <h2 className="text-xl roboto-light text-gray-800 mb-3">Tipo de Profesión</h2>
             <p className="text-gray-600 text-base">{getProfessionTypeLabel(professional.professionType)}</p>
           </div>
@@ -226,14 +215,14 @@ function MyProfile() {
 
         {/* Información del perfil */}
         {professional.professionalTitle && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
             <h2 className="text-xl roboto-light text-gray-800 mb-3">Título Profesional</h2>
             <p className="text-gray-600 text-base">{professional.professionalTitle}</p>
           </div>
         )}
 
         {professional.phone && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
             <h2 className="text-xl roboto-light text-gray-800 mb-3">Contacto</h2>
             <p className="text-gray-600 text-base">📞 {professional.phone}</p>
             {professional.location && (
@@ -244,7 +233,7 @@ function MyProfile() {
 
         {/* Calificaciones recientes */}
         {ratings.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <Award className="w-6 h-6 mr-2 text-yellow-500" />
               Mis Calificaciones Recientes
@@ -286,7 +275,7 @@ function MyProfile() {
         )}
 
         {ratings.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center animate-slideUp delay-300 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 text-center animate-slideUp delay-200 hover-lift">
             <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-base">Aún no tenés calificaciones</p>
             <p className="text-sm text-gray-400 mt-2">
@@ -294,6 +283,17 @@ function MyProfile() {
             </p>
           </div>
         )}
+
+        {/* Botón Editar Perfil - MOVIDO AL FINAL */}
+        <div className="mb-6 flex justify-center">
+          <button
+            onClick={() => navigate('/edit-profile-professional')}
+            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift max-w-xs w-full"
+          >
+            <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+            <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
+          </button>
+        </div>
       </div>
 
       {/* Botón Home flotante fijo abajo centrado */}
