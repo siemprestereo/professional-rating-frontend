@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, Award, Home, ChevronRight, Search } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, Award, Home, ChevronRight, Search, AlertTriangle } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -247,6 +247,25 @@ function CvView() {
               : '🔒 Tu perfil está oculto de las búsquedas'}
           </p>
         </div>
+
+        {/* Banner de advertencia - Solo si no tiene trabajos activos */}
+        {[...freelanceActive, ...employeeActive].length === 0 && (
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base roboto-light text-orange-900 mb-1">
+                  ⚠️ No podés recibir calificaciones todavía
+                </h3>
+                <p className="text-sm text-orange-800">
+                  Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TRABAJO AUTÓNOMO ACTUAL */}
         {freelanceActive.length > 0 && (
