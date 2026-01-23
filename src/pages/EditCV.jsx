@@ -100,10 +100,6 @@ function EditCV() {
   try {
     const token = localStorage.getItem('authToken');
     
-    console.log('📋 Estado antes de mapear:');
-    console.log('freelanceJobs:', freelanceJobs);
-    console.log('employeeJobs:', employeeJobs);
-    
     // Mapear trabajos al formato que espera el backend
     const mappedWorkExperiences = [...freelanceJobs, ...employeeJobs].map(job => ({
       workHistoryId: job.workHistoryId || null,
@@ -117,16 +113,12 @@ function EditCV() {
       referenceContact: job.referenceName
     }));
 
-    console.log('📤 Datos mapeados a enviar:', mappedWorkExperiences);
-
     const payload = {
       description,
       workExperiences: mappedWorkExperiences,
       education,
       certifications
     };
-
-    console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
 
     const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
       method: 'PUT',
@@ -137,16 +129,9 @@ function EditCV() {
       body: JSON.stringify(payload)
     });
 
-    console.log('📥 Response status:', response.status);
-
     if (response.ok) {
-      const responseData = await response.json();
-      console.log('✅ Respuesta del servidor:', responseData);
       setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      // Recargar el CV para sincronizar los IDs y datos actualizados
-      setTimeout(() => {
-        loadCV();
-      }, 500);
+      // NO recargar automáticamente - mantener el estado actual
     } else {
       const errorData = await response.json();
       console.error('❌ Error del backend:', errorData);
