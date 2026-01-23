@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, ChevronDown, FileText } from 'lucide-react';
+import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, ChevronDown, FileText, Search } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import LoadingScreen from '../components/LoadingScreen';
@@ -495,7 +495,7 @@ function ProfessionalDashboard() {
             </p>
           ) : (
             <div className="space-y-3">
-              {ratings.slice(0, 5).map((rating, index) => (
+              {ratings.slice(0, 2).map((rating, index) => (
                 <div 
                   key={rating.id} 
                   className="border-b border-gray-100 pb-3 last:border-0 animate-slideUp"
@@ -515,20 +515,38 @@ function ProfessionalDashboard() {
                 </div>
               ))}
               
-              {ratings.length > 5 && (
+              {ratings.length > 2 && (
                 <p className="text-sm text-gray-500 text-center pt-2">
-                  + {ratings.length - 5} calificaciones más
+                  + {ratings.length - 2} calificaciones más
                 </p>
               )}
             </div>
           )}
         </div>
 
-        {/* Acciones rápidas - MODIFICADO: 2 botones en fila */}
+        {/* NUEVO: Buscar Profesionales */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
+          <h3 className="text-xl roboto-light text-white mb-2 flex items-center">
+            <Search className="w-6 h-6 mr-2" />
+            Explorá otros profesionales
+          </h3>
+          <p className="text-white/90 text-sm mb-4">
+            Descubrí y conectá con otros profesionales en la plataforma
+          </p>
+          
+          <button
+            onClick={() => navigate('/search')}
+            className="w-full bg-white text-purple-600 font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 ripple text-base"
+          >
+            🔍 Buscar Profesionales
+          </button>
+        </div>
+
+        {/* Acciones rápidas - 2 botones en fila */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             onClick={() => navigate('/my-profile')}
-            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-150 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-200 hover-lift"
           >
             <User className="w-7 h-7 text-blue-600 mx-auto mb-2" />
             <p className="font-semibold text-gray-800">Mi perfil</p>
@@ -536,7 +554,7 @@ function ProfessionalDashboard() {
 
           <button
             onClick={handleCV}
-            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-200 hover-lift"
+            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-250 hover-lift"
           >
             <ClipboardList className="w-7 h-7 text-purple-600 mx-auto mb-2" />
             <p className="font-semibold text-gray-800">Mi CV</p>
