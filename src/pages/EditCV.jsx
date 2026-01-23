@@ -333,27 +333,6 @@ function EditCV() {
         </div>
       </div>
 
-      {/* Banner de advertencia - Solo si no tiene trabajos activos */}
-      {[...freelanceJobs, ...employeeJobs].filter(w => w.currentlyWorking === true).length === 0 && (
-        <div className="max-w-4xl mx-auto px-4 -mt-16 mb-4 animate-slideUp">
-          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base roboto-light text-orange-900 mb-1">
-                  ⚠️ No podés recibir calificaciones todavía
-                </h3>
-                <p className="text-sm text-orange-800">
-                  Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         
@@ -371,6 +350,25 @@ function EditCV() {
             rows="4"
           />
         </div>
+
+        {/* Banner de advertencia - Solo si no tiene trabajos activos */}
+        {[...freelanceJobs, ...employeeJobs].filter(w => w.currentlyWorking === true).length === 0 && (
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base roboto-light text-orange-900 mb-1">
+                  ⚠️ No podés recibir calificaciones todavía
+                </h3>
+                <p className="text-sm text-orange-800">
+                  Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TRABAJO AUTÓNOMO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
