@@ -5,11 +5,14 @@ import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed
 
 function SearchProfessionals() {
   const navigate = useNavigate();
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
   const [activeTab, setActiveTab] = useState('buscar'); // 'buscar' o 'explorar'
+  const [topProfessionals, setTopProfessionals] = useState([]);
   const inputRef = useRef(null);
 
   // Palabras para el placeholder animado
@@ -82,37 +85,57 @@ function SearchProfessionals() {
     };
   }, [searchTerm]);
 
-  // Mock data - en producción esto vendría del backend
-  const mockProfessionals = [
-    {
-      id: 5,
-      name: 'Pedro González',
-      reputationScore: 4.5,
-      totalRatings: 12,
-      currentBusiness: 'La Parrilla'
-    },
-    {
-      id: 2,
-      name: 'Carlos López',
-      reputationScore: 4.8,
-      totalRatings: 25,
-      currentBusiness: 'El Buen Sabor'
+  // Cargar top profesionales cuando se abre el tab "Explorar"
+  useEffect(() => {
+    if (activeTab === 'explorar' && topProfessionals.length === 0) {
+      loadTopProfessionals();
     }
-  ];
+  }, [activeTab]);
 
-  const handleSearch = async () => {
+  const loadTopProfessionals = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`${backendUrl}/api/professionals/search/top`);
       
-      const filtered = mockProfessionals.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.currentBusiness.toLowerCase().includes(searchTerm.toLowerCase())
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Top profesionales cargados:', data);
+        setTopProfessionals(data);
+      } else {
+        console.error('❌ Error cargando top profesionales');
+        setTopProfessionals([]);
+      }
+    } catch (error) {
+      console.error('Error loading top professionals:', error);
+      setTopProfessionals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      setProfessionals([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${backendUrl}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`
       );
       
-      setProfessionals(filtered);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Búsqueda exitosa:', data);
+        setProfessionals(data);
+      } else {
+        console.error('❌ Error en búsqueda');
+        setProfessionals([]);
+      }
     } catch (error) {
       console.error('Error searching:', error);
+      setProfessionals([]);
     } finally {
       setLoading(false);
     }
@@ -120,7 +143,11 @@ function SearchProfessionals() {
 
   const handleCategoryClick = (categoryName) => {
     setSearchTerm(categoryName);
-    handleSearch();
+    setActiveTab('buscar');
+    // Esperar un tick para que se actualice searchTerm
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
   };
 
   const renderStars = (score) => {
@@ -143,6 +170,71 @@ function SearchProfessionals() {
     };
     return colors[color] || colors.blue;
   };
+
+  const translateProfession = (type) => {
+    const translations = {
+      'WAITER': 'Mozo',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
+      'CHEF': 'Chef',
+      'BARISTA': 'Barista',
+      'BARTENDER': 'Bartender',
+      'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
+      'SECURITY': 'Seguridad',
+      'RECEPTIONIST': 'Recepcionista'
+    };
+    return translations[type] || type;
+  };
+
+  const renderProfessionalCard = (professional, index = 0) => (
+    <div
+      key={professional.id}
+      onClick={() => navigate(`/cv/${professional.id}`)}
+      className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      <div className="flex items-start">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mr-4 transition-transform duration-300 hover:scale-110">
+          {professional.name.charAt(0)}
+        </div>
+        
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-gray-800 mb-1">
+            {professional.name}
+          </h3>
+          
+          {professional.professionType && (
+            <p className="text-sm text-purple-600 font-semibold mb-2">
+              {translateProfession(professional.professionType)}
+            </p>
+          )}
+          
+          <div className="flex items-center mb-2">
+            {renderStars(professional.reputationScore || 0)}
+            <span className="ml-2 text-sm font-semibold text-gray-700">
+              {(professional.reputationScore || 0).toFixed(1)}
+            </span>
+            <span className="ml-2 text-sm text-gray-500">
+              ({professional.totalRatings || 0})
+            </span>
+          </div>
+          
+          {professional.location && (
+            <div className="flex items-center text-sm text-gray-600">
+              <MapPin className="w-4 h-4 mr-1 text-purple-600" />
+              {professional.location}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
@@ -215,43 +307,9 @@ function SearchProfessionals() {
               </div>
             ) : professionals.length > 0 ? (
               <div className="space-y-4">
-                {professionals.map((professional, index) => (
-                  <div
-                    key={professional.id}
-                    onClick={() => navigate(`/professional/${professional.id}`)}
-                    className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mr-4 transition-transform duration-300 hover:scale-110">
-                        {professional.name.charAt(0)}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">
-                          {professional.name}
-                        </h3>
-                        
-                        <div className="flex items-center mb-2">
-                          {renderStars(professional.reputationScore)}
-                          <span className="ml-2 text-sm font-semibold text-gray-700">
-                            {professional.reputationScore.toFixed(1)}
-                          </span>
-                          <span className="ml-2 text-sm text-gray-500">
-                            ({professional.totalRatings})
-                          </span>
-                        </div>
-                        
-                        {professional.currentBusiness && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="w-4 h-4 mr-1 text-purple-600" />
-                            {professional.currentBusiness}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {professionals.map((professional, index) => 
+                  renderProfessionalCard(professional, index)
+                )}
               </div>
             ) : (
               <>
@@ -301,65 +359,50 @@ function SearchProfessionals() {
         {/* TAB: EXPLORAR */}
         {activeTab === 'explorar' && (
           <div className="animate-fadeIn">
-            {/* Top profesionales */}
-            <div className="mb-6">
-              <h3 className="text-xl roboto-light text-gray-800 mb-4">🌟 Top Profesionales</h3>
-              <div className="space-y-3">
-                {mockProfessionals.map((professional) => (
-                  <div
-                    key={professional.id}
-                    onClick={() => navigate(`/professional/${professional.id}`)}
-                    className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all hover-lift"
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mr-4">
-                        {professional.name.charAt(0)}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h4 className="text-lg font-bold text-gray-800 mb-1">
-                          {professional.name}
-                        </h4>
-                        
-                        <div className="flex items-center mb-2">
-                          {renderStars(professional.reputationScore)}
-                          <span className="ml-2 text-sm font-semibold text-gray-700">
-                            {professional.reputationScore.toFixed(1)}
-                          </span>
-                          <span className="ml-2 text-sm text-gray-500">
-                            ({professional.totalRatings})
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPin className="w-4 h-4 mr-1 text-purple-600" />
-                          {professional.currentBusiness}
-                        </div>
-                      </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4" />
+                <div className="text-gray-600 text-base">Cargando...</div>
+              </div>
+            ) : (
+              <>
+                {/* Top profesionales */}
+                <div className="mb-6">
+                  <h3 className="text-xl roboto-light text-gray-800 mb-4">🌟 Top Profesionales</h3>
+                  {topProfessionals.length > 0 ? (
+                    <div className="space-y-3">
+                      {topProfessionals.map((professional, index) => 
+                        renderProfessionalCard(professional, index)
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 text-base">No hay profesionales disponibles</p>
+                    </div>
+                  )}
+                </div>
 
-            {/* Por categoría */}
-            <div>
-              <h4 className="text-base font-semibold text-gray-700 mb-3">Por categoría</h4>
-              <div className="space-y-2">
-                <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700 text-base">🏗️ Construcción</span>
-                  <span className="text-sm text-gray-500">12 profesionales</span>
-                </button>
-                <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700 text-base">🍳 Gastronomía</span>
-                  <span className="text-sm text-gray-500">8 profesionales</span>
-                </button>
-                <button className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md">
-                  <span className="font-semibold text-gray-700 text-base">💅 Belleza</span>
-                  <span className="text-sm text-gray-500">5 profesionales</span>
-                </button>
-              </div>
-            </div>
+                {/* Por categoría */}
+                <div>
+                  <h4 className="text-base font-semibold text-gray-700 mb-3">Por categoría</h4>
+                  <div className="space-y-2">
+                    {popularCategories.slice(0, 3).map((category) => (
+                      <button
+                        key={category.name}
+                        onClick={() => handleCategoryClick(category.name)}
+                        className="w-full bg-white hover:bg-gray-50 p-4 rounded-xl flex items-center justify-between transition-all shadow-sm hover:shadow-md"
+                      >
+                        <span className="font-semibold text-gray-700 text-base">
+                          {category.emoji} {category.name}
+                        </span>
+                        <span className="text-sm text-purple-600">Ver →</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
