@@ -91,47 +91,77 @@ function EditCV() {
   };
 
   const handleSave = async () => {
-    const allWorkExperiences = [...freelanceJobs, ...employeeJobs];
+  if (!cv || !cv.id) {
+    setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+    return;
+  }
+
+  setSaving(true);
+  try {
+    const token = localStorage.getItem('authToken');
     
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+    console.log('📋 Estado antes de mapear:');
+    console.log('freelanceJobs:', freelanceJobs);
+    console.log('employeeJobs:', employeeJobs);
+    
+    // Mapear trabajos al formato que espera el backend
+    const mappedWorkExperiences = [...freelanceJobs, ...employeeJobs].map(job => ({
+      workHistoryId: job.workHistoryId || null,
+      businessName: job.company,
+      position: job.position,
+      startDate: job.startDate,
+      endDate: job.endDate,
+      isActive: job.currentlyWorking,
+      isFreelance: job.isFreelance,
+      description: job.description,
+      referenceContact: job.referenceName
+    }));
+
+    console.log('📤 Datos mapeados a enviar:', mappedWorkExperiences);
+
+    const payload = {
+      description,
+      workExperiences: mappedWorkExperiences,
+      education,
+      certifications
+    };
+
+    console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
+
+    const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('📥 Response status:', response.status);
+
+    if (response.ok) {
+      const responseData = await response.json();
+      console.log('✅ Respuesta del servidor:', responseData);
+      setToast({ type: 'success', message: 'CV actualizado correctamente' });
+      // Recargar el CV para sincronizar los IDs y datos actualizados
+      setTimeout(() => {
+        loadCV();
+      }, 500);
+    } else {
+      const errorData = await response.json();
+      console.error('❌ Error del backend:', errorData);
+      
+      const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
+      setToast({ type: 'error', message: errorMessage });
       return;
     }
-
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          description,
-          workExperiences: allWorkExperiences,
-          education,
-          certifications
-        })
-      });
-
-      if (response.ok) {
-        setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Error del backend:', errorData);
-        
-        const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
-        setToast({ type: 'error', message: errorMessage });
-        return;
-      }
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
-    } finally {
-      setSaving(false);
-    }
-  };
+  } catch (error) {
+    console.error('Error saving CV:', error);
+    setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Freelance handlers
   const addFreelanceJob = () => {
