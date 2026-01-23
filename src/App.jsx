@@ -21,7 +21,7 @@ import CvView from './pages/CvView';
 import PublicCvView from './pages/PublicCvView';
 import RatingsHistory from './pages/RatingsHistory';
 import StatsPublic from './pages/StatsPublic';
-import ClientStats from './pages/ClientStats';
+import ClientStats from './pages/ClientStats.jsx/index.js';
 
 function App() {
   return (
@@ -29,7 +29,10 @@ function App() {
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/professional/:professionalId" element={<ProfessionalProfile />} />
+        
+        {/* CAMBIO: Ahora /professional/:professionalId usa PublicCvView */}
+        <Route path="/professional/:professionalId" element={<PublicCvView />} />
+        
         <Route path="/rate/:code" element={<QRResolve />} />
         <Route path="/rate-professional/:professionalId" element={<RatingForm />} />
         <Route path="/search" element={<SearchProfessionals />} />
@@ -40,7 +43,7 @@ function App() {
         <Route path="/font-test" element={<FontWeightTest />} />
         <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
         
-        {/* CV PÚBLICO - Para compartir (sin login) */}
+        {/* CV PÚBLICO - Para compartir (sin login) - RUTA ALTERNATIVA */}
         <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
         
         {/* RATINGS HISTORY PÚBLICO - Cuando viene workHistoryId (sin login) */}

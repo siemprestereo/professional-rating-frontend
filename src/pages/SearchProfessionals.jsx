@@ -195,7 +195,7 @@ function SearchProfessionals() {
   const renderProfessionalCard = (professional, index = 0) => (
     <div
       key={professional.id}
-      onClick={() => navigate(`/cv/${professional.id}`)}
+      onClick={() => navigate(`/professional/${professional.id}`)}
       className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
