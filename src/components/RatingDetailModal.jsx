@@ -7,7 +7,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-br from-blue-500 to-purple-600 px-6 py-4 rounded-t-3xl">
           <div className="flex justify-between items-center">
-            <h2 className="text-white text-xl font-bold">Detalle de Calificación</h2>
+            <h2 className="text-white text-xl roboto-light">Detalle de Calificación</h2>
             <button
               onClick={onClose}
               className="text-white hover:scale-110 transition-transform"
@@ -41,7 +41,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
               <MapPin className="w-5 h-5 mr-2 text-purple-600" />
               <div>
                 <p className="text-sm text-gray-600">Lugar</p>
-                <p className="font-semibold">{rating.businessName}</p>
+                <p className="font-semibold text-base">{rating.businessName}</p>
               </div>
             </div>
 
@@ -49,7 +49,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
               <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
               <div>
                 <p className="text-sm text-gray-600">Posición</p>
-                <p className="font-semibold">{rating.workplacePosition}</p>
+                <p className="font-semibold text-base">{rating.workplacePosition}</p>
               </div>
             </div>
 
@@ -57,7 +57,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
               <Calendar className="w-5 h-5 mr-2 text-purple-600" />
               <div>
                 <p className="text-sm text-gray-600">Fecha</p>
-                <p className="font-semibold">
+                <p className="font-semibold text-base">
                   {new Date(rating.createdAt).toLocaleDateString('es-AR', {
                     day: 'numeric',
                     month: 'long',
@@ -75,7 +75,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
                 <MessageSquare className="w-5 h-5 mr-2 text-purple-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-gray-600">Comentario</p>
               </div>
-              <p className="text-gray-800 leading-relaxed">
+              <p className="text-gray-800 leading-relaxed text-base">
                 "{rating.comment}"
               </p>
             </div>
@@ -94,7 +94,7 @@ function RatingDetailModal({ rating, onClose, renderStars }) {
         <div className="px-6 pb-6">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-transform"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-transform text-base"
           >
             Cerrar
           </button>

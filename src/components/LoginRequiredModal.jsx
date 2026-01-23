@@ -26,10 +26,10 @@ function LoginRequiredModal({ onClose }) {
           <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <LogIn className="w-8 h-8 text-purple-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2 className="text-2xl roboto-light text-gray-800 mb-2">
             Iniciá sesión para continuar
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             Necesitás iniciar sesión para buscar profesionales
           </p>
         </div>
@@ -37,7 +37,7 @@ function LoginRequiredModal({ onClose }) {
         <div className="space-y-3">
           <button
             onClick={handleClientLogin}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"
           >
             <span className="text-xl">⭐</span>
             Ingresar como Cliente
@@ -45,7 +45,7 @@ function LoginRequiredModal({ onClose }) {
 
           <button
             onClick={handleProfessionalLogin}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"
           >
             <UserPlus className="w-5 h-5" />
             Ingresar como Profesional
@@ -53,7 +53,7 @@ function LoginRequiredModal({ onClose }) {
 
           <button
             onClick={onClose}
-            className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-semibold hover:bg-gray-300 transition-all"
+            className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-semibold hover:bg-gray-300 transition-all text-base"
           >
             Cancelar
           </button>

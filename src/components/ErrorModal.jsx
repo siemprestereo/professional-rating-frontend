@@ -24,7 +24,7 @@ function ErrorModal({
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <XCircle className="w-6 h-6 text-red-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+            <h2 className="text-2xl roboto-light text-gray-800">{title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -34,20 +34,20 @@ function ErrorModal({
           </button>
         </div>
         
-        <p className="text-gray-600 mb-6">{message}</p>
+        <p className="text-gray-600 mb-6 text-base">{message}</p>
         
         <div className={`flex gap-3 ${showCancel ? '' : 'justify-end'}`}>
           {showCancel && (
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all"
+              className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all text-base"
             >
               Cancelar
             </button>
           )}
           <button
             onClick={handleAction}
-            className={`${showCancel ? 'flex-1' : 'w-full'} bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition-all`}
+            className={`${showCancel ? 'flex-1' : 'w-full'} bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition-all text-base`}
           >
             {actionText}
           </button>
