@@ -113,7 +113,7 @@ function ClientLogin() {
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
         <button
           onClick={() => navigate('/')}
-          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors"
+          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver
@@ -123,7 +123,7 @@ function ClientLogin() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
             <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">
             Ingreso Clientes
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
@@ -208,7 +208,7 @@ function ClientLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 sm:py-3.5 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple mb-3 sm:mb-4 text-sm sm:text-base"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 sm:py-3.5 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple mb-3 sm:mb-4 text-base sm:text-lg"
           >
             {loading ? (
               <span className="flex items-center justify-center">

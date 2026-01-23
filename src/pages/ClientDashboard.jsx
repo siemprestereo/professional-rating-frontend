@@ -167,8 +167,8 @@ function ClientDashboard() {
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   if (!client) {
     return null;
@@ -238,7 +238,7 @@ function ClientDashboard() {
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
             {client.name ? client.name.charAt(0) : 'U'}
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 animate-slideUp">{client.name || 'Usuario'}</h2>
+          <h2 className="text-xl roboto-light text-white mb-2 animate-slideUp">{client.name || 'Usuario'}</h2>
           {/* Medalla del usuario */}
           {topBadges.length > 0 && (
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full animate-slideUp delay-100">
@@ -267,10 +267,10 @@ function ClientDashboard() {
 
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
+          <h3 className="text-xl roboto-light text-gray-800 mb-2">
             ¡Hola {firstName}! 👋
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             Para calificar a un profesional, pídele que te muestre su código QR.
           </p>
         </div>
@@ -278,7 +278,7 @@ function ClientDashboard() {
         {/* Calificaciones Recientes */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+            <h3 className="text-xl roboto-light text-gray-800 flex items-center">
               <Star className="w-5 h-5 mr-2 text-yellow-500" />
               Calificaciones recientes
             </h3>
@@ -295,7 +295,7 @@ function ClientDashboard() {
           {myRatings.length === 0 ? (
             <div className="text-center py-8">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 text-base">
                 Aún no has calificado a ningún profesional
               </p>
               <p className="text-sm text-gray-400">
@@ -311,7 +311,7 @@ function ClientDashboard() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h4 className="font-semibold text-gray-800">{rating.professionalName}</h4>
+                      <h4 className="font-semibold text-gray-800 text-base">{rating.professionalName}</h4>
                       <p className="text-sm text-gray-500">{rating.businessName}</p>
                     </div>
                     <div className="flex items-center gap-1">

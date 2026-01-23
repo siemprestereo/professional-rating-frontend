@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
+
 function ClientRegister() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -118,7 +119,7 @@ function ClientRegister() {
       <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
         <button
           onClick={() => navigate('/client-login')}
-          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors"
+          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver al login
@@ -128,10 +129,10 @@ function ClientRegister() {
           <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
             <UserPlus className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl roboto-light text-gray-800 mb-2">
             Registro Clientes
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             Creá tu cuenta para calificar profesionales
           </p>
         </div>
@@ -139,7 +140,7 @@ function ClientRegister() {
         {/* Botón de Google */}
         <button
           onClick={handleGoogleLogin}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift"
+          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-base"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -161,7 +162,7 @@ function ClientRegister() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Nombre Completo
             </label>
             <input
@@ -170,12 +171,12 @@ function ClientRegister() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Juan Pérez"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all text-base"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Email
             </label>
             <input
@@ -184,12 +185,12 @@ function ClientRegister() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all text-base"
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Password
             </label>
             <div className="relative">
@@ -200,7 +201,7 @@ function ClientRegister() {
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-green-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-green-500 focus:outline-none transition-all text-base"
               />
               <button
                 type="button"
@@ -213,7 +214,7 @@ function ClientRegister() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2">
+            <label className="block text-gray-700 font-semibold mb-2 text-base">
               Confirmar Password
             </label>
             <div className="relative">
@@ -223,7 +224,7 @@ function ClientRegister() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repetí tu password"
                 required
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-green-500 focus:outline-none transition-all"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-green-500 focus:outline-none transition-all text-base"
               />
               <button
                 type="button"
@@ -238,7 +239,7 @@ function ClientRegister() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple"
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-lg"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -252,7 +253,7 @@ function ClientRegister() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-base">
             ¿Ya tenés cuenta?{' '}
             <button
               onClick={() => navigate('/client-login')}

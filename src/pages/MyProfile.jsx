@@ -107,17 +107,17 @@ function MyProfile() {
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   if (!professional) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
         <div className="bg-white rounded-2xl p-8 text-center animate-scaleIn">
-          <p className="text-gray-600 mb-4">No se pudo cargar tu perfil</p>
+          <p className="text-gray-600 mb-4 text-base">No se pudo cargar tu perfil</p>
           <button
             onClick={() => navigate('/professional-dashboard')}
-            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple"
+            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple text-base"
           >
             Volver al panel principal
           </button>
@@ -188,12 +188,12 @@ function MyProfile() {
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
             {professionalName.charAt(0)}
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2 animate-slideUp">
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             {professionalName}
           </h1>
           <div className="flex items-center justify-center mb-4 animate-slideUp delay-100">
             {renderStars(Math.round(reputationScore))}
-            <span className="ml-2 text-white font-semibold">
+            <span className="ml-2 text-white font-semibold text-lg">
               {reputationScore.toFixed(1)}
             </span>
           </div>
@@ -219,25 +219,25 @@ function MyProfile() {
         {/* Tipo de profesión */}
         {professional.professionType && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Tipo de Profesión</h2>
-            <p className="text-gray-600">{getProfessionTypeLabel(professional.professionType)}</p>
+            <h2 className="text-xl roboto-light text-gray-800 mb-3">Tipo de Profesión</h2>
+            <p className="text-gray-600 text-base">{getProfessionTypeLabel(professional.professionType)}</p>
           </div>
         )}
 
         {/* Información del perfil */}
         {professional.professionalTitle && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Título Profesional</h2>
-            <p className="text-gray-600">{professional.professionalTitle}</p>
+            <h2 className="text-xl roboto-light text-gray-800 mb-3">Título Profesional</h2>
+            <p className="text-gray-600 text-base">{professional.professionalTitle}</p>
           </div>
         )}
 
         {professional.phone && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">Contacto</h2>
-            <p className="text-gray-600">📞 {professional.phone}</p>
+            <h2 className="text-xl roboto-light text-gray-800 mb-3">Contacto</h2>
+            <p className="text-gray-600 text-base">📞 {professional.phone}</p>
             {professional.location && (
-              <p className="text-gray-600 mt-2">📍 {professional.location}</p>
+              <p className="text-gray-600 mt-2 text-base">📍 {professional.location}</p>
             )}
           </div>
         )}
@@ -245,8 +245,8 @@ function MyProfile() {
         {/* Calificaciones recientes */}
         {ratings.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300 hover-lift">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-              <Award className="w-5 h-5 mr-2 text-yellow-500" />
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <Award className="w-6 h-6 mr-2 text-yellow-500" />
               Mis Calificaciones Recientes
             </h2>
             <div className="space-y-4">
@@ -263,7 +263,7 @@ function MyProfile() {
                     </span>
                   </div>
                   {rating.comment && (
-                    <p className="text-gray-600 text-sm mb-2">{rating.comment}</p>
+                    <p className="text-gray-600 text-base mb-2">{rating.comment}</p>
                   )}
                   
                   {rating.workplaceName ? (
@@ -288,7 +288,7 @@ function MyProfile() {
         {ratings.length === 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center animate-slideUp delay-300 hover-lift">
             <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aún no tenés calificaciones</p>
+            <p className="text-gray-500 text-base">Aún no tenés calificaciones</p>
             <p className="text-sm text-gray-400 mt-2">
               Compartí tu perfil con clientes para recibir calificaciones
             </p>
@@ -297,10 +297,10 @@ function MyProfile() {
       </div>
 
       {/* Botón Home flotante fijo abajo centrado */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
         <button 
           onClick={() => navigate('/professional-dashboard')}
-          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white pointer-events-auto"
           aria-label="Volver al inicio"
         >
           <Home className="w-7 h-7 text-white" />
