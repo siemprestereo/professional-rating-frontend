@@ -335,7 +335,7 @@ function EditCV() {
 
       {/* Banner de advertencia - Solo si no tiene trabajos activos */}
       {[...freelanceJobs, ...employeeJobs].filter(w => w.currentlyWorking === true).length === 0 && (
-        <div className="max-w-4xl mx-auto px-4 -mt-12 mb-4 animate-slideUp">
+        <div className="max-w-4xl mx-auto px-4 -mt-16 mb-4 animate-slideUp">
           <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
