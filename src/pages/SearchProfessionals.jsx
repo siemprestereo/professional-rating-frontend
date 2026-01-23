@@ -410,7 +410,7 @@ function SearchProfessionals() {
       {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
-          onClick={() => navigate('/client-dashboard')}
+          onClick={() => navigate(-1)}
           className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
           aria-label="Volver al inicio"
         >
