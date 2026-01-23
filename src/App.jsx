@@ -21,7 +21,7 @@ import CvView from './pages/CvView';
 import PublicCvView from './pages/PublicCvView';
 import RatingsHistory from './pages/RatingsHistory';
 import StatsPublic from './pages/StatsPublic';
-import ClientStats from './pages/ClientStats.jsx/index.js';
+import ClientStats from './pages/ClientStats';
 
 function App() {
   return (
