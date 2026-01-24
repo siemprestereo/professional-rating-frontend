@@ -97,7 +97,7 @@ function EditCV() {
   };
 
   // Nueva función para guardar UNA experiencia laboral individual
-  const handleSaveWorkExperience = async (job, isFreelance) => {
+  const handleSaveWorkExperience = async (job, isFreelance, index) => {
     if (!cv || !cv.id) {
       setToast({ type: 'error', message: 'Error: CV no inicializado' });
       return;
@@ -143,6 +143,13 @@ function EditCV() {
         console.log('✅ Experiencia guardada:', data);
         
         setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
+        
+        // Colapsar el ítem después de guardar
+        if (isFreelance) {
+          setExpandedFreelance(null);
+        } else {
+          setExpandedEmployee(null);
+        }
         
         // Recargar el CV para obtener el ID actualizado
         await loadCV();
@@ -601,7 +608,7 @@ function EditCV() {
 
                       {/* Botón Guardar Individual */}
                       <button
-                        onClick={() => handleSaveWorkExperience(job, true)}
+                        onClick={() => handleSaveWorkExperience(job, true, index)}
                         disabled={savingWorkId === (job.workHistoryId || 'new')}
                         className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
                       >
@@ -773,7 +780,7 @@ function EditCV() {
 
                       {/* Botón Guardar Individual */}
                       <button
-                        onClick={() => handleSaveWorkExperience(job, false)}
+                        onClick={() => handleSaveWorkExperience(job, false, index)}
                         disabled={savingWorkId === (job.workHistoryId || 'new')}
                         className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
                       >
