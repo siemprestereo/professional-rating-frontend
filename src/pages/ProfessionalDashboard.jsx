@@ -281,7 +281,7 @@ function ProfessionalDashboard() {
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
           <button
-            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >

@@ -92,7 +92,7 @@ function LandingPage() {
           <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
             {/* Logo arriba del título */}
             <div 
-              onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+              onClick={() => window.location.href = 'https:/www.calificalo.com.ar/'}
               className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
             >
               <img 
