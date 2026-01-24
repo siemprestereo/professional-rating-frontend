@@ -170,7 +170,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
   }
 };
 
-  cconst handleSave = async () => {
+  const handleSave = async () => {
   if (!cv || !cv.id) {
     setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
     return;
