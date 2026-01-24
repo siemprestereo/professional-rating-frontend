@@ -97,74 +97,78 @@ function EditCV() {
   };
 
   // Nueva función para guardar UNA experiencia laboral individual
-  const handleSaveWorkExperience = async (job, isFreelance, index) => {
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado' });
-      return;
-    }
+  // Nueva función para guardar UNA experiencia laboral individual
+const handleSaveWorkExperience = async (job, isFreelance, index) => {
+  if (!cv || !cv.id) {
+    setToast({ type: 'error', message: 'Error: CV no inicializado' });
+    return;
+  }
 
-    // Validar que tenga al menos el puesto
-    if (!job.position || job.position.trim() === '') {
-      setToast({ type: 'error', message: 'El puesto es obligatorio' });
-      return;
-    }
+  // Validar que tenga al menos el puesto
+  if (!job.position || job.position.trim() === '') {
+    setToast({ type: 'error', message: 'El puesto es obligatorio' });
+    return;
+  }
 
-    setSavingWorkId(job.workHistoryId || 'new'); // Marcar como guardando
+  setSavingWorkId(job.workHistoryId || 'new'); // Marcar como guardando
+  
+  try {
+    const token = localStorage.getItem('authToken');
     
-    try {
-      const token = localStorage.getItem('authToken');
+    // Mapear al formato que espera el backend
+    const payload = {
+      businessId: job.workHistoryId || null,
+      businessName: job.company || '',
+      position: job.position,
+      startDate: job.startDate,
+      endDate: job.endDate,
+      isActive: job.currentlyWorking,
+      isFreelance: isFreelance,
+      description: job.description,
+      referenceContact: job.referenceName
+    };
+
+    console.log('💾 Guardando experiencia:', payload);
+
+    const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Experiencia guardada:', data);
       
-      // Mapear al formato que espera el backend
-      const payload = {
-        businessId: job.workHistoryId || null,
-        businessName: job.company || '',
-        position: job.position,
-        startDate: job.startDate,
-        endDate: job.endDate,
-        isActive: job.currentlyWorking,
-        isFreelance: isFreelance,
-        description: job.description,
-        referenceContact: job.referenceName
-      };
-
-      console.log('💾 Guardando experiencia:', payload);
-
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Experiencia guardada:', data);
-        
-        setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
-        
-        // Colapsar el ítem después de guardar
+      setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
+      
+      // Recargar el CV para obtener el ID actualizado
+      await loadCV();
+      
+      // ✅ COLAPSAR DESPUÉS de recargar (agregar un pequeño delay)
+      setTimeout(() => {
         if (isFreelance) {
           setExpandedFreelance(null);
         } else {
           setExpandedEmployee(null);
         }
-        
-        // Recargar el CV para obtener el ID actualizado
-        await loadCV();
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Error del backend:', errorData);
-        setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
-      }
-    } catch (error) {
-      console.error('Error saving work experience:', error);
-      setToast({ type: 'error', message: 'Error de conexión al guardar' });
-    } finally {
-      setSavingWorkId(null);
+      }, 100); // ← CAMBIO: Agregar delay de 100ms
+      
+    } else {
+      const errorData = await response.json();
+      console.error('❌ Error del backend:', errorData);
+      setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
     }
-  };
+  } catch (error) {
+    console.error('Error saving work experience:', error);
+    setToast({ type: 'error', message: 'Error de conexión al guardar' });
+  } finally {
+    setSavingWorkId(null);
+  }
+};
 
   const handleSave = async () => {
     if (!cv || !cv.id) {
