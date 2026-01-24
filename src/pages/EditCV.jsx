@@ -170,49 +170,54 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
   }
 };
 
-  const handleSave = async () => {
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+  cconst handleSave = async () => {
+  if (!cv || !cv.id) {
+    setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+    return;
+  }
+
+  setSaving(true);
+  try {
+    const token = localStorage.getItem('authToken');
+    
+    // Ahora solo guardamos descripción, educación y certificaciones
+    const payload = {
+      description,
+      education,
+      certifications
+    };
+
+    const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      setToast({ type: 'success', message: 'CV actualizado correctamente' });
+      
+      // ✅ Redirigir a cv-view después de 1 segundo
+      setTimeout(() => {
+        navigate('/cv-view');
+      }, 1000);
+    } else {
+      const errorData = await response.json();
+      console.error('❌ Error del backend:', errorData);
+      
+      const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
+      setToast({ type: 'error', message: errorMessage });
       return;
     }
-
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      
-      // Ahora solo guardamos descripción, educación y certificaciones
-      const payload = {
-        description,
-        education,
-        certifications
-      };
-
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Error del backend:', errorData);
-        
-        const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
-        setToast({ type: 'error', message: errorMessage });
-        return;
-      }
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
-    } finally {
-      setSaving(false);
-    }
-  };
+  } catch (error) {
+    console.error('Error saving CV:', error);
+    setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Freelance handlers
   const addFreelanceJob = () => {
@@ -1040,7 +1045,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
           ) : (
             <>
               <Save className="w-5 h-5 mr-2" />
-              Guardar descripción, educación y certificaciones
+              Confirmar y guardar todos el CV
             </>
           )}
         </button>
