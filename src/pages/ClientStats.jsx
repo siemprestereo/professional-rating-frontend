@@ -154,7 +154,7 @@ function ClientStats() {
             📊 Mis Estadísticas
           </h1>
           <p className="text-white/90 animate-slideUp delay-100">
-            Tu actividad y tus logros como calificador
+            Tu actividad y tus logros como calificador.
           </p>
         </div>
       </div>
