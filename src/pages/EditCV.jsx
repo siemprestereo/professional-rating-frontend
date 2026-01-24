@@ -11,6 +11,7 @@ function EditCV() {
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingWorkId, setSavingWorkId] = useState(null); // Para controlar qué trabajo se está guardando
   
   // Estados para el formulario
   const [description, setDescription] = useState('');
@@ -90,63 +91,117 @@ function EditCV() {
     }
   };
 
-  const handleSave = async () => {
-  if (!cv || !cv.id) {
-    setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
-    return;
-  }
+  // Función para contar trabajos activos
+  const countActiveJobs = () => {
+    return [...freelanceJobs, ...employeeJobs].filter(job => job.currentlyWorking === true).length;
+  };
 
-  setSaving(true);
-  try {
-    const token = localStorage.getItem('authToken');
-    
-    // Mapear trabajos al formato que espera el backend
-    const mappedWorkExperiences = [...freelanceJobs, ...employeeJobs].map(job => ({
-      workHistoryId: job.workHistoryId || null,
-      businessName: job.company,
-      position: job.position,
-      startDate: job.startDate,
-      endDate: job.endDate,
-      isActive: job.currentlyWorking,
-      isFreelance: job.isFreelance,
-      description: job.description,
-      referenceContact: job.referenceName
-    }));
-
-    const payload = {
-      description,
-      workExperiences: mappedWorkExperiences,
-      education,
-      certifications
-    };
-
-    const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      // NO recargar automáticamente - mantener el estado actual
-    } else {
-      const errorData = await response.json();
-      console.error('❌ Error del backend:', errorData);
-      
-      const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
-      setToast({ type: 'error', message: errorMessage });
+  // Nueva función para guardar UNA experiencia laboral individual
+  const handleSaveWorkExperience = async (job, isFreelance) => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado' });
       return;
     }
-  } catch (error) {
-    console.error('Error saving CV:', error);
-    setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
-  } finally {
-    setSaving(false);
-  }
-};
+
+    // Validar que tenga al menos el puesto
+    if (!job.position || job.position.trim() === '') {
+      setToast({ type: 'error', message: 'El puesto es obligatorio' });
+      return;
+    }
+
+    setSavingWorkId(job.workHistoryId || 'new'); // Marcar como guardando
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Mapear al formato que espera el backend
+      const payload = {
+        businessId: job.workHistoryId || null,
+        businessName: job.company || '',
+        position: job.position,
+        startDate: job.startDate,
+        endDate: job.endDate,
+        isActive: job.currentlyWorking,
+        isFreelance: isFreelance,
+        description: job.description,
+        referenceContact: job.referenceName
+      };
+
+      console.log('💾 Guardando experiencia:', payload);
+
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Experiencia guardada:', data);
+        
+        setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
+        
+        // Recargar el CV para obtener el ID actualizado
+        await loadCV();
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error del backend:', errorData);
+        setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
+      }
+    } catch (error) {
+      console.error('Error saving work experience:', error);
+      setToast({ type: 'error', message: 'Error de conexión al guardar' });
+    } finally {
+      setSavingWorkId(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Ahora solo guardamos descripción, educación y certificaciones
+      const payload = {
+        description,
+        education,
+        certifications
+      };
+
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'CV actualizado correctamente' });
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error del backend:', errorData);
+        
+        const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
+        setToast({ type: 'error', message: errorMessage });
+        return;
+      }
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Freelance handlers
   const addFreelanceJob = () => {
@@ -169,12 +224,21 @@ function EditCV() {
 
   const updateFreelanceJob = (index, field, value) => {
     const updated = [...freelanceJobs];
-    updated[index][field] = value;
     
+    // Si intenta marcar como activo, validar el límite
     if (field === 'currentlyWorking' && value === true) {
+      const currentActive = countActiveJobs();
+      if (currentActive >= 3 && !updated[index].currentlyWorking) {
+        setToast({ 
+          type: 'warning', 
+          message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' 
+        });
+        return;
+      }
       updated[index].endDate = '';
     }
     
+    updated[index][field] = value;
     setFreelanceJobs(updated);
   };
 
@@ -214,12 +278,21 @@ function EditCV() {
 
   const updateEmployeeJob = (index, field, value) => {
     const updated = [...employeeJobs];
-    updated[index][field] = value;
     
+    // Si intenta marcar como activo, validar el límite
     if (field === 'currentlyWorking' && value === true) {
+      const currentActive = countActiveJobs();
+      if (currentActive >= 3 && !updated[index].currentlyWorking) {
+        setToast({ 
+          type: 'warning', 
+          message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' 
+        });
+        return;
+      }
       updated[index].endDate = '';
     }
     
+    updated[index][field] = value;
     setEmployeeJobs(updated);
   };
 
@@ -367,7 +440,7 @@ function EditCV() {
         </div>
 
         {/* Banner de advertencia - Solo si no tiene trabajos activos */}
-        {[...freelanceJobs, ...employeeJobs].filter(w => w.currentlyWorking === true).length === 0 && (
+        {countActiveJobs() === 0 && (
           <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -379,6 +452,25 @@ function EditCV() {
                 </h3>
                 <p className="text-sm text-orange-800">
                   Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Banner informativo - Máximo 3 trabajos activos */}
+        {countActiveJobs() >= 3 && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base roboto-light text-blue-900 mb-1">
+                  ℹ️ Límite de trabajos activos alcanzado
+                </h3>
+                <p className="text-sm text-blue-800">
+                  Ya tienes 3 trabajos activos. Para agregar otro trabajo activo, primero desactiva uno existente.
                 </p>
               </div>
             </div>
@@ -492,7 +584,8 @@ function EditCV() {
                             type="checkbox"
                             checked={job.currentlyWorking}
                             onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)}
-                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                            disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
@@ -505,6 +598,25 @@ function EditCV() {
                         className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base"
                         rows="3"
                       />
+
+                      {/* Botón Guardar Individual */}
+                      <button
+                        onClick={() => handleSaveWorkExperience(job, true)}
+                        disabled={savingWorkId === (job.workHistoryId || 'new')}
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
+                      >
+                        {savingWorkId === (job.workHistoryId || 'new') ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-5 h-5 mr-2" />
+                            Guardar trabajo
+                          </>
+                        )}
+                      </button>
 
                       <button
                         onClick={() => confirmDeleteFreelanceJob(index)}
@@ -627,7 +739,8 @@ function EditCV() {
                             type="checkbox"
                             checked={job.currentlyWorking}
                             onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)}
-                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                            disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
@@ -657,6 +770,25 @@ function EditCV() {
                           className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
                         />
                       </div>
+
+                      {/* Botón Guardar Individual */}
+                      <button
+                        onClick={() => handleSaveWorkExperience(job, false)}
+                        disabled={savingWorkId === (job.workHistoryId || 'new')}
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
+                      >
+                        {savingWorkId === (job.workHistoryId || 'new') ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-5 h-5 mr-2" />
+                            Guardar trabajo
+                          </>
+                        )}
+                      </button>
 
                       <button
                         onClick={() => confirmDeleteEmployeeJob(index)}
@@ -883,7 +1015,7 @@ function EditCV() {
           )}
         </div>
 
-        {/* Botón Guardar */}
+        {/* Botón Guardar - Ahora solo para descripción, educación y certificaciones */}
         <button
           onClick={handleSave}
           disabled={saving}
@@ -897,7 +1029,7 @@ function EditCV() {
           ) : (
             <>
               <Save className="w-5 h-5 mr-2" />
-              Guardar CV
+              Guardar descripción, educación y certificaciones
             </>
           )}
         </button>
