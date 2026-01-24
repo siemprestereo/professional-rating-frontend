@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
-import LoginRequiredModal from '../components/LoginRequiredModal'; // ← AGREGAR
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 function SearchProfessionals() {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ function SearchProfessionals() {
   const [placeholder, setPlaceholder] = useState('');
   const [activeTab, setActiveTab] = useState('buscar');
   const [topProfessionals, setTopProfessionals] = useState([]);
-  const [showLoginModal, setShowLoginModal] = useState(false); // ← AGREGAR
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const inputRef = useRef(null);
 
   // Palabras para el placeholder animado
@@ -93,6 +93,13 @@ function SearchProfessionals() {
     }
   }, [activeTab]);
 
+  // ← NUEVO: Auto-ejecutar búsqueda cuando cambia searchTerm
+  useEffect(() => {
+    if (searchTerm.trim() && activeTab === 'buscar') {
+      handleSearch();
+    }
+  }, [searchTerm]);
+
   const loadTopProfessionals = async () => {
     setLoading(true);
     try {
@@ -145,12 +152,9 @@ function SearchProfessionals() {
   const handleCategoryClick = (categoryName) => {
     setSearchTerm(categoryName);
     setActiveTab('buscar');
-    setTimeout(() => {
-      handleSearch();
-    }, 100);
+    // Ya no necesitamos setTimeout, el useEffect se encarga
   };
 
-  // ← AGREGAR ESTA FUNCIÓN
   const checkLoginAndNavigate = (professionalId) => {
     const token = localStorage.getItem('authToken');
     
@@ -207,7 +211,7 @@ function SearchProfessionals() {
   const renderProfessionalCard = (professional, index = 0) => (
     <div
       key={professional.id}
-      onClick={() => checkLoginAndNavigate(professional.id)} // ← CAMBIAR ESTA LÍNEA
+      onClick={() => checkLoginAndNavigate(professional.id)}
       className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
@@ -430,7 +434,6 @@ function SearchProfessionals() {
         </button>
       </div>
 
-      {/* ← AGREGAR ESTE MODAL AL FINAL */}
       {showLoginModal && (
         <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
       )}
