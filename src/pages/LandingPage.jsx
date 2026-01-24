@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-
+import { getFirstName } from '../utils/formatName'; // ← AGREGAR IMPORT
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -21,8 +21,8 @@ function LandingPage() {
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
         fullName = fullName.trim(); // Eliminar espacios al inicio y final
         
-        // Extraer solo el primer nombre
-        const firstName = fullName.split(' ')[0].split('@')[0];
+        // Extraer y capitalizar solo el primer nombre
+        const firstName = getFirstName(fullName.split('@')[0]); // ← USAR FUNCIÓN
         
         setUserInfo({
           name: firstName,
@@ -60,7 +60,7 @@ function LandingPage() {
         <div className="h-screen flex flex-col justify-center items-center px-4 text-center">
           {/* Logo grande arriba del mensaje */}
           <div 
-            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-6 sm:mb-10 animate-slideDown"
           >
             <img 
@@ -87,7 +87,7 @@ function LandingPage() {
           </button>
         </div>
       ) : (
-        // Usuario no logueado - Mostrar landing normal con logo arriba
+        // ... resto del código sin cambios
         <>
           <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
             {/* Logo arriba del título */}

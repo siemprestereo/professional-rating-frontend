@@ -4,6 +4,7 @@ import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, Chevron
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import LoadingScreen from '../components/LoadingScreen';
+import { capitalizeName, getFirstName } from '../utils/formatName';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -270,14 +271,9 @@ function ProfessionalDashboard() {
     return null;
   }
 
-  // Extraer solo el primer nombre con capitalización
-  const getFirstName = (fullName) => {
-    if (!fullName) return 'Usuario';
-    const name = fullName.trim().split(' ')[0];
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  };
-
+  // Usar funciones utilitarias para formatear nombres
   const firstName = getFirstName(professional.name);
+  const fullName = capitalizeName(professional.name);
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
@@ -332,9 +328,9 @@ function ProfessionalDashboard() {
         
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn">
-            {professional.name.charAt(0).toUpperCase()}
+            {fullName.charAt(0).toUpperCase()}
           </div>
-          <h2 className="text-2xl roboto-light text-white mb-2 animate-slideUp">{professional.name}</h2>
+          <h2 className="text-2xl roboto-light text-white mb-2 animate-slideUp">{fullName}</h2>
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
             {renderStars(Math.round(professional.reputationScore || 0))}
             <span className="ml-2 text-white font-semibold text-lg">

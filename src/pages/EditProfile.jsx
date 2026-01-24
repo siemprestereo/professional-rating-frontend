@@ -70,19 +70,28 @@ function EditProfile() {
         throw new Error(data.error || 'Error al actualizar perfil');
       }
 
-      const data = await response.json();
+      const updatedData = await response.json();
+      console.log('✅ Respuesta del servidor:', updatedData);
       
-      // Actualizar localStorage
+      // Actualizar localStorage con los datos devueltos por el servidor
       const updatedClient = {
-        ...client,
-        phone: data.phone || phone,
-        location: data.location || location
+        id: updatedData.id || client.id,
+        name: updatedData.name || client.name,
+        email: updatedData.email || client.email,
+        phone: updatedData.phone || '',
+        location: updatedData.location || ''
       };
+      
       localStorage.setItem('client', JSON.stringify(updatedClient));
       setClient(updatedClient);
+      
+      // Actualizar los estados del formulario
+      setPhone(updatedClient.phone);
+      setLocation(updatedClient.location);
 
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
     } catch (err) {
+      console.error('❌ Error al guardar:', err);
       setToast({ type: 'error', message: err.message });
     } finally {
       setSaving(false);
