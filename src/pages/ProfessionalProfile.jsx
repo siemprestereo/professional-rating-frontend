@@ -165,7 +165,7 @@ function ProfessionalProfile() {
               className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all text-base"
             >
               <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Buscar</span>
+              <span className="hidden sm:inline">Buscar </span>
             </button>
           </div>
         </div>
