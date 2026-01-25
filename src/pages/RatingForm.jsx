@@ -4,6 +4,7 @@ import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import api from '../services/api.js';
+import LoadingScreen from '../components/LoadingScreen';
 
 function RatingForm() {
   const { professionalId } = useParams();
@@ -140,18 +141,18 @@ function RatingForm() {
   };
 
   if (loading) {
-  return <LoadingScreen message="" />;
-}
+    return <LoadingScreen />;
+  }
 
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center p-4 animate-fadeIn">
         <div className="bg-white rounded-3xl p-8 text-center max-w-md w-full animate-scaleIn">
           <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4 animate-scaleIn" />
-          <h2 className="text-3xl font-bold text-gray-800 mb-2 animate-slideUp">
+          <h2 className="text-3xl roboto-light text-gray-800 mb-2 animate-slideUp">
             ¡Gracias por tu opinión!
           </h2>
-          <p className="text-gray-600 mb-6 animate-slideUp delay-100">
+          <p className="text-gray-600 mb-6 animate-slideUp delay-100 text-base">
             Tu calificación ayuda a {professional?.name?.split(' ')[0] || 'este profesional'} a mejorar su servicio
           </p>
           <div className="animate-pulse text-gray-500">
@@ -171,7 +172,7 @@ function RatingForm() {
       <div className="bg-white/10 backdrop-blur-md px-4 py-4 animate-slideDown">
         <button
           onClick={() => navigate(`/professional/${professionalId}`)}
-          className="text-white flex items-center hover:translate-x-[-4px] transition-transform duration-300"
+          className="text-white flex items-center hover:translate-x-[-4px] transition-transform duration-300 text-base"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver
@@ -186,7 +187,7 @@ function RatingForm() {
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
               {professional?.name?.charAt(0) || '?'}
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 animate-slideUp delay-100">
+            <h1 className="text-2xl roboto-light text-gray-800 animate-slideUp delay-100">
               Calificar a {professional?.name || 'Cargando...'}
             </h1>
           </div>
@@ -195,7 +196,7 @@ function RatingForm() {
             {/* Selector de lugar de trabajo (si tiene múltiples) */}
             {showWorkplaceSelector && (
               <div className="mb-6 animate-slideUp delay-150">
-                <label className="block text-gray-700 font-semibold mb-2">
+                <label className="block text-gray-700 font-semibold mb-2 text-base">
                   ¿Dónde te atendió?
                 </label>
                 <div className="space-y-2">
@@ -217,7 +218,7 @@ function RatingForm() {
                             : 'text-gray-400'
                         }`} />
                         <div>
-                          <p className="font-semibold text-gray-800">{job.businessName}</p>
+                          <p className="font-semibold text-gray-800 text-base">{job.businessName}</p>
                           <p className="text-sm text-gray-500">{job.position}</p>
                         </div>
                       </div>
@@ -229,7 +230,7 @@ function RatingForm() {
 
             {/* Estrellas */}
             <div className="mb-6 animate-slideUp delay-200">
-              <label className="block text-gray-700 font-semibold mb-3 text-center">
+              <label className="block text-gray-700 font-semibold mb-3 text-center text-base">
                 ¿Cómo fue tu experiencia?
               </label>
               <div className="flex justify-center gap-2 mb-2">
@@ -252,7 +253,7 @@ function RatingForm() {
                   </button>
                 ))}
               </div>
-              <div className="text-center text-sm text-gray-500 transition-all duration-300">
+              <div className="text-center text-base text-gray-500 transition-all duration-300">
                 {score === 0 && 'Tocá para calificar'}
                 {score === 1 && '😞 Malo'}
                 {score === 2 && '😕 Regular'}
@@ -264,14 +265,14 @@ function RatingForm() {
 
             {/* Comentario */}
             <div className="mb-6 animate-slideUp delay-300">
-              <label className="block text-gray-700 font-semibold mb-2">
+              <label className="block text-gray-700 font-semibold mb-2 text-base">
                 Contanos más (opcional)
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="¿Qué te gustó o qué podría mejorar?"
-                className="w-full border-2 border-gray-200 rounded-2xl p-4 focus:border-purple-500 focus:outline-none resize-none transition-all duration-300"
+                className="w-full border-2 border-gray-200 rounded-2xl p-4 focus:border-purple-500 focus:outline-none resize-none transition-all duration-300 text-base"
                 rows="4"
                 maxLength="500"
               />
@@ -284,7 +285,7 @@ function RatingForm() {
             <button
               type="submit"
               disabled={submitting || score === 0 || (showWorkplaceSelector && !selectedWorkplace)}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-300 hover:scale-105 active:scale-95 animate-scaleIn delay-400 ripple"
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-300 hover:scale-105 active:scale-95 animate-scaleIn delay-400 ripple text-lg"
             >
               {submitting ? (
                 <span className="flex items-center justify-center">
