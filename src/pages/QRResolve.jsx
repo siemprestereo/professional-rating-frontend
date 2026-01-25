@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api.js';
 import { Loader2, XCircle } from 'lucide-react';
+import RatingForm from './RatingForm';
 
 function QRResolve() {
   const { code } = useParams();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+  const [professionalId, setProfessionalId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     resolveQRCode();
@@ -15,13 +18,25 @@ function QRResolve() {
   const resolveQRCode = async () => {
     try {
       const response = await api.resolveQR(code);
-      const professionalId = response.professionalId;
-      navigate('/rate-professional/' + professionalId, { replace: true });
+      setProfessionalId(response.professionalId);
+      setLoading(false);
     } catch (err) {
       console.error('Error resolving QR:', err);
       setError('Error al procesar el QR');
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
+          <p className="text-white text-xl roboto-light">Procesando código QR...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -43,14 +58,8 @@ function QRResolve() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-fadeIn">
-      <div className="text-center">
-        <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-        <p className="text-white text-xl roboto-light">Procesando código QR...</p>
-      </div>
-    </div>
-  );
+  // ✅ Renderizar RatingForm directamente sin cambiar la URL
+  return <RatingForm professionalIdFromToken={professionalId} />;
 }
 
 export default QRResolve;

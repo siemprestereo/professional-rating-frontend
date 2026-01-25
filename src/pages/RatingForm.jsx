@@ -6,9 +6,13 @@ import ErrorModal from '../components/ErrorModal';
 import api from '../services/api.js';
 import LoadingScreen from '../components/LoadingScreen';
 
-function RatingForm() {
-  const { professionalId } = useParams();
+function RatingForm({ professionalIdFromToken }) {
+  const { professionalId: professionalIdFromUrl } = useParams();
   const navigate = useNavigate();
+  
+  // ✅ Usar el ID del token si existe, sino usar el de la URL (para compatibilidad con rutas viejas)
+  const professionalId = professionalIdFromToken || professionalIdFromUrl;
+  
   const [professional, setProfessional] = useState(null);
   const [score, setScore] = useState(0);
   const [hoverScore, setHoverScore] = useState(0);
@@ -21,7 +25,9 @@ function RatingForm() {
   const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
-    loadProfessional();
+    if (professionalId) {
+      loadProfessional();
+    }
   }, [professionalId]);
 
   const loadProfessional = async () => {
