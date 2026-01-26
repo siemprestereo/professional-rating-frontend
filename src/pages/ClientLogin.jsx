@@ -33,6 +33,7 @@ function ClientLogin() {
     if (token) {
       console.log('✅ Token recibido de OAuth:', token);
       localStorage.setItem('authToken', token);
+      localStorage.setItem('userType', 'CLIENT');
       
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -41,17 +42,17 @@ function ClientLogin() {
         if (payload.userType === 'CLIENT') {
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
           setTimeout(() => {
-            navigate('/client-dashboard', { replace: true });
+            window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
           }, 1000);
         } else {
-          navigate('/professional-dashboard', { replace: true });
+          window.location.href = 'https://www.calificalo.com.ar/professional-dashboard';
         }
       } catch (e) {
         console.error('Error al decodificar token:', e);
         setToast({ type: 'error', message: 'Error al procesar autenticación' });
       }
     }
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,6 +83,7 @@ function ClientLogin() {
       const data = await response.json();
       
       localStorage.setItem('authToken', data.token);
+      localStorage.setItem('userType', 'CLIENT');
       
       localStorage.setItem('client', JSON.stringify({
         id: data.id,
@@ -92,7 +94,7 @@ function ClientLogin() {
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
       setTimeout(() => {
-        navigate('/client-dashboard');
+        window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
       }, 1000);
     } catch (err) {
       setLoginError('Error de conexión. Intentá nuevamente.');
