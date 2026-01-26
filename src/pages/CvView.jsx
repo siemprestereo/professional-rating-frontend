@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, Award, Home, ChevronRight, Search, AlertTriangle } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, Home, ChevronRight, Search, AlertTriangle } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -413,28 +413,6 @@ function CvView() {
                   {edu.description && (
                     <p className="text-gray-600 mt-2 text-sm">{edu.description}</p>
                   )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Certificaciones */}
-        {cv.certifications && cv.certifications.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
-            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-              <Award className="w-6 h-6 mr-2 text-purple-600" />
-              Certificaciones
-            </h2>
-            <div className="space-y-4">
-              {cv.certifications.map((cert, index) => (
-                <div key={index} className="border-l-4 border-green-500 pl-4">
-                  <p className="font-bold text-gray-800">{cert.name}</p>
-                  <p className="text-green-600">{cert.issuer}</p>
-                  <p className="text-sm text-gray-500">
-                    Obtenida: {formatDate(cert.dateObtained)}
-                    {cert.expiryDate && ` | Expira: ${formatDate(cert.expiryDate)}`}
-                  </p>
                 </div>
               ))}
             </div>

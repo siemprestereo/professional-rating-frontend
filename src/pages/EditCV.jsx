@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Save, Briefcase, GraduationCap, Award, Home, ChevronDown, ChevronRight, Lock, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Save, Briefcase, GraduationCap, Home, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -11,20 +11,19 @@ function EditCV() {
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [savingWorkId, setSavingWorkId] = useState(null); // Para controlar qué trabajo se está guardando
+  const [savingWorkId, setSavingWorkId] = useState(null);
+  const [deletingWorkId, setDeletingWorkId] = useState(null);
   
   // Estados para el formulario
   const [description, setDescription] = useState('');
   const [freelanceJobs, setFreelanceJobs] = useState([]);
   const [employeeJobs, setEmployeeJobs] = useState([]);
   const [education, setEducation] = useState([]);
-  const [certifications, setCertifications] = useState([]);
   
   // Estados de expansión (acordeón)
   const [expandedFreelance, setExpandedFreelance] = useState(null);
   const [expandedEmployee, setExpandedEmployee] = useState(null);
   const [expandedEducation, setExpandedEducation] = useState(null);
-  const [expandedCertification, setExpandedCertification] = useState(null);
   
   // Modal de confirmación
   const [deleteModal, setDeleteModal] = useState(null);
@@ -79,7 +78,6 @@ function EditCV() {
         setEmployeeJobs(allJobs.filter(job => job.isFreelance === false));
         
         setEducation(data.education || []);
-        setCertifications(data.certifications || []);
       } else {
         throw new Error('No se pudo cargar el CV');
       }
@@ -96,128 +94,200 @@ function EditCV() {
     return [...freelanceJobs, ...employeeJobs].filter(job => job.currentlyWorking === true).length;
   };
 
-  // Nueva función para guardar UNA experiencia laboral individual
-  // Nueva función para guardar UNA experiencia laboral individual
-const handleSaveWorkExperience = async (job, isFreelance, index) => {
-  if (!cv || !cv.id) {
-    setToast({ type: 'error', message: 'Error: CV no inicializado' });
-    return;
-  }
-
-  // Validar que tenga al menos el puesto
-  if (!job.position || job.position.trim() === '') {
-    setToast({ type: 'error', message: 'El puesto es obligatorio' });
-    return;
-  }
-
-  setSavingWorkId(job.workHistoryId || 'new'); // Marcar como guardando
-  
-  try {
-    const token = localStorage.getItem('authToken');
-    
-    // Mapear al formato que espera el backend
-    const payload = {
-      businessId: job.workHistoryId || null,
-      businessName: job.company || '',
-      position: job.position,
-      startDate: job.startDate,
-      endDate: job.endDate,
-      isActive: job.currentlyWorking,
-      isFreelance: isFreelance,
-      description: job.description,
-      referenceContact: job.referenceName
-    };
-
-    console.log('💾 Guardando experiencia:', payload);
-
-    const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Experiencia guardada:', data);
-      
-      setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
-      
-      // Recargar el CV para obtener el ID actualizado
-      await loadCV();
-      
-      // ✅ COLAPSAR DESPUÉS de recargar (agregar un pequeño delay)
-      setTimeout(() => {
-        if (isFreelance) {
-          setExpandedFreelance(null);
-        } else {
-          setExpandedEmployee(null);
-        }
-      }, 100); // ← CAMBIO: Agregar delay de 100ms
-      
-    } else {
-      const errorData = await response.json();
-      console.error('❌ Error del backend:', errorData);
-      setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
-    }
-  } catch (error) {
-    console.error('Error saving work experience:', error);
-    setToast({ type: 'error', message: 'Error de conexión al guardar' });
-  } finally {
-    setSavingWorkId(null);
-  }
-};
-
-  const handleSave = async () => {
-  if (!cv || !cv.id) {
-    setToast({ type: 'error', message: 'Error : CV no inicializado correctamente' });
-    return;
-  }
-
-  setSaving(true);
-  try {
-    const token = localStorage.getItem('authToken');
-    
-    // Ahora solo guardamos descripción, educación y certificaciones
-    const payload = {
-      description,
-      education,
-      certifications
-    };
-
-    const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (response.ok) {
-      setToast({ type: 'success', message: 'CV actualizado correctamente' });
-      
-      // ✅ Redirigir a cv-view después de 1 segundo
-      setTimeout(() => {
-        navigate('/cv-view');
-      }, 1000);
-    } else {
-      const errorData = await response.json();
-      console.error('❌ Error del backend:', errorData);
-      
-      const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
-      setToast({ type: 'error', message: errorMessage });
+  // Guardar experiencia laboral individual
+  const handleSaveWorkExperience = async (job, isFreelance, index) => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado' });
       return;
     }
-  } catch (error) {
-    console.error('Error saving CV:', error);
-    setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
-  } finally {
-    setSaving(false);
-  }
-};
+
+    if (!job.position || job.position.trim() === '') {
+      setToast({ type: 'error', message: 'El puesto es obligatorio' });
+      return;
+    }
+
+    setSavingWorkId(job.workHistoryId || 'new');
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const payload = {
+        businessId: job.workHistoryId || null,
+        businessName: job.company || '',
+        position: job.position,
+        startDate: job.startDate,
+        endDate: job.endDate,
+        isActive: job.currentlyWorking,
+        isFreelance: isFreelance,
+        description: job.description,
+        referenceContact: job.referenceName
+      };
+
+      console.log('💾 Guardando experiencia:', payload);
+
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Experiencia guardada:', data);
+        
+        setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
+        
+        await loadCV();
+        
+        setTimeout(() => {
+          if (isFreelance) {
+            setExpandedFreelance(null);
+          } else {
+            setExpandedEmployee(null);
+          }
+        }, 100);
+        
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error del backend:', errorData);
+        setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
+      }
+    } catch (error) {
+      console.error('Error saving work experience:', error);
+      setToast({ type: 'error', message: 'Error de conexión al guardar' });
+    } finally {
+      setSavingWorkId(null);
+    }
+  };
+
+  // Eliminar trabajo freelance del backend
+  const handleDeleteFreelanceJob = async (index) => {
+    const job = freelanceJobs[index];
+    
+    if (!job.workHistoryId) {
+      removeFreelanceJob(index);
+      return;
+    }
+
+    setDeletingWorkId(job.workHistoryId);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(
+        `${backendUrl}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Trabajo eliminado correctamente' });
+        await loadCV();
+        setExpandedFreelance(null);
+      } else {
+        const errorData = await response.json();
+        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
+      }
+    } catch (error) {
+      console.error('Error deleting freelance job:', error);
+      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
+    } finally {
+      setDeletingWorkId(null);
+    }
+  };
+
+  // Eliminar trabajo empleado del backend
+  const handleDeleteEmployeeJob = async (index) => {
+    const job = employeeJobs[index];
+    
+    if (!job.workHistoryId) {
+      removeEmployeeJob(index);
+      return;
+    }
+
+    setDeletingWorkId(job.workHistoryId);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(
+        `${backendUrl}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Trabajo eliminado correctamente' });
+        await loadCV();
+        setExpandedEmployee(null);
+      } else {
+        const errorData = await response.json();
+        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
+      }
+    } catch (error) {
+      console.error('Error deleting employee job:', error);
+      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
+    } finally {
+      setDeletingWorkId(null);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const payload = {
+        description,
+        education
+      };
+
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'CV actualizado correctamente' });
+        
+        setTimeout(() => {
+          navigate('/cv-view');
+        }, 1000);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error del backend:', errorData);
+        
+        const errorMessage = errorData.error || errorData.message || 'Error al guardar CV';
+        setToast({ type: 'error', message: errorMessage });
+        return;
+      }
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Freelance handlers
   const addFreelanceJob = () => {
@@ -241,7 +311,6 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
   const updateFreelanceJob = (index, field, value) => {
     const updated = [...freelanceJobs];
     
-    // Si intenta marcar como activo, validar el límite
     if (field === 'currentlyWorking' && value === true) {
       const currentActive = countActiveJobs();
       if (currentActive >= 3 && !updated[index].currentlyWorking) {
@@ -295,7 +364,6 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
   const updateEmployeeJob = (index, field, value) => {
     const updated = [...employeeJobs];
     
-    // Si intenta marcar como activo, validar el límite
     if (field === 'currentlyWorking' && value === true) {
       const currentActive = countActiveJobs();
       if (currentActive >= 3 && !updated[index].currentlyWorking) {
@@ -367,56 +435,22 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
     setExpandedEducation(null);
   };
 
-  // Certification handlers
-  const addCertification = () => {
-    const newCert = {
-      name: '',
-      issuer: '',
-      dateObtained: '',
-      expiryDate: ''
-    };
-    setCertifications([...certifications, newCert]);
-    setExpandedCertification(certifications.length);
-  };
-
-  const updateCertification = (index, field, value) => {
-    const updated = [...certifications];
-    updated[index][field] = value;
-    setCertifications(updated);
-  };
-
-  const confirmDeleteCertification = (index) => {
-    setDeleteModal({
-      type: 'certification',
-      index: index,
-      title: '¿Eliminar certificación?',
-      message: 'Esta acción no se puede deshacer.'
-    });
-  };
-
-  const removeCertification = (index) => {
-    setCertifications(certifications.filter((_, i) => i !== index));
-    setDeleteModal(null);
-    setExpandedCertification(null);
-  };
-
   const handleConfirmDelete = () => {
     if (!deleteModal) return;
     
     switch (deleteModal.type) {
       case 'freelance':
-        removeFreelanceJob(deleteModal.index);
+        handleDeleteFreelanceJob(deleteModal.index);
         break;
       case 'employee':
-        removeEmployeeJob(deleteModal.index);
+        handleDeleteEmployeeJob(deleteModal.index);
         break;
       case 'education':
         removeEducation(deleteModal.index);
         break;
-      case 'certification':
-        removeCertification(deleteModal.index);
-        break;
     }
+    
+    setDeleteModal(null);
   };
 
   if (loading) {
@@ -432,7 +466,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
             Editar CV
           </h1>
           <p className="text-white/90 text-lg animate-slideUp delay-100">
-            Agregá tu experiencia, educación y certificaciones
+            Agregá tu experiencia y educación
           </p>
         </div>
       </div>
@@ -619,7 +653,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
                       <button
                         onClick={() => handleSaveWorkExperience(job, true, index)}
                         disabled={savingWorkId === (job.workHistoryId || 'new')}
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base"
                       >
                         {savingWorkId === (job.workHistoryId || 'new') ? (
                           <>
@@ -634,11 +668,23 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
                         )}
                       </button>
 
+                      {/* Botón Eliminar Individual */}
                       <button
                         onClick={() => confirmDeleteFreelanceJob(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold text-base"
+                        disabled={deletingWorkId === job.workHistoryId}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base"
                       >
-                        Eliminar trabajo autónomo
+                        {deletingWorkId === job.workHistoryId ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Eliminando...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-5 h-5 mr-2" />
+                            Eliminar trabajo
+                          </>
+                        )}
                       </button>
                     </div>
                   )}
@@ -791,7 +837,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
                       <button
                         onClick={() => handleSaveWorkExperience(job, false, index)}
                         disabled={savingWorkId === (job.workHistoryId || 'new')}
-                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-3 text-base"
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base"
                       >
                         {savingWorkId === (job.workHistoryId || 'new') ? (
                           <>
@@ -806,11 +852,23 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
                         )}
                       </button>
 
+                      {/* Botón Eliminar Individual */}
                       <button
                         onClick={() => confirmDeleteEmployeeJob(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold text-base"
+                        disabled={deletingWorkId === job.workHistoryId}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base"
                       >
-                        Eliminar trabajo
+                        {deletingWorkId === job.workHistoryId ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Eliminando...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-5 h-5 mr-2" />
+                            Eliminar trabajo
+                          </>
+                        )}
                       </button>
                     </div>
                   )}
@@ -936,102 +994,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
           )}
         </div>
 
-        {/* Certificaciones */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
-              <Award className="w-6 h-6 mr-2 text-purple-600" />
-              Certificaciones
-            </h2>
-            <button
-              onClick={addCertification}
-              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
-
-          {certifications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              No hay certificaciones agregadas
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {certifications.map((cert, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div
-                    onClick={() => setExpandedCertification(expandedCertification === index ? null : index)}
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {expandedCertification === index ? (
-                        <ChevronDown className="w-5 h-5 text-purple-600" />
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      )}
-                      <div>
-                        <p className="font-semibold text-gray-800 text-base">
-                          {cert.name || 'Sin nombre'} {cert.issuer && `- ${cert.issuer}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {cert.dateObtained ? new Date(cert.dateObtained).getFullYear() : 'Sin fecha'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {expandedCertification === index && (
-                    <div className="p-4 pt-0 border-t border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input
-                          type="text"
-                          placeholder="Nombre de la certificación"
-                          value={cert.name}
-                          onChange={(e) => updateCertification(index, 'name', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Emisor"
-                          value={cert.issuer}
-                          onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
-                          className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
-                        />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha obtenida</label>
-                          <input
-                            type="date"
-                            value={cert.dateObtained}
-                            onChange={(e) => updateCertification(index, 'dateObtained', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de expiración (opcional)</label>
-                          <input
-                            type="date"
-                            value={cert.expiryDate}
-                            onChange={(e) => updateCertification(index, 'expiryDate', e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => confirmDeleteCertification(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold text-base"
-                      >
-                        Eliminar certificación
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Botón Guardar - Ahora solo para descripción, educación y certificaciones */}
+        {/* Botón Guardar - Ahora solo para descripción y educación */}
         <button
           onClick={handleSave}
           disabled={saving}
@@ -1045,7 +1008,7 @@ const handleSaveWorkExperience = async (job, isFreelance, index) => {
           ) : (
             <>
               <Save className="w-5 h-5 mr-2" />
-              Confirmar y guardar todos el CV
+              Confirmar y guardar todo el CV
             </>
           )}
         </button>
