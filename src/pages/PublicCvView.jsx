@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GraduationCap, Star, ChevronRight, Home } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import Toast from '../components/Toast';
 
 function PublicCvView() {
   const { professionalId } = useParams();
@@ -11,9 +12,13 @@ function PublicCvView() {
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [checkingFavorite, setCheckingFavorite] = useState(true);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     loadPublicCV();
+    checkIfFavorite();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalId]);
 
@@ -28,6 +33,82 @@ function PublicCvView() {
       setError('No se pudo cargar el CV');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkIfFavorite = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const userType = localStorage.getItem('userType');
+      
+      if (!token || userType !== 'CLIENT') {
+        setCheckingFavorite(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${backendUrl}/api/clients/me/favorites/${professionalId}/check`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsFavorite(data.isFavorite);
+      }
+    } catch (error) {
+      console.error('Error checking favorite:', error);
+    } finally {
+      setCheckingFavorite(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        navigate('/client-login');
+        return;
+      }
+
+      if (isFavorite) {
+        // Eliminar de favoritos
+        const response = await fetch(
+          `${backendUrl}/api/clients/me/favorites/${professionalId}`,
+          {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+
+        if (response.ok) {
+          setIsFavorite(false);
+          setToast({ type: 'success', message: 'Eliminado de guardados' });
+        }
+      } else {
+        // Agregar a favoritos
+        const response = await fetch(
+          `${backendUrl}/api/clients/me/favorites/${professionalId}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+          }
+        );
+
+        if (response.ok) {
+          setIsFavorite(true);
+          setToast({ type: 'success', message: 'Guardado en favoritos' });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      setToast({ type: 'error', message: 'Error al guardar' });
     }
   };
 
@@ -311,6 +392,34 @@ function PublicCvView() {
         )}
       </div>
 
+      {/* ✅ BOTÓN FLOTANTE FAVORITOS (solo para clientes) */}
+      {localStorage.getItem('userType') === 'CLIENT' && !checkingFavorite && (
+        <div className="fixed top-20 right-4 z-50 animate-slideUp">
+          <button
+            onClick={toggleFavorite}
+            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
+              isFavorite
+                ? 'bg-red-500 hover:bg-red-600'
+                : 'bg-white hover:bg-gray-100'
+            }`}
+          >
+            <svg
+              className={`w-7 h-7 ${isFavorite ? 'text-white fill-white' : 'text-gray-400'}`}
+              fill={isFavorite ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
           onClick={handleHomeClick}
@@ -320,6 +429,15 @@ function PublicCvView() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

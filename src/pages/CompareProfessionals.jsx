@@ -1,0 +1,294 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Star, Home, ArrowLeft, Calendar } from 'lucide-react';
+import LoadingScreen from '../components/LoadingScreen';
+import Toast from '../components/Toast';
+
+function CompareProfessionals() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  
+  const [professionals, setProfessionals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  
+  // Filtros
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState('rating-desc'); // rating-desc, rating-asc, name
+
+  useEffect(() => {
+    if (!location.state?.professionals) {
+      navigate('/saved-professionals');
+      return;
+    }
+    
+    setProfessionals(location.state.professionals);
+  }, [location.state, navigate]);
+
+  const applyFilters = async () => {
+    if (!startDate || !endDate) {
+      setToast({ type: 'warning', message: 'Seleccioná ambas fechas' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(
+        `${backendUrl}/api/clients/me/favorites?startDate=${startDate}&endDate=${endDate}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        const allData = await response.json();
+        // Filtrar solo los seleccionados
+        const selectedIds = professionals.map(p => p.professionalId);
+        const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
+        setProfessionals(filtered);
+        setToast({ type: 'success', message: 'Filtros aplicados' });
+      }
+    } catch (error) {
+      console.error('Error applying filters:', error);
+      setToast({ type: 'error', message: 'Error al aplicar filtros' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    // Recargar datos originales
+    if (location.state?.professionals) {
+      setProfessionals(location.state.professionals);
+    }
+  };
+
+  const getSortedProfessionals = () => {
+    const sorted = [...professionals];
+    
+    switch (sortBy) {
+      case 'rating-desc':
+        return sorted.sort((a, b) => (b.reputationScore || 0) - (a.reputationScore || 0));
+      case 'rating-asc':
+        return sorted.sort((a, b) => (a.reputationScore || 0) - (b.reputationScore || 0));
+      case 'name':
+        return sorted.sort((a, b) => a.professionalName.localeCompare(b.professionalName));
+      default:
+        return sorted;
+    }
+  };
+
+  const renderStars = (score) => {
+    return [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`w-5 h-5 ${i < Math.round(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+      />
+    ));
+  };
+
+  const translateProfession = (type) => {
+    const translations = {
+      'WAITER': 'Mozo',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
+      'CHEF': 'Chef',
+      'BARISTA': 'Barista',
+      'BARTENDER': 'Bartender',
+      'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
+      'SECURITY': 'Seguridad',
+      'RECEPTIONIST': 'Recepcionista'
+    };
+    return translations[type] || type;
+  };
+
+  if (loading) {
+    return <LoadingScreen message="Aplicando filtros..." />;
+  }
+
+  const sortedProfessionals = getSortedProfessionals();
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-purple-500 to-pink-600 px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={() => navigate('/saved-professionals')}
+            className="flex items-center text-white mb-4 hover:opacity-80 transition-opacity"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Volver a la lista
+          </button>
+          <h1 className="text-3xl roboto-light text-white mb-2">
+            Comparar Profesionales
+          </h1>
+          <p className="text-white/90">
+            {professionals.length} {professionals.length === 1 ? 'profesional seleccionado' : 'profesionales seleccionados'}
+          </p>
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="max-w-4xl mx-auto px-4 -mt-8 pb-4">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+          <h2 className="text-lg roboto-light text-gray-800 mb-4 flex items-center">
+            <Calendar className="w-5 h-5 mr-2 text-purple-600" />
+            Filtrar por período
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex items-end gap-2">
+              <button
+                onClick={applyFilters}
+                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-purple-700 transition-all"
+              >
+                Aplicar
+              </button>
+              <button
+                onClick={clearFilters}
+                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+              >
+                Limpiar
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-600 mb-1">Ordenar por</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+            >
+              <option value="rating-desc">Calificación (mayor a menor)</option>
+              <option value="rating-asc">Calificación (menor a mayor)</option>
+              <option value="name">Nombre (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Lista de profesionales */}
+        <div className="space-y-3">
+          {sortedProfessionals.map((prof, index) => (
+            <div
+              key={prof.professionalId}
+              className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all"
+            >
+              {/* Ranking badge */}
+              {sortBy.startsWith('rating') && (
+                <div className="absolute top-4 right-4">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                    ${index === 0 ? 'bg-yellow-400 text-yellow-900' : 
+                      index === 1 ? 'bg-gray-300 text-gray-700' : 
+                      index === 2 ? 'bg-orange-400 text-orange-900' : 
+                      'bg-gray-100 text-gray-600'}
+                  `}>
+                    {index + 1}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-3xl font-bold text-purple-600">
+                  {prof.professionalName.charAt(0)}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {prof.professionalName}
+                  </h3>
+                  <p className="text-purple-600">
+                    {translateProfession(prof.professionType)}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex">
+                      {renderStars(prof.reputationScore || 0)}
+                    </div>
+                    <span className="text-lg font-bold text-gray-800">
+                      {(prof.reputationScore || 0).toFixed(1)}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      ({prof.totalRatings || 0} calificaciones)
+                    </span>
+                  </div>
+
+                  {prof.notes && (
+                    <p className="text-sm text-gray-500 mt-2 italic">
+                      📝 {prof.notes}
+                    </p>
+                  )}
+                </div>
+
+                {/* Botón ver CV */}
+                <button
+                  onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
+                  className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all"
+                >
+                  Ver CV
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Botón Home */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <button
+          onClick={() => navigate('/client-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+export default CompareProfessionals;

@@ -22,6 +22,8 @@ import PublicCvView from './pages/PublicCvView';
 import RatingsHistory from './pages/RatingsHistory';
 import StatsPublic from './pages/StatsPublic';
 import ClientStats from './pages/ClientStats';
+import SavedProfessionals from './pages/SavedProfessionals';
+import CompareProfessionals from './pages/CompareProfessionals';
 
 function App() {
   return (
@@ -135,6 +137,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/saved-professionals" element={<SavedProfessionals />} />
+<Route path="/compare-professionals" element={<CompareProfessionals />} />
       </Routes>
     </Router>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Loader2, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown } from 'lucide-react';
+import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 
 function ClientDashboard() {
@@ -12,6 +12,7 @@ function ClientDashboard() {
   const [stats, setStats] = useState(null);
   const [topBadges, setTopBadges] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [favoritesCount, setFavoritesCount] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ function ClientDashboard() {
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
         loadRatings(clientData.id, token);
+        loadFavoritesCount(token);
       } else if (response.status === 401) {
         // Token inválido o expirado
         console.log('Token inválido, redirigiendo al login');
@@ -102,6 +104,23 @@ function ClientDashboard() {
     } catch (error) {
       console.error('Error loading ratings:', error);
       setMyRatings([]);
+    }
+  };
+
+  const loadFavoritesCount = async (token) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/clients/me/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFavoritesCount(data.length);
+      }
+    } catch (error) {
+      console.error('Error loading favorites count:', error);
     }
   };
 
@@ -186,7 +205,7 @@ function ClientDashboard() {
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
           <button
-            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >
@@ -304,7 +323,7 @@ function ClientDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentRatings.map((rating, index) => (
+              {recentRatings.map((rating) => (
                 <div 
                   key={rating.id} 
                   className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
@@ -338,7 +357,7 @@ function ClientDashboard() {
         </div>
 
         {/* Acciones rápidas */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             onClick={() => navigate('/client-stats')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-150 hover-lift"
@@ -361,6 +380,20 @@ function ClientDashboard() {
           >
             <Search className="w-8 h-8 text-teal-600 mx-auto mb-2" />
             <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
+          </button>
+
+          {/* ✅ NUEVO BOTÓN: Profesionales Guardados */}
+          <button
+            onClick={() => navigate('/saved-professionals')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-300 hover-lift relative"
+          >
+            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-gray-800">Mis Profesionales</p>
+            {favoritesCount > 0 && (
+              <span className="absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {favoritesCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
