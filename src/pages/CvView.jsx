@@ -431,7 +431,7 @@ function CvView() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-300">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
-              Educación
+              Educación y capacitaciones
             </h2>
             <div className="space-y-4">
               {cv.education.map((edu, index) => (
