@@ -248,9 +248,40 @@ function CvView() {
           </p>
         </div>
 
+        {/* ✅ BOTONES DE ACCIÓN - MOVIDOS AQUÍ */}
+        <div className="grid grid-cols-3 gap-3 mb-4 animate-slideUp delay-50">
+          <button
+            onClick={() => navigate('/edit-cv')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
+          >
+            <Briefcase className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+            <p className="font-semibold text-gray-800 text-sm">Editar CV</p>
+          </button>
+
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
+          >
+            <svg className="w-6 h-6 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <p className="font-semibold text-gray-800 text-sm">Compartir CV</p>
+          </button>
+
+          <button
+            onClick={() => window.open(`${backendUrl}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
+          >
+            <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <p className="font-semibold text-gray-800 text-sm">Descargar CV en PDF</p>
+          </button>
+        </div>
+
         {/* Banner de advertencia - Solo si no tiene trabajos activos */}
         {[...freelanceActive, ...employeeActive].length === 0 && (
-          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp delay-100">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5 text-orange-600" />
@@ -269,7 +300,7 @@ function CvView() {
 
         {/* TRABAJO AUTÓNOMO ACTUAL */}
         {freelanceActive.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">💼</span>
               Trabajo Autónomo Actual
@@ -314,7 +345,7 @@ function CvView() {
 
         {/* TRABAJOS ACTUALES (Relación de dependencia) */}
         {employeeActive.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">🏢</span>
               Trabajos Actuales
@@ -352,7 +383,7 @@ function CvView() {
 
         {/* EXPERIENCIAS PASADAS */}
         {pastJobs.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">📋</span>
               Experiencias Laborales Pasadas
@@ -397,7 +428,7 @@ function CvView() {
 
         {/* Educación */}
         {cv.education && cv.education.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-300">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
               Educación
@@ -418,37 +449,6 @@ function CvView() {
             </div>
           </div>
         )}
-
-        {/* Botones de acción - 3 botones en fila */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <button
-            onClick={() => navigate('/edit-cv')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
-          >
-            <Briefcase className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800 text-sm">Editar CV</p>
-          </button>
-
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
-          >
-            <svg className="w-6 h-6 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            <p className="font-semibold text-gray-800 text-sm">Compartir CV</p>
-          </button>
-
-          <button
-            onClick={() => window.open(`${backendUrl}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
-          >
-            <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            <p className="font-semibold text-gray-800 text-sm">Descargar CV en PDF</p>
-          </button>
-        </div>
       </div>
 
       {/* Botón Home flotante */}
