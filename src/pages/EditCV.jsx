@@ -13,6 +13,8 @@ function EditCV() {
   const [saving, setSaving] = useState(false);
   const [savingWorkId, setSavingWorkId] = useState(null);
   const [deletingWorkId, setDeletingWorkId] = useState(null);
+  const [savingEducationId, setSavingEducationId] = useState(null);
+  const [deletingEducationId, setDeletingEducationId] = useState(null);
   
   // Estados para el formulario
   const [description, setDescription] = useState('');
@@ -163,6 +165,71 @@ function EditCV() {
     }
   };
 
+  // Guardar educación individual
+  const handleSaveEducation = async (edu, index) => {
+    if (!cv || !cv.id) {
+      setToast({ type: 'error', message: 'Error: CV no inicializado' });
+      return;
+    }
+
+    // Validar que tenga al menos institución o título
+    if ((!edu.institution || edu.institution.trim() === '') && 
+        (!edu.degree || edu.degree.trim() === '')) {
+      setToast({ type: 'error', message: 'Debe ingresar al menos la institución o el título' });
+      return;
+    }
+
+    setSavingEducationId(edu.id || 'new');
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const payload = {
+        id: edu.id || null,
+        institution: edu.institution || '',
+        degree: edu.degree || '',
+        startDate: edu.startDate && edu.startDate !== '' ? edu.startDate : null,
+        endDate: edu.endDate && edu.endDate !== '' ? edu.endDate : null,
+        currentlyStudying: edu.currentlyStudying || false,
+        description: edu.description || ''
+      };
+
+      console.log('💾 Guardando educación:', payload);
+
+      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/education`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Educación guardada:', data);
+        
+        setToast({ type: 'success', message: 'Educación guardada correctamente' });
+        
+        await loadCV();
+        
+        setTimeout(() => {
+          setExpandedEducation(null);
+        }, 100);
+        
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error del backend:', errorData);
+        setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
+      }
+    } catch (error) {
+      console.error('Error saving education:', error);
+      setToast({ type: 'error', message: 'Error de conexión al guardar' });
+    } finally {
+      setSavingEducationId(null);
+    }
+  };
+
   // Eliminar trabajo freelance del backend
   const handleDeleteFreelanceJob = async (index) => {
     const job = freelanceJobs[index];
@@ -243,6 +310,46 @@ function EditCV() {
     }
   };
 
+  // Eliminar educación del backend
+  const handleDeleteEducation = async (index) => {
+    const edu = education[index];
+    
+    if (!edu.id) {
+      removeEducation(index);
+      return;
+    }
+
+    setDeletingEducationId(edu.id);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(
+        `${backendUrl}/api/cv/${cv.id}/education/${edu.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Educación eliminada correctamente' });
+        await loadCV();
+        setExpandedEducation(null);
+      } else {
+        const errorData = await response.json();
+        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
+      }
+    } catch (error) {
+      console.error('Error deleting education:', error);
+      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
+    } finally {
+      setDeletingEducationId(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!cv || !cv.id) {
       setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
@@ -253,19 +360,8 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       
-      // ✅ Limpiar education: convertir strings vacíos en null
-      const cleanedEducation = education.map(edu => ({
-        institution: edu.institution || '',
-        degree: edu.degree || '',
-        startDate: edu.startDate && edu.startDate !== '' ? edu.startDate : null,
-        endDate: edu.endDate && edu.endDate !== '' ? edu.endDate : null,
-        currentlyStudying: edu.currentlyStudying || false,
-        description: edu.description || ''
-      }));
-      
       const payload = {
-        description,
-        education: cleanedEducation
+        description
       };
 
       console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2));
@@ -458,7 +554,7 @@ function EditCV() {
         handleDeleteEmployeeJob(deleteModal.index);
         break;
       case 'education':
-        removeEducation(deleteModal.index);
+        handleDeleteEducation(deleteModal.index);
         break;
     }
     
@@ -992,13 +1088,42 @@ function EditCV() {
                         rows="2"
                       />
 
-                      {/* ✅ BOTÓN ROJO GRANDE */}
+                      {/* ✅ BOTÓN VERDE GUARDAR EDUCACIÓN */}
+                      <button
+                        onClick={() => handleSaveEducation(edu, index)}
+                        disabled={savingEducationId === (edu.id || 'new')}
+                        className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base"
+                      >
+                        {savingEducationId === (edu.id || 'new') ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Guardando...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-5 h-5 mr-2" />
+                            Guardar educación
+                          </>
+                        )}
+                      </button>
+
+                      {/* ✅ BOTÓN ROJO ELIMINAR EDUCACIÓN */}
                       <button
                         onClick={() => confirmDeleteEducation(index)}
-                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-all flex items-center justify-center text-base"
+                        disabled={deletingEducationId === edu.id}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base"
                       >
-                        <Trash2 className="w-5 h-5 mr-2" />
-                        Eliminar educación
+                        {deletingEducationId === edu.id ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Eliminando...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-5 h-5 mr-2" />
+                            Eliminar educación
+                          </>
+                        )}
                       </button>
                     </div>
                   )}
@@ -1008,7 +1133,7 @@ function EditCV() {
           )}
         </div>
 
-        {/* Botón Guardar - Ahora solo para descripción y educación */}
+        {/* Botón Guardar - Ahora solo para descripción */}
         <button
           onClick={handleSave}
           disabled={saving}
