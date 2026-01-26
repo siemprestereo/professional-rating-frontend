@@ -194,7 +194,7 @@ function EditCV() {
         description: edu.description || ''
       };
 
-      console.log('💾 Guardando educación:', payload);
+      console.log('💾 Guardando ítem:', payload);
 
       const response = await fetch(`${backendUrl}/api/cv/${cv.id}/education`, {
         method: 'POST',
@@ -207,9 +207,9 @@ function EditCV() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Educación guardada:', data);
+        console.log('✅ Ítem guardado:', data);
         
-        setToast({ type: 'success', message: 'Educación guardada correctamente' });
+        setToast({ type: 'success', message: 'Ítem guardado correctamente' });
         
         await loadCV();
         
@@ -255,7 +255,7 @@ function EditCV() {
       );
 
       if (response.ok) {
-        setToast({ type: 'success', message: 'Trabajo eliminado correctamente' });
+        setToast({ type: 'success', message: 'Ítem eliminado correctamente' });
         await loadCV();
         setExpandedFreelance(null);
       } else {
@@ -335,7 +335,7 @@ function EditCV() {
       );
 
       if (response.ok) {
-        setToast({ type: 'success', message: 'Educación eliminada correctamente' });
+        setToast({ type: 'success', message: 'Ítem eliminado correctamente' });
         await loadCV();
         setExpandedEducation(null);
       } else {
@@ -532,7 +532,7 @@ function EditCV() {
     setDeleteModal({
       type: 'education',
       index: index,
-      title: '¿Eliminar educación?',
+      title: '¿Eliminar ítem?',
       message: 'Esta acción no se puede deshacer.'
     });
   };
@@ -574,7 +574,7 @@ function EditCV() {
             Editar CV
           </h1>
           <p className="text-white/90 text-lg animate-slideUp delay-100">
-            Agregá tu experiencia y educación
+            Agregá tu experiencia laboral y educativa
           </p>
         </div>
       </div>
@@ -991,7 +991,7 @@ function EditCV() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
               <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
-              Educación
+              Educación y capacitaciones
             </h2>
             <button
               onClick={addEducation}
@@ -1003,7 +1003,7 @@ function EditCV() {
 
           {education.length === 0 ? (
             <p className="text-gray-500 text-center py-4">
-              No hay educación agregada
+              No hay experiencia educativa agregada
             </p>
           ) : (
             <div className="space-y-2">
@@ -1102,7 +1102,7 @@ function EditCV() {
                         ) : (
                           <>
                             <Save className="w-5 h-5 mr-2" />
-                            Guardar educación
+                            Guardar ítem
                           </>
                         )}
                       </button>
@@ -1121,7 +1121,7 @@ function EditCV() {
                         ) : (
                           <>
                             <Trash2 className="w-5 h-5 mr-2" />
-                            Eliminar educación
+                            Eliminar ítem
                           </>
                         )}
                       </button>
