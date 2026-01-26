@@ -162,7 +162,7 @@ function SavedProfessionals() {
               Guardá profesionales desde su CV para tenerlos siempre a mano
             </p>
             <button
-              onClick={() => navigate('/search-professionals')}
+              onClick={() => navigate('/search')}
               className="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-all"
             >
               Buscar profesionales
