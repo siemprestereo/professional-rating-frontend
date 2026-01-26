@@ -253,10 +253,22 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       
+      // ✅ Limpiar education: convertir strings vacíos en null
+      const cleanedEducation = education.map(edu => ({
+        institution: edu.institution || '',
+        degree: edu.degree || '',
+        startDate: edu.startDate && edu.startDate !== '' ? edu.startDate : null,
+        endDate: edu.endDate && edu.endDate !== '' ? edu.endDate : null,
+        currentlyStudying: edu.currentlyStudying || false,
+        description: edu.description || ''
+      }));
+      
       const payload = {
         description,
-        education
+        education: cleanedEducation
       };
+
+      console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
         method: 'PUT',
@@ -980,10 +992,12 @@ function EditCV() {
                         rows="2"
                       />
 
+                      {/* ✅ BOTÓN ROJO GRANDE */}
                       <button
                         onClick={() => confirmDeleteEducation(index)}
-                        className="text-red-500 hover:text-red-700 font-semibold text-base"
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg hover:scale-105 transition-all flex items-center justify-center text-base"
                       >
+                        <Trash2 className="w-5 h-5 mr-2" />
                         Eliminar educación
                       </button>
                     </div>
