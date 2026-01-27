@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Calendar } from 'lucide-react';
+import { Star, Home, ArrowLeft, Calendar, ChevronDown } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 
@@ -16,7 +16,10 @@ function CompareProfessionals() {
   // Filtros
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState('rating-desc'); // rating-desc, rating-asc, name
+  const [sortBy, setSortBy] = useState('rating-desc');
+  
+  // Estado para el trabajo seleccionado de cada profesional
+  const [selectedWorks, setSelectedWorks] = useState({});
 
   useEffect(() => {
     if (!location.state?.professionals) {
@@ -25,6 +28,13 @@ function CompareProfessionals() {
     }
     
     setProfessionals(location.state.professionals);
+    
+    // Inicializar selectedWorks con "all" para cada profesional
+    const initialWorks = {};
+    location.state.professionals.forEach(prof => {
+      initialWorks[prof.professionalId] = 'all';
+    });
+    setSelectedWorks(initialWorks);
   }, [location.state, navigate]);
 
   const applyFilters = async () => {
@@ -46,7 +56,6 @@ function CompareProfessionals() {
 
       if (response.ok) {
         const allData = await response.json();
-        // Filtrar solo los seleccionados
         const selectedIds = professionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
         setProfessionals(filtered);
@@ -60,13 +69,64 @@ function CompareProfessionals() {
     }
   };
 
-  const clearFilters = () => {
+  const clearFilters = async () => {
     setStartDate('');
     setEndDate('');
-    // Recargar datos originales
-    if (location.state?.professionals) {
-      setProfessionals(location.state.professionals);
+    
+    // Recargar datos originales sin filtro
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      const response = await fetch(
+        `${backendUrl}/api/clients/me/favorites`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        const allData = await response.json();
+        const selectedIds = professionals.map(p => p.professionalId);
+        const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
+        setProfessionals(filtered);
+      }
+    } catch (error) {
+      console.error('Error clearing filters:', error);
     }
+  };
+
+  const handleWorkChange = (professionalId, workHistoryId) => {
+    setSelectedWorks(prev => ({
+      ...prev,
+      [professionalId]: workHistoryId
+    }));
+  };
+
+  const getDisplayedStats = (prof) => {
+    const selectedWork = selectedWorks[prof.professionalId];
+    
+    if (!selectedWork || selectedWork === 'all') {
+      // Mostrar estadísticas generales
+      return {
+        avgScore: prof.reputationScore,
+        totalRatings: prof.totalRatings
+      };
+    }
+    
+    // Buscar el trabajo específico
+    const work = prof.workHistory?.find(w => w.id.toString() === selectedWork);
+    
+    if (work) {
+      return {
+        avgScore: work.avgScoreInPeriod,
+        totalRatings: work.ratingsCountInPeriod
+      };
+    }
+    
+    return {
+      avgScore: 0,
+      totalRatings: 0
+    };
   };
 
   const getSortedProfessionals = () => {
@@ -74,9 +134,17 @@ function CompareProfessionals() {
     
     switch (sortBy) {
       case 'rating-desc':
-        return sorted.sort((a, b) => (b.reputationScore || 0) - (a.reputationScore || 0));
+        return sorted.sort((a, b) => {
+          const statsA = getDisplayedStats(a);
+          const statsB = getDisplayedStats(b);
+          return statsB.avgScore - statsA.avgScore;
+        });
       case 'rating-asc':
-        return sorted.sort((a, b) => (a.reputationScore || 0) - (b.reputationScore || 0));
+        return sorted.sort((a, b) => {
+          const statsA = getDisplayedStats(a);
+          const statsB = getDisplayedStats(b);
+          return statsA.avgScore - statsB.avgScore;
+        });
       case 'name':
         return sorted.sort((a, b) => a.professionalName.localeCompare(b.professionalName));
       default:
@@ -202,70 +270,101 @@ function CompareProfessionals() {
 
         {/* Lista de profesionales */}
         <div className="space-y-3">
-          {sortedProfessionals.map((prof, index) => (
-            <div
-              key={prof.professionalId}
-              className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all"
-            >
-              {/* Ranking badge */}
-              {sortBy.startsWith('rating') && (
-                <div className="absolute top-4 right-4">
-                  <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                    ${index === 0 ? 'bg-yellow-400 text-yellow-900' : 
-                      index === 1 ? 'bg-gray-300 text-gray-700' : 
-                      index === 2 ? 'bg-orange-400 text-orange-900' : 
-                      'bg-gray-100 text-gray-600'}
-                  `}>
-                    {index + 1}
-                  </div>
-                </div>
-              )}
+          {sortedProfessionals.map((prof, index) => {
+            const stats = getDisplayedStats(prof);
+            const hasMultipleWorks = prof.workHistory && prof.workHistory.length > 1;
 
-              <div className="flex items-center gap-4">
-                {/* Avatar */}
-                <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-3xl font-bold text-purple-600">
-                  {prof.professionalName.charAt(0)}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {prof.professionalName}
-                  </h3>
-                  <p className="text-purple-600">
-                    {translateProfession(prof.professionType)}
-                  </p>
-                  
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex">
-                      {renderStars(prof.reputationScore || 0)}
+            return (
+              <div
+                key={prof.professionalId}
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all relative"
+              >
+                {/* Ranking badge */}
+                {sortBy.startsWith('rating') && (
+                  <div className="absolute top-4 right-4">
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                      ${index === 0 ? 'bg-yellow-400 text-yellow-900' : 
+                        index === 1 ? 'bg-gray-300 text-gray-700' : 
+                        index === 2 ? 'bg-orange-400 text-orange-900' : 
+                        'bg-gray-100 text-gray-600'}
+                    `}>
+                      {index + 1}
                     </div>
-                    <span className="text-lg font-bold text-gray-800">
-                      {(prof.reputationScore || 0).toFixed(1)}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      ({prof.totalRatings || 0} calificaciones)
-                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-3xl font-bold text-purple-600 flex-shrink-0">
+                    {prof.professionalName.charAt(0)}
                   </div>
 
-                  {prof.notes && (
-                    <p className="text-sm text-gray-500 mt-2 italic">
-                      📝 {prof.notes}
+                  {/* Info */}
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {prof.professionalName}
+                    </h3>
+                    <p className="text-purple-600 mb-3">
+                      {translateProfession(prof.professionType)}
                     </p>
-                  )}
-                </div>
 
-                {/* Botón ver CV */}
-                <button
-                  onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
-                  className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all"
-                >
-                  Ver CV
-                </button>
+                    {/* Dropdown de trabajos */}
+                    {hasMultipleWorks && (
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          📍 Lugar de trabajo
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={selectedWorks[prof.professionalId] || 'all'}
+                            onChange={(e) => handleWorkChange(prof.professionalId, e.target.value)}
+                            className="w-full appearance-none border-2 border-gray-200 rounded-xl px-3 py-2 pr-10 focus:border-purple-500 focus:outline-none bg-white cursor-pointer text-sm"
+                          >
+                            <option value="all">Todos los trabajos</option>
+                            {prof.workHistory.map((work) => (
+                              <option key={work.id} value={work.id}>
+                                {work.businessName} - {work.position}
+                                {work.isActive ? ' (Actual)' : ' (Pasado)'}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Estadísticas */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex">
+                        {renderStars(stats.avgScore || 0)}
+                      </div>
+                      <span className="text-lg font-bold text-gray-800">
+                        {(stats.avgScore || 0).toFixed(1)}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        ({stats.totalRatings || 0} calificaciones)
+                      </span>
+                    </div>
+
+                    {prof.notes && (
+                      <p className="text-sm text-gray-500 mt-2 italic">
+                        📝 {prof.notes}
+                      </p>
+                    )}
+
+                    {/* Botón ver CV */}
+                    <button
+                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
+                      className="mt-3 bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm"
+                    >
+                      Ver CV completo
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
