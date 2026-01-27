@@ -173,14 +173,14 @@ function PublicCvView() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8">
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8 pb-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600">
             {cvData.professionalName?.charAt(0) || 'P'}
           </div>
           <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
-          {cvData.professionType && <p className="text-white/90 text-lg mb-4">{translateProfession(cvData.professionType)}</p>}
-          <div className="flex items-center justify-center mb-2">
+          {cvData.professionType && <p className="text-white/90 text-lg mb-6">{translateProfession(cvData.professionType)}</p>}
+          <div className="flex items-center justify-center mb-3">
             {renderStars(cvData.reputationScore || 0)}
             <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
           </div>
