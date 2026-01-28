@@ -153,7 +153,7 @@ function SavedProfessionals() {
             disabled={!canCompare}
             className={`w-full font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 ${
               canCompare
-                ? 'bg-white text-purple-600 shadow-lg hover:scale-105'
+                ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg hover:scale-105'
                 : 'bg-white/20 text-white/50 cursor-not-allowed'
             }`}
           >
@@ -195,9 +195,9 @@ function SavedProfessionals() {
                 onClick={(e) => handleCardClick(e, prof.professionalId)}
                 className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-3">
                   {/* Checkbox */}
-                  <div className="flex-shrink-0 pt-1">
+                  <div className="flex-shrink-0">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(prof.professionalId)}
@@ -208,13 +208,13 @@ function SavedProfessionals() {
                   </div>
 
                   {/* Avatar */}
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-2xl font-bold text-purple-600 flex-shrink-0">
+                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
                     {prof.professionalName.charAt(0)}
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-800">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-gray-800 truncate">
                       {prof.professionalName}
                     </h3>
                     <p className="text-sm text-purple-600">
@@ -224,38 +224,43 @@ function SavedProfessionals() {
                       <div className="flex">
                         {renderStars(prof.reputationScore || 0)}
                       </div>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-xs text-gray-600">
                         {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
                       </span>
                     </div>
-                    {prof.notes && (
-                      <p className="text-sm text-gray-500 mt-2 italic">
-                        📝 {prof.notes}
-                      </p>
-                    )}
+                  </div>
 
-                    {/* Botón eliminar (con cuerpo) */}
+                  {/* Botón eliminar */}
+                  <div className="flex-shrink-0">
                     <button
                       onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                      className="mt-3 bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center gap-2"
+                      className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
+                      title="Eliminar"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      Eliminar
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
+
+                {/* Notas (si existen) */}
+                {prof.notes && (
+                  <div className="mt-3 pl-20">
+                    <p className="text-sm text-gray-500 italic">
+                      📝 {prof.notes}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Botón Home flotante */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button 
-          onClick={() => navigate(-1)}
-          className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Volver atrás"
+      {/* Botón Home */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <button
+          onClick={() => navigate('/client-dashboard')}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
