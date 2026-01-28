@@ -256,11 +256,12 @@ function SavedProfessionals() {
         )}
       </div>
 
-      {/* Botón Home */}
-      <div className="fixed bottom-4 right-4 z-40">
-        <button
-          onClick={() => navigate('/client-dashboard')}
-          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+      {/* Botón Home flotante */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
+        <button 
+          onClick={() => navigate(-1)}
+          className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
+          aria-label="Volver atrás"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
