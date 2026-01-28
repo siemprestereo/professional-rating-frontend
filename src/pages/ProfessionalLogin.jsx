@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, ArrowLeft, User, AlertCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
@@ -9,6 +9,7 @@ function ProfessionalLogin() {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
@@ -180,21 +181,34 @@ function ProfessionalLogin() {
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Contraseña
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setLoginError('');
-              }}
-              placeholder="••••••••"
-              required
-              className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
-                loginError 
-                  ? 'border-red-500 focus:border-red-500' 
-                  : 'border-gray-200 focus:border-purple-500'
-              } ${shake ? 'animate-shake' : ''}`}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLoginError('');
+                }}
+                placeholder="••••••••"
+                required
+                className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
+                  loginError 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : 'border-gray-200 focus:border-purple-500'
+                } ${shake ? 'animate-shake' : ''}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Mensaje de error inline */}

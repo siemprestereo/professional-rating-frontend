@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, Home, ArrowLeft, Trash2 } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
+import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function SavedProfessionals() {
   const navigate = useNavigate();
@@ -189,69 +190,80 @@ function SavedProfessionals() {
           </div>
         ) : (
           <div className="space-y-3">
-            {professionals.map((prof) => (
-              <div
-                key={prof.professionalId}
-                onClick={(e) => handleCardClick(e, prof.professionalId)}
-                className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Checkbox */}
-                  <div className="flex-shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(prof.professionalId)}
-                      onChange={() => toggleSelection(prof.professionalId)}
-                      className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
+            {professionals.map((prof) => {
+              const badge = getProfessionalBadge(prof.totalRatings);
+              
+              return (
+                <div
+                  key={prof.professionalId}
+                  onClick={(e) => handleCardClick(e, prof.professionalId)}
+                  className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Checkbox */}
+                    <div className="flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(prof.professionalId)}
+                        onChange={() => toggleSelection(prof.professionalId)}
+                        className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
 
-                  {/* Avatar */}
-                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
-                    {prof.professionalName.charAt(0)}
-                  </div>
+                    {/* Avatar */}
+                    <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
+                      {prof.professionalName.charAt(0)}
+                    </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-gray-800 truncate">
-                      {prof.professionalName}
-                    </h3>
-                    <p className="text-sm text-purple-600">
-                      {translateProfession(prof.professionType)}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex">
-                        {renderStars(prof.reputationScore || 0)}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-gray-800 truncate">
+                        {prof.professionalName}
+                      </h3>
+                      <p className="text-sm text-purple-600 mb-1">
+                        {translateProfession(prof.professionType)}
+                      </p>
+                      
+                      {/* Medalla */}
+                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-1 ${badge.bgColor} ${badge.borderColor} border`}>
+                        <span className="text-sm">{badge.emoji}</span>
+                        <span className={badge.color}>{badge.name}</span>
                       </div>
-                      <span className="text-xs text-gray-600">
-                        {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
-                      </span>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="flex">
+                          {renderStars(prof.reputationScore || 0)}
+                        </div>
+                        <span className="text-xs text-gray-600">
+                          {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Botón eliminar */}
+                    <div className="flex-shrink-0">
+                      <button
+                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
+                        className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Botón eliminar */}
-                  <div className="flex-shrink-0">
-                    <button
-                      onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                      className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+                  {/* Notas (si existen) */}
+                  {prof.notes && (
+                    <div className="mt-3 pl-20">
+                      <p className="text-sm text-gray-500 italic">
+                        📝 {prof.notes}
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Notas (si existen) */}
-                {prof.notes && (
-                  <div className="mt-3 pl-20">
-                    <p className="text-sm text-gray-500 italic">
-                      📝 {prof.notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

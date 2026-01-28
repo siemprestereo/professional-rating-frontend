@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GraduationCap, Star, ChevronRight, Home } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
+import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function PublicCvView() {
   const { professionalId } = useParams();
@@ -170,6 +171,7 @@ function PublicCvView() {
   const freelanceActive = workHistory.filter(w => w.isFreelance && w.isActive);
   const employeeActive = workHistory.filter(w => !w.isFreelance && w.isActive);
   const pastJobs = workHistory.filter(w => !w.isActive);
+  const badge = getProfessionalBadge(cvData.totalRatings || 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -179,7 +181,14 @@ function PublicCvView() {
             {cvData.professionalName?.charAt(0) || 'P'}
           </div>
           <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
-          {cvData.professionType && <p className="text-white/90 text-lg mb-6">{translateProfession(cvData.professionType)}</p>}
+          {cvData.professionType && <p className="text-white/90 text-lg mb-3">{translateProfession(cvData.professionType)}</p>}
+          
+          {/* Medalla */}
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2`}>
+            <span className="text-xl">{badge.emoji}</span>
+            <span className={badge.color}>{badge.name}</span>
+          </div>
+          
           <div className="flex items-center justify-center mb-3">
             {renderStars(cvData.reputationScore || 0)}
             <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
@@ -392,7 +401,7 @@ function PublicCvView() {
         )}
       </div>
 
-      {/* ✅ BOTÓN FLOTANTE FAVORITOS (solo para clientes) */}
+      {/* BOTÓN FLOTANTE FAVORITOS (solo para clientes) */}
       {localStorage.getItem('userType') === 'CLIENT' && !checkingFavorite && (
         <div className="fixed top-20 right-4 z-50 animate-slideUp">
           <button

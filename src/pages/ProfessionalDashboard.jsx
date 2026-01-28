@@ -5,6 +5,7 @@ import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { capitalizeName, getFirstName } from '../utils/formatName';
+import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -274,6 +275,7 @@ function ProfessionalDashboard() {
   // Usar funciones utilitarias para formatear nombres
   const firstName = getFirstName(professional.name);
   const fullName = capitalizeName(professional.name);
+  const badge = getProfessionalBadge(professional.totalRatings || 0);
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
@@ -330,7 +332,14 @@ function ProfessionalDashboard() {
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn">
             {fullName.charAt(0).toUpperCase()}
           </div>
-          <h2 className="text-2xl roboto-light text-white mb-2 animate-slideUp">{fullName}</h2>
+          <h2 className="text-2xl roboto-light text-white mb-3 animate-slideUp">{fullName}</h2>
+          
+          {/* Medalla */}
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2 animate-slideUp delay-50`}>
+            <span className="text-xl">{badge.emoji}</span>
+            <span className={badge.color}>{badge.name}</span>
+          </div>
+          
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
             {renderStars(Math.round(professional.reputationScore || 0))}
             <span className="ml-2 text-white font-semibold text-lg">

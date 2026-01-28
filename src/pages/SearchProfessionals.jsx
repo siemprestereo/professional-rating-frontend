@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
+import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function SearchProfessionals() {
   const navigate = useNavigate();
@@ -93,12 +94,31 @@ function SearchProfessionals() {
     }
   }, [activeTab]);
 
-  // ← NUEVO: Auto-ejecutar búsqueda cuando cambia searchTerm
+  // Auto-ejecutar búsqueda cuando cambia searchTerm
   useEffect(() => {
     if (searchTerm.trim() && activeTab === 'buscar') {
       handleSearch();
     }
   }, [searchTerm]);
+
+  // Manejar el botón "atrás" del navegador
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state?.category) {
+        setSearchTerm(event.state.category);
+        setActiveTab('buscar');
+      } else {
+        setSearchTerm('');
+        setActiveTab('buscar');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   const loadTopProfessionals = async () => {
     setLoading(true);
@@ -152,7 +172,13 @@ function SearchProfessionals() {
   const handleCategoryClick = (categoryName) => {
     setSearchTerm(categoryName);
     setActiveTab('buscar');
-    // Ya no necesitamos setTimeout, el useEffect se encarga
+    
+    // Agregar al historial del navegador
+    window.history.pushState(
+      { category: categoryName }, 
+      '', 
+      `/search?q=${encodeURIComponent(categoryName)}`
+    );
   };
 
   const checkLoginAndNavigate = (professionalId) => {
@@ -208,49 +234,59 @@ function SearchProfessionals() {
     return translations[type] || type;
   };
 
-  const renderProfessionalCard = (professional, index = 0) => (
-    <div
-      key={professional.id}
-      onClick={() => checkLoginAndNavigate(professional.id)}
-      className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
-      style={{ animationDelay: `${index * 0.1}s` }}
-    >
-      <div className="flex items-start">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mr-4 transition-transform duration-300 hover:scale-110">
-          {professional.name.charAt(0)}
-        </div>
-        
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-800 mb-1">
-            {professional.name}
-          </h3>
-          
-          {professional.professionType && (
-            <p className="text-sm text-purple-600 font-semibold mb-2">
-              {translateProfession(professional.professionType)}
-            </p>
-          )}
-          
-          <div className="flex items-center mb-2">
-            {renderStars(professional.reputationScore || 0)}
-            <span className="ml-2 text-sm font-semibold text-gray-700">
-              {(professional.reputationScore || 0).toFixed(1)}
-            </span>
-            <span className="ml-2 text-sm text-gray-500">
-              ({professional.totalRatings || 0})
-            </span>
+  const renderProfessionalCard = (professional, index = 0) => {
+    const badge = getProfessionalBadge(professional.totalRatings);
+    
+    return (
+      <div
+        key={professional.id}
+        onClick={() => checkLoginAndNavigate(professional.id)}
+        className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all duration-300 animate-slideUp hover-lift"
+        style={{ animationDelay: `${index * 0.1}s` }}
+      >
+        <div className="flex items-start">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl font-bold text-white mr-4 transition-transform duration-300 hover:scale-110">
+            {professional.name.charAt(0)}
           </div>
           
-          {professional.location && (
-            <div className="flex items-center text-sm text-gray-600">
-              <MapPin className="w-4 h-4 mr-1 text-purple-600" />
-              {professional.location}
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-gray-800 mb-1">
+              {professional.name}
+            </h3>
+            
+            {professional.professionType && (
+              <p className="text-sm text-purple-600 font-semibold mb-2">
+                {translateProfession(professional.professionType)}
+              </p>
+            )}
+            
+            {/* Medalla */}
+            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-2 ${badge.bgColor} ${badge.borderColor} border`}>
+              <span className="text-sm">{badge.emoji}</span>
+              <span className={badge.color}>{badge.name}</span>
             </div>
-          )}
+            
+            <div className="flex items-center mb-2">
+              {renderStars(professional.reputationScore || 0)}
+              <span className="ml-2 text-sm font-semibold text-gray-700">
+                {(professional.reputationScore || 0).toFixed(1)}
+              </span>
+              <span className="ml-2 text-sm text-gray-500">
+                ({professional.totalRatings || 0})
+              </span>
+            </div>
+            
+            {professional.location && (
+              <div className="flex items-center text-sm text-gray-600">
+                <MapPin className="w-4 h-4 mr-1 text-purple-600" />
+                {professional.location}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">

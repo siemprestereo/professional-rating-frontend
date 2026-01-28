@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Star, Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
+import { getProfessionalBadge, getAdjustedScore } from '../utils/professionalBadge';
 
 function CompareProfessionals() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function CompareProfessionals() {
   // Filtros
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState('rating-desc');
+  const [sortBy, setSortBy] = useState('rating-adjusted-desc');
   const [showDateFilter, setShowDateFilter] = useState(false);
   
   // Estado para el trabajo seleccionado de cada profesional
@@ -148,16 +149,36 @@ function CompareProfessionals() {
     
     switch (sortBy) {
       case 'rating-desc':
+        // Promedio simple (mayor a menor)
         return sorted.sort((a, b) => {
           const statsA = getDisplayedStats(a);
           const statsB = getDisplayedStats(b);
           return statsB.avgScore - statsA.avgScore;
         });
       case 'rating-asc':
+        // Promedio simple (menor a mayor)
         return sorted.sort((a, b) => {
           const statsA = getDisplayedStats(a);
           const statsB = getDisplayedStats(b);
           return statsA.avgScore - statsB.avgScore;
+        });
+      case 'rating-adjusted-desc':
+        // Score bayesiano (mayor a menor) - RECOMENDADO
+        return sorted.sort((a, b) => {
+          const statsA = getDisplayedStats(a);
+          const statsB = getDisplayedStats(b);
+          const adjustedA = getAdjustedScore(statsA.avgScore, statsA.totalRatings);
+          const adjustedB = getAdjustedScore(statsB.avgScore, statsB.totalRatings);
+          return adjustedB - adjustedA;
+        });
+      case 'rating-adjusted-asc':
+        // Score bayesiano (menor a mayor)
+        return sorted.sort((a, b) => {
+          const statsA = getDisplayedStats(a);
+          const statsB = getDisplayedStats(b);
+          const adjustedA = getAdjustedScore(statsA.avgScore, statsA.totalRatings);
+          const adjustedB = getAdjustedScore(statsB.avgScore, statsB.totalRatings);
+          return adjustedA - adjustedB;
         });
       case 'seniority':
         return sorted.sort((a, b) => {
@@ -238,8 +259,10 @@ function CompareProfessionals() {
             onChange={(e) => setSortBy(e.target.value)}
             className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
           >
-            <option value="rating-desc">Calificación (mayor a menor)</option>
-            <option value="rating-asc">Calificación (menor a mayor)</option>
+            <option value="rating-adjusted-desc">Calificación ajustada (mayor a menor) ⭐ Recomendado</option>
+            <option value="rating-adjusted-asc">Calificación ajustada (menor a mayor)</option>
+            <option value="rating-desc">Calificación promedio (mayor a menor)</option>
+            <option value="rating-asc">Calificación promedio (menor a mayor)</option>
             <option value="seniority">Antigüedad en la plataforma</option>
           </select>
         </div>
@@ -308,6 +331,7 @@ function CompareProfessionals() {
           {sortedProfessionals.map((prof) => {
             const stats = getDisplayedStats(prof);
             const hasMultipleWorks = prof.workHistory && prof.workHistory.length > 1;
+            const badge = getProfessionalBadge(stats.totalRatings);
 
             return (
               <div
@@ -325,9 +349,15 @@ function CompareProfessionals() {
                     <h3 className="text-xl font-bold text-gray-800">
                       {prof.professionalName}
                     </h3>
-                    <p className="text-purple-600 mb-3">
+                    <p className="text-purple-600 mb-2">
                       {translateProfession(prof.professionType)}
                     </p>
+
+                    {/* Medalla */}
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2`}>
+                      <span className="text-lg">{badge.emoji}</span>
+                      <span className={badge.color}>{badge.name}</span>
+                    </div>
 
                     {/* Dropdown de trabajos */}
                     {hasMultipleWorks && (
