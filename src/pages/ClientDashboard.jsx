@@ -268,7 +268,7 @@ function ClientDashboard() {
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h3 className="text-xl roboto-light text-gray-800 mb-2">
-            ¡Hola {firstName}! 👋
+            ¡Hola, {firstName}! 👋
           </h3>
           <p className="text-gray-600 text-base">
             Para calificar a un profesional, pídele que te muestre su código QR.
@@ -284,7 +284,7 @@ function ClientDashboard() {
             </h3>
             {myRatings.length > 3 && (
               <button
-                onClick={() => navigate('/client-stats')}
+                onClick={() => navigate('/client-ratings-history')}
                 className="text-teal-600 text-sm font-semibold hover:text-teal-700"
               >
                 Ver todas →
