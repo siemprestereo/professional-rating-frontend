@@ -12,7 +12,6 @@ function ClientDashboard() {
   const [stats, setStats] = useState(null);
   const [topBadges, setTopBadges] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [favoritesCount, setFavoritesCount] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -69,7 +68,6 @@ function ClientDashboard() {
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
         loadRatings(clientData.id, token);
-        loadFavoritesCount(token);
       } else if (response.status === 401) {
         // Token inválido o expirado
         console.log('Token inválido, redirigiendo al login');
@@ -104,23 +102,6 @@ function ClientDashboard() {
     } catch (error) {
       console.error('Error loading ratings:', error);
       setMyRatings([]);
-    }
-  };
-
-  const loadFavoritesCount = async (token) => {
-    try {
-      const response = await fetch(`${backendUrl}/api/clients/me/favorites`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFavoritesCount(data.length);
-      }
-    } catch (error) {
-      console.error('Error loading favorites count:', error);
     }
   };
 
@@ -382,21 +363,38 @@ function ClientDashboard() {
             <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
           </button>
 
-          {/* ✅ NUEVO BOTÓN: Profesionales Guardados */}
+          {/* ✅ BOTÓN: Profesionales Guardados con corazón latiendo */}
           <button
             onClick={() => navigate('/saved-professionals')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-300 hover-lift relative"
           >
-            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2 animate-heartbeat" />
             <p className="text-xs font-semibold text-gray-800">Mis Profesionales</p>
-            {favoritesCount > 0 && (
-              <span className="absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {favoritesCount}
-              </span>
-            )}
           </button>
         </div>
       </div>
+
+      {/* Estilos de animación heartbeat */}
+      <style>{`
+        @keyframes heartbeat {
+          0%, 100% { 
+            transform: scale(1);
+            filter: brightness(1);
+          }
+          25% { 
+            transform: scale(1.1);
+            filter: brightness(1.2) hue-rotate(-10deg);
+          }
+          50% { 
+            transform: scale(1);
+            filter: brightness(1);
+          }
+        }
+        
+        .animate-heartbeat {
+          animation: heartbeat 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
