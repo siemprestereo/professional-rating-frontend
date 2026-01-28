@@ -24,6 +24,7 @@ import StatsPublic from './pages/StatsPublic';
 import ClientStats from './pages/ClientStats';
 import SavedProfessionals from './pages/SavedProfessionals';
 import CompareProfessionals from './pages/CompareProfessionals';
+import ClientRatingsHistory from './pages/ClientRatingsHistory';
 
 function App() {
   return (
@@ -129,6 +130,7 @@ function App() {
          </ProtectedRoute>
            } 
         />
+        
         <Route 
           path="/edit-profile" 
           element={
@@ -139,6 +141,7 @@ function App() {
         />
         <Route path="/saved-professionals" element={<SavedProfessionals />} />
 <Route path="/compare-professionals" element={<CompareProfessionals />} />
+<Route path="/client-ratings-history" element={<ClientRatingsHistory />} />
       </Routes>
     </Router>
   );

@@ -95,7 +95,7 @@ function ClientStats() {
     const earnedBadges = [];
     const total = ratingsData.length;
 
-    // Medallas por cantidad (RESTAURADAS)
+    // Medallas por cantidad
     if (total >= 1) earnedBadges.push({ icon: '🥉', name: 'Primera calificación', description: 'Has dado tu primera calificación', unlocked: true });
     if (total >= 5) earnedBadges.push({ icon: '🥈', name: 'Calificador activo', description: '5 calificaciones otorgadas', unlocked: true });
     if (total >= 10) earnedBadges.push({ icon: '🥇', name: 'Calificador experimentado', description: '10 calificaciones otorgadas', unlocked: true });
@@ -103,7 +103,7 @@ function ClientStats() {
     if (total >= 50) earnedBadges.push({ icon: '👑', name: 'Calificador Maestro', description: '50 calificaciones otorgadas', unlocked: true });
     if (total >= 100) earnedBadges.push({ icon: '⭐', name: 'Calificador Legendario', description: '100 calificaciones otorgadas', unlocked: true });
 
-    // Medallas especiales (RESTAURADAS)
+    // Medallas especiales
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
     const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
     
@@ -124,7 +124,7 @@ function ClientStats() {
       earnedBadges.push({ icon: '🔍', name: 'Explorador', description: 'Has calificado 5+ categorías diferentes', unlocked: true, special: true });
     }
 
-    // Medallas bloqueadas (RESTAURADAS)
+    // Medallas bloqueadas
     if (total < 5) earnedBadges.push({ icon: '🥈', name: 'Calificador Activo', description: `${5 - total} calificaciones más`, unlocked: false });
     if (total < 10 && total >= 5) earnedBadges.push({ icon: '🥇', name: 'Calificador Experimentado', description: `${10 - total} calificaciones más`, unlocked: false });
     if (total < 25 && total >= 10) earnedBadges.push({ icon: '💎', name: 'Calificador Experto', description: `${25 - total} calificaciones más`, unlocked: false });
@@ -160,7 +160,7 @@ function ClientStats() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-4">
-        {/* Quick Stats - Los dos cuadrados con separación corregida */}
+        {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp">
             <p className="text-3xl font-bold mb-1">{stats?.total || 0}</p>
@@ -276,34 +276,47 @@ function ClientStats() {
           </div>
         </div>
 
-        {/* Historial Completo */}
+        {/* Historial Completo - BOTÓN PARA VER MÁS */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-teal-600" />
-            Historial Completo ({ratings.length})
+            Historial de Calificaciones
           </h3>
           
           {ratings.length === 0 ? (
             <p className="text-center text-gray-500 py-8">Aún no has dado calificaciones</p>
           ) : (
-            <div className="space-y-3">
-              {ratings.map((rating) => (
-                <div key={rating.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold text-gray-800">{rating.professionalName}</h4>
-                      <p className="text-sm text-gray-500">{rating.businessName}</p>
+            <>
+              {/* Mostrar solo las últimas 3 */}
+              <div className="space-y-3 mb-4">
+                {ratings.slice(0, 3).map((rating) => (
+                  <div key={rating.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{rating.professionalName}</h4>
+                        <p className="text-sm text-gray-500">{rating.businessName}</p>
+                      </div>
+                      <div className="flex items-center gap-1">{renderStars(rating.score)}</div>
                     </div>
-                    <div className="flex items-center gap-1">{renderStars(rating.score)}</div>
+                    {rating.comment && <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>}
+                    <div className="flex items-center text-xs text-gray-400">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {new Date(rating.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </div>
                   </div>
-                  {rating.comment && <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>}
-                  <div className="flex items-center text-xs text-gray-400">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(rating.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Botón Ver Todas */}
+              {ratings.length > 3 && (
+                <button
+                  onClick={() => navigate('/client-ratings-history')}
+                  className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-3 rounded-xl hover:scale-105 transition-all shadow-lg"
+                >
+                  Ver todas las calificaciones ({ratings.length})
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
