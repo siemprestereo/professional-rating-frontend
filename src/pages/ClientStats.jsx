@@ -181,6 +181,7 @@ function ClientStats() {
             </h3>
             
             <div className="relative h-48 mt-4">
+              {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
                 {[...Array(6)].map((_, i) => {
                   const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
@@ -189,35 +190,48 @@ function ClientStats() {
                 })}
               </div>
 
-              <div className="absolute left-10 top-0 right-2 bottom-10 overflow-hidden">
+              {/* Gráfico */}
+              <div className="absolute left-10 top-0 right-2 bottom-10">
                 <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
+                  {/* Líneas horizontales de fondo */}
                   {[...Array(6)].map((_, i) => (
                     <line key={i} x1="0" y1={i * 32} x2="500" y2={i * 32} stroke="#e5e7eb" strokeWidth="1" />
                   ))}
 
-                  {stats.monthlyActivity.filter(m => m.count > 0).length > 1 && (
-                    <polyline
-                      points={stats.monthlyActivity.map((m, i) => {
-                        const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
-                        const x = (i * 500) / (stats.monthlyActivity.length - 1);
-                        const y = 10 + ((maxCount - m.count) / maxCount) * 140;
-                        return `${x},${y}`;
-                      }).join(' ')}
-                      fill="none"
-                      stroke="url(#gradient)"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
+                  {/* Línea conectando los puntos */}
+                  <polyline
+                    points={stats.monthlyActivity.map((m, i) => {
+                      const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
+                      const x = (i * 500) / (stats.monthlyActivity.length - 1);
+                      const y = 10 + ((maxCount - m.count) / maxCount) * 140;
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="url(#gradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
 
+                  {/* Puntos en cada mes */}
                   {stats.monthlyActivity.map((m, i) => {
                     const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                     const x = (i * 500) / (stats.monthlyActivity.length - 1);
                     const y = 10 + ((maxCount - m.count) / maxCount) * 140;
-                    return <circle key={i} cx={x} cy={y} r="5" fill="#10b981" stroke="white" strokeWidth="2" />;
+                    return (
+                      <circle 
+                        key={i} 
+                        cx={x} 
+                        cy={y} 
+                        r="6" 
+                        fill="#10b981" 
+                        stroke="white" 
+                        strokeWidth="2"
+                      />
+                    );
                   })}
 
+                  {/* Gradiente para la línea */}
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#10b981" />
@@ -227,6 +241,7 @@ function ClientStats() {
                 </svg>
               </div>
 
+              {/* Eje X - Meses */}
               <div className="absolute left-10 right-2 bottom-0 flex justify-between text-xs text-gray-500">
                 {stats.monthlyActivity.map((m, i) => (
                   <span key={i} className="capitalize">{m.month}</span>
