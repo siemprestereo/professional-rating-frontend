@@ -19,6 +19,7 @@ function CompareProfessionals() {
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('rating-adjusted-desc');
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [quickFilter, setQuickFilter] = useState(''); // 'last30', 'last3m', 'last6m', ''
   
   // Estado para el trabajo seleccionado de cada profesional
   const [selectedWorks, setSelectedWorks] = useState({});
@@ -38,6 +39,45 @@ function CompareProfessionals() {
     });
     setSelectedWorks(initialWorks);
   }, [location.state, navigate]);
+
+  const handleQuickFilterChange = (filterType) => {
+    // Si ya está seleccionado, deseleccionar
+    if (quickFilter === filterType) {
+      setQuickFilter('');
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+
+    setQuickFilter(filterType);
+    
+    const today = new Date();
+    const endDateStr = today.toISOString().split('T')[0];
+    let startDateStr = '';
+
+    switch (filterType) {
+      case 'last30':
+        const date30 = new Date(today);
+        date30.setDate(date30.getDate() - 30);
+        startDateStr = date30.toISOString().split('T')[0];
+        break;
+      case 'last3m':
+        const date3m = new Date(today);
+        date3m.setMonth(date3m.getMonth() - 3);
+        startDateStr = date3m.toISOString().split('T')[0];
+        break;
+      case 'last6m':
+        const date6m = new Date(today);
+        date6m.setMonth(date6m.getMonth() - 6);
+        startDateStr = date6m.toISOString().split('T')[0];
+        break;
+      default:
+        break;
+    }
+
+    setStartDate(startDateStr);
+    setEndDate(endDateStr);
+  };
 
   const applyFilters = async () => {
     if (!startDate || !endDate) {
@@ -74,6 +114,7 @@ function CompareProfessionals() {
   const clearFilters = async () => {
     setStartDate('');
     setEndDate('');
+    setQuickFilter('');
     
     // Recargar datos originales sin filtro
     try {
@@ -286,13 +327,54 @@ function CompareProfessionals() {
 
           {showDateFilter && (
             <div className="px-6 pb-6">
+              {/* Filtros rápidos */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-600 mb-2">Filtros rápidos</label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleQuickFilterChange('last30')}
+                    className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                      quickFilter === 'last30'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Últimos 30 días
+                  </button>
+                  <button
+                    onClick={() => handleQuickFilterChange('last3m')}
+                    className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                      quickFilter === 'last3m'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Últimos 3 meses
+                  </button>
+                  <button
+                    onClick={() => handleQuickFilterChange('last6m')}
+                    className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                      quickFilter === 'last6m'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Últimos 6 meses
+                  </button>
+                </div>
+              </div>
+
+              {/* Selectores de fecha */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
                   <input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setQuickFilter(''); // Limpiar filtro rápido si se modifica manualmente
+                    }}
                     className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                   />
                 </div>
@@ -302,7 +384,10 @@ function CompareProfessionals() {
                   <input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setQuickFilter(''); // Limpiar filtro rápido si se modifica manualmente
+                    }}
                     className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
                   />
                 </div>
