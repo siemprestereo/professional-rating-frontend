@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Calendar, ChevronDown } from 'lucide-react';
+import { Star, Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 
@@ -17,6 +17,7 @@ function CompareProfessionals() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('rating-desc');
+  const [showDateFilter, setShowDateFilter] = useState(false);
   
   // Estado para el trabajo seleccionado de cada profesional
   const [selectedWorks, setSelectedWorks] = useState({});
@@ -89,6 +90,7 @@ function CompareProfessionals() {
         const selectedIds = professionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
         setProfessionals(filtered);
+        setToast({ type: 'success', message: 'Filtros limpiados' });
       }
     } catch (error) {
       console.error('Error clearing filters:', error);
@@ -100,6 +102,18 @@ function CompareProfessionals() {
       ...prev,
       [professionalId]: workHistoryId
     }));
+  };
+
+  const removeProfessional = (professionalId) => {
+    const updated = professionals.filter(p => p.professionalId !== professionalId);
+    
+    if (updated.length === 0) {
+      navigate('/saved-professionals');
+      return;
+    }
+    
+    setProfessionals(updated);
+    setToast({ type: 'success', message: 'Profesional eliminado de la comparación' });
   };
 
   const getDisplayedStats = (prof) => {
@@ -145,8 +159,12 @@ function CompareProfessionals() {
           const statsB = getDisplayedStats(b);
           return statsA.avgScore - statsB.avgScore;
         });
-      case 'name':
-        return sorted.sort((a, b) => a.professionalName.localeCompare(b.professionalName));
+      case 'seniority':
+        return sorted.sort((a, b) => {
+          const dateA = new Date(a.savedAt);
+          const dateB = new Date(b.savedAt);
+          return dateA - dateB; // Más antiguo primero
+        });
       default:
         return sorted;
     }
@@ -209,91 +227,93 @@ function CompareProfessionals() {
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-8 pb-4">
+        
+        {/* Ordenar por */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-          <h2 className="text-lg roboto-light text-gray-800 mb-4 flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-purple-600" />
-            Filtrar por período
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-              />
-            </div>
-            
-            <div className="flex items-end gap-2">
-              <button
-                onClick={applyFilters}
-                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-purple-700 transition-all"
-              >
-                Aplicar
-              </button>
-              <button
-                onClick={clearFilters}
-                className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-xl font-semibold hover:bg-gray-300 transition-all"
-              >
-                Limpiar
-              </button>
-            </div>
-          </div>
+          <label className="block text-sm font-medium text-gray-600 mb-2">Ordenar por</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+          >
+            <option value="rating-desc">Calificación (mayor a menor)</option>
+            <option value="rating-asc">Calificación (menor a mayor)</option>
+            <option value="seniority">Antigüedad en la plataforma</option>
+          </select>
+        </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-600 mb-1">Ordenar por</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
-            >
-              <option value="rating-desc">Calificación (mayor a menor)</option>
-              <option value="rating-asc">Calificación (menor a mayor)</option>
-              <option value="name">Nombre (A-Z)</option>
-            </select>
-          </div>
+        {/* Filtro por período (colapsable) */}
+        <div className="bg-white rounded-2xl shadow-lg mb-4">
+          <button
+            onClick={() => setShowDateFilter(!showDateFilter)}
+            className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-2xl"
+          >
+            <div className="flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-purple-600" />
+              <span className="text-lg roboto-light text-gray-800">Filtrar por período</span>
+            </div>
+            {showDateFilter ? (
+              <ChevronUp className="w-5 h-5 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+
+          {showDateFilter && (
+            <div className="px-6 pb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                
+                <div className="flex items-end gap-2">
+                  <button
+                    onClick={applyFilters}
+                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-purple-700 transition-all"
+                  >
+                    Aplicar
+                  </button>
+                  <button
+                    onClick={clearFilters}
+                    className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Lista de profesionales */}
         <div className="space-y-3">
-          {sortedProfessionals.map((prof, index) => {
+          {sortedProfessionals.map((prof) => {
             const stats = getDisplayedStats(prof);
             const hasMultipleWorks = prof.workHistory && prof.workHistory.length > 1;
 
             return (
               <div
                 key={prof.professionalId}
-                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all relative"
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all"
               >
-                {/* Ranking badge */}
-                {sortBy.startsWith('rating') && (
-                  <div className="absolute top-4 right-4">
-                    <div className={`
-                      w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
-                      ${index === 0 ? 'bg-yellow-400 text-yellow-900' : 
-                        index === 1 ? 'bg-gray-300 text-gray-700' : 
-                        index === 2 ? 'bg-orange-400 text-orange-900' : 
-                        'bg-gray-100 text-gray-600'}
-                    `}>
-                      {index + 1}
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
                   <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-3xl font-bold text-purple-600 flex-shrink-0">
@@ -353,13 +373,22 @@ function CompareProfessionals() {
                       </p>
                     )}
 
-                    {/* Botón ver CV */}
-                    <button
-                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
-                      className="mt-3 bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm"
-                    >
-                      Ver CV completo
-                    </button>
+                    {/* Botones */}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => removeProfessional(prof.professionalId)}
+                        className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Eliminar de la lista
+                      </button>
+                      <button
+                        onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
+                        className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm"
+                      >
+                        Ver CV
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -368,8 +397,8 @@ function CompareProfessionals() {
         </div>
       </div>
 
-      {/* Botón Home */}
-      <div className="fixed bottom-4 right-4 z-40">
+      {/* Botón Home (centrado) */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
         <button
           onClick={() => navigate('/client-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
