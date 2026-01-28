@@ -144,7 +144,7 @@ function PublicCvView() {
   };
 
   const handleHomeClick = () => {
-    window.location.href = 'https://www.calificalo.com.ar/';
+    window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
   };
 
   if (loading) return <LoadingScreen message="Cargando CV..." />;
