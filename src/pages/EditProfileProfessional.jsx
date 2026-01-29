@@ -22,7 +22,7 @@ function EditProfileProfessional() {
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [professionType, setProfessionType] = useState('');
   
-  // ✅ NUEVO: Estado para verificar si ya es cliente
+  // ✅ Estado para verificar si ya tiene activeRole CLIENT
   const [isAlreadyClient, setIsAlreadyClient] = useState(false);
   
   // Modal eliminar cuenta
@@ -60,7 +60,7 @@ function EditProfileProfessional() {
     checkIfAlreadyClient();
   }, []);
 
-  // ✅ NUEVA FUNCIÓN: Verificar si ya tiene rol de cliente
+  // ✅ CORREGIDO: Verificar activeRole en lugar de hasClientRole
   const checkIfAlreadyClient = async () => {
     try {
       const token = localStorage.getItem('authToken');
@@ -71,8 +71,8 @@ function EditProfileProfessional() {
       if (response.ok) {
         const data = await response.json();
         console.log('Role check:', data);
-        // Si tiene rol CLIENT, mostrar que ya es cliente
-        setIsAlreadyClient(data.hasClientRole === true);
+        // ✅ Verificar si activeRole es CLIENT
+        setIsAlreadyClient(data.activeRole === 'CLIENT');
       }
     } catch (error) {
       console.error('Error checking client role:', error);
@@ -214,14 +214,14 @@ function EditProfileProfessional() {
     }
   };
 
-  // ✅ MODIFICADO: Handler para cambiar a cliente
+  // ✅ CORREGIDO: Handler para cambiar a cliente
   const handleSwitchToClient = () => {
     if (isAlreadyClient) {
-      // Ya tiene rol de cliente, solo cambiar al dashboard
+      // activeRole ya es CLIENT, solo navegar al dashboard
       localStorage.setItem('userType', 'CLIENT');
       navigate('/client-dashboard');
     } else {
-      // No tiene rol de cliente, mostrar modal para confirmar
+      // activeRole es PROFESSIONAL, mostrar modal para confirmar cambio
       setShowSwitchModal(true);
     }
   };
@@ -379,8 +379,8 @@ function EditProfileProfessional() {
           </h3>
           <p className="text-gray-600 mb-4 text-base">
             {isAlreadyClient 
-              ? 'Ya tenés un perfil de Cliente activo. Podés cambiar cuando quieras.'
-              : 'Si ya no prestás servicios profesionales, podés volver a tu perfil de Cliente para seguir calificando a otros profesionales.'
+              ? 'Tu rol activo es Cliente. Podés ir al dashboard de cliente cuando quieras.'
+              : 'Si ya no prestás servicios profesionales, podés cambiar tu rol activo a Cliente para seguir calificando a otros profesionales.'
             }
           </p>
           <button
@@ -388,7 +388,7 @@ function EditProfileProfessional() {
             onClick={handleSwitchToClient}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
           >
-            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Volver a ser Cliente'}
+            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Cambiar a Cliente'}
           </button>
         </div>
 
