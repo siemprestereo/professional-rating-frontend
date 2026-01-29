@@ -22,6 +22,9 @@ function EditProfileProfessional() {
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [professionType, setProfessionType] = useState('');
   
+  // ✅ NUEVO: Estado para verificar si ya es cliente
+  const [isAlreadyClient, setIsAlreadyClient] = useState(false);
+  
   // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -54,7 +57,27 @@ function EditProfileProfessional() {
 
   useEffect(() => {
     loadProfile();
+    checkIfAlreadyClient();
   }, []);
+
+  // ✅ NUEVA FUNCIÓN: Verificar si ya tiene rol de cliente
+  const checkIfAlreadyClient = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${backendUrl}/api/users/me/roles`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Role check:', data);
+        // Si tiene rol CLIENT, mostrar que ya es cliente
+        setIsAlreadyClient(data.hasClientRole === true);
+      }
+    } catch (error) {
+      console.error('Error checking client role:', error);
+    }
+  };
 
   const loadProfile = async () => {
     const savedData = localStorage.getItem('professional');
@@ -77,7 +100,7 @@ function EditProfileProfessional() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Backend data:', data); // Debug
+        console.log('Backend data:', data);
         
         setProfessional(data);
         setName(data.name || '');
@@ -87,10 +110,8 @@ function EditProfileProfessional() {
         setProfessionalTitle(data.professionalTitle || '');
         setProfessionType(data.professionType || '');
         
-        // Actualizar localStorage con los datos completos
         localStorage.setItem('professional', JSON.stringify(data));
       } else {
-        // Si falla el backend, usar datos locales
         setProfessional(localData);
         setName(localData.name || '');
         setEmail(localData.email || '');
@@ -101,7 +122,6 @@ function EditProfileProfessional() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      // Si hay error, usar datos locales
       setProfessional(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -141,7 +161,6 @@ function EditProfileProfessional() {
 
       const data = await response.json();
       
-      // Actualizar localStorage
       const updatedProfessional = {
         ...professional,
         phone: data.phone || phone,
@@ -192,6 +211,18 @@ function EditProfileProfessional() {
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
+    }
+  };
+
+  // ✅ MODIFICADO: Handler para cambiar a cliente
+  const handleSwitchToClient = () => {
+    if (isAlreadyClient) {
+      // Ya tiene rol de cliente, solo cambiar al dashboard
+      localStorage.setItem('userType', 'CLIENT');
+      navigate('/client-dashboard');
+    } else {
+      // No tiene rol de cliente, mostrar modal para confirmar
+      setShowSwitchModal(true);
     }
   };
 
@@ -344,17 +375,20 @@ function EditProfileProfessional() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-green-200 animate-slideUp delay-50">
           <h3 className="text-xl roboto-light text-gray-800 mb-2 flex items-center">
             <UserCheck className="w-6 h-6 mr-2 text-green-600" />
-            ¿Ya no ejercés tu profesión?
+            {isAlreadyClient ? '¿Querés volver a tu perfil de Cliente?' : '¿Ya no ejercés tu profesión?'}
           </h3>
           <p className="text-gray-600 mb-4 text-base">
-            Si ya no prestás servicios profesionales, podés volver a tu perfil de Cliente para seguir calificando a otros profesionales.
+            {isAlreadyClient 
+              ? 'Ya tenés un perfil de Cliente activo. Podés cambiar cuando quieras.'
+              : 'Si ya no prestás servicios profesionales, podés volver a tu perfil de Cliente para seguir calificando a otros profesionales.'
+            }
           </p>
           <button
             type="button"
-            onClick={() => setShowSwitchModal(true)}
+            onClick={handleSwitchToClient}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
           >
-            Volver a ser Cliente
+            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Volver a ser Cliente'}
           </button>
         </div>
 
@@ -425,16 +459,14 @@ function EditProfileProfessional() {
         </div>
       )}
 
-      {/* Modal de cambio a Cliente */}
-      {showSwitchModal && (
+      {/* Modal de cambio a Cliente - SOLO SI NO ES CLIENTE */}
+      {showSwitchModal && !isAlreadyClient && (
         <SwitchToClientModal
           onClose={() => setShowSwitchModal(false)}
           onSuccess={(newToken) => {
-            // Actualizar token
             localStorage.setItem('authToken', newToken);
-            // Limpiar datos de profesional
             localStorage.removeItem('professional');
-            // Redirigir al dashboard de cliente
+            localStorage.setItem('userType', 'CLIENT');
             navigate('/client-dashboard');
           }}
         />
