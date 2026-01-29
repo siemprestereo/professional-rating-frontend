@@ -142,7 +142,7 @@ function SavedProfessionals() {
             Volver
           </button>
           <h1 className="text-3xl roboto-light text-white mb-3">
-            Profesionales Guardados
+            Profesionales guardados
           </h1>
           <p className="text-white/90 text-sm mb-4">
             Seleccioná a los Profesionales para comparar su desempeño

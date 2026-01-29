@@ -144,10 +144,6 @@ function PublicCvView() {
     navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
   };
 
-  const handleHomeClick = () => {
-    window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
-  };
-
   if (loading) return <LoadingScreen message="Cargando CV..." />;
 
   if (error || !cvData) {
@@ -159,8 +155,8 @@ function PublicCvView() {
           </div>
           <h2 className="text-2xl roboto-light text-gray-800 mb-2">CV no encontrado</h2>
           <p className="text-gray-600 mb-6">El CV que buscás no existe o ya no está disponible</p>
-          <button onClick={handleHomeClick} className="bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all">
-            Volver al inicio
+          <button onClick={() => navigate(-1)} className="bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all">
+            Volver atrás
           </button>
         </div>
       </div>
@@ -431,9 +427,9 @@ function PublicCvView() {
 
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
-          onClick={handleHomeClick}
+          onClick={() => navigate(-1)}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Ir al inicio"
+          aria-label="Volver atrás"
         >
           <Home className="w-7 h-7 text-white" />
         </button>
