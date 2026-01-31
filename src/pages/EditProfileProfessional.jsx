@@ -375,12 +375,12 @@ function EditProfileProfessional() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-green-200 animate-slideUp delay-50">
           <h3 className="text-xl roboto-light text-gray-800 mb-2 flex items-center">
             <UserCheck className="w-6 h-6 mr-2 text-green-600" />
-            {isAlreadyClient ? '¿Querés volver a tu perfil de Cliente?' : '¿Ya no ejercés tu profesión?'}
+            {isAlreadyClient ? '¿Querés convertirte en Cliente?' : '¿Ya no ejercés tu profesión?'}
           </h3>
           <p className="text-gray-600 mb-4 text-base">
             {isAlreadyClient 
               ? 'Ya tenés un perfil de Cliente activo. Podés cambiar cuando quieras.'
-              : 'Si ya no prestás servicios profesionales, podés volver a tu perfil de Cliente para seguir calificando a otros profesionales.'
+              : 'Si ya no prestás servicios profesionales, podés cambiar tu perfil y convertirte en Cliente para seguir calificando a otros profesionales.'
             }
           </p>
           <button
