@@ -60,24 +60,23 @@ function EditProfileProfessional() {
     checkIfAlreadyClient();
   }, []);
 
-  // ✅ NUEVA FUNCIÓN: Verificar si ya tiene rol de cliente
   const checkIfAlreadyClient = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/users/me/roles`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${backendUrl}/api/role/current`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Role check:', data);
-        // Si tiene rol CLIENT, mostrar que ya es cliente
-        setIsAlreadyClient(data.hasClientRole === true);
-      }
-    } catch (error) {
-      console.error('Error checking client role:', error);
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Role check:', data);
+      // Si activeRole es CLIENT, entonces ya es cliente
+      setIsAlreadyClient(data.activeRole === 'CLIENT');
     }
-  };
+  } catch (error) {
+    console.error('Error checking role:', error);
+  }
+};
 
   const loadProfile = async () => {
     const savedData = localStorage.getItem('professional');
