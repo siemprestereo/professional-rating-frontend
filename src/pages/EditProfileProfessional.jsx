@@ -387,7 +387,7 @@ function EditProfileProfessional() {
             onClick={handleSwitchToClient}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
           >
-            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Volver a ser Cliente'}
+            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Convertite en Cliente'}
           </button>
         </div>
 
