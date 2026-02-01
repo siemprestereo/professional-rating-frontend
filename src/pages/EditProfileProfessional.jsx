@@ -419,7 +419,7 @@ function EditProfileProfessional() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
-
+      
       {/* Modal de confirmación eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
