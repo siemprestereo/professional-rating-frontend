@@ -83,7 +83,7 @@ function ProfessionalLogin() {
       const data = await response.json();
       
       localStorage.setItem('authToken', data.token);
-      
+      localStorage.setItem('userType', 'PROFESSIONAL');
       localStorage.setItem('professional', JSON.stringify({
         id: data.id,
         email: data.email,

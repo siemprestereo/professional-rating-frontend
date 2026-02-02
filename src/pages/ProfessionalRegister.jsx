@@ -113,7 +113,7 @@ function ProfessionalRegister() {
       
       // Guardar token en localStorage
       localStorage.setItem('authToken', data.token);
-      
+      localStorage.setItem('userType', 'PROFESSIONAL');
       // Guardar datos del usuario
       localStorage.setItem('professional', JSON.stringify({
         id: data.id,
