@@ -48,6 +48,24 @@ export const getProfessionalRatings = async (professionalId) => {
   return response.data;
 };
 
+// ✅ NUEVO: Actualizar rating
+export const updateRating = async (ratingId, ratingData) => {
+  const response = await apiClient.put(`/ratings/${ratingId}`, ratingData);
+  return response.data;
+};
+
+// ✅ NUEVO: Eliminar rating
+export const deleteRating = async (ratingId) => {
+  const response = await apiClient.delete(`/ratings/${ratingId}`);
+  return response.data;
+};
+
+// ✅ NUEVO: Obtener un rating específico por ID
+export const getRatingById = async (ratingId) => {
+  const response = await apiClient.get(`/ratings/${ratingId}`);
+  return response.data;
+};
+
 // ========== QR ==========
 export const resolveQR = async (code) => {
   const response = await apiClient.get(`/qr/resolve/${code}`);
@@ -74,6 +92,9 @@ export default {
   getCurrentUser,
   getProfessionalProfile,
   createRating,
+  updateRating,
+  deleteRating,
+  getRatingById,
   getProfessionalRatings,
   resolveQR,
   switchRole,
