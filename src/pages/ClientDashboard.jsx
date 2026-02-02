@@ -7,6 +7,8 @@ import Toast from '../components/Toast';
 import api from '../services/api';
 
 function ClientDashboard() {
+  console.log('🚀 CLIENT DASHBOARD VERSION 2.0 🚀');
+  
   const navigate = useNavigate();
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const [client, setClient] = useState(null);
@@ -19,12 +21,7 @@ function ClientDashboard() {
   const [toast, setToast] = useState(null);
   const dropdownRef = useRef(null);
 
-  // 🔥 VERIFICACIÓN DE VERSIÓN
-useEffect(() => {
-  console.log('🚀🚀🚀 CLIENT DASHBOARD VERSION 2.0 LOADED 🚀🚀🚀');
-  console.log('myRatings:', myRatings);
-  console.log('canEdit del primer rating:', myRatings[0]?.canEdit);
-}, [myRatings]);
+  useEffect(() => {
     // Primero verificar si hay token en la URL (OAuth redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
@@ -52,6 +49,14 @@ useEffect(() => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // 🔥 VERIFICACIÓN DE VERSIÓN
+  useEffect(() => {
+    console.log('🚀🚀🚀 myRatings updated:', myRatings);
+    if (myRatings.length > 0) {
+      console.log('canEdit del primer rating:', myRatings[0]?.canEdit);
+    }
+  }, [myRatings]);
 
   const loadClientData = async () => {
     // Verificar si hay token
@@ -168,11 +173,13 @@ useEffect(() => {
   };
 
   const handleEditRating = (rating) => {
+    console.log('🔵 Editando rating:', rating.id);
     // Navegar al formulario de edición con el ID del rating
     navigate(`/edit-rating/${rating.id}`);
   };
 
   const handleDeleteClick = (rating) => {
+    console.log('🔴 Intentando eliminar rating:', rating.id);
     setDeleteModal({
       ratingId: rating.id,
       professionalName: rating.professionalName
@@ -366,6 +373,8 @@ useEffect(() => {
               {recentRatings.map((rating) => {
                 const timeRemaining = getTimeRemaining(rating.createdAt);
                 const canEdit = rating.canEdit;
+
+                console.log(`Rating ${rating.id} - canEdit: ${canEdit}, timeRemaining: ${timeRemaining}`);
 
                 return (
                   <div 
