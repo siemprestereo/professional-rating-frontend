@@ -49,7 +49,7 @@ function ProfessionalRegister() {
     if (token) {
       console.log('✅ Token recibido de OAuth en register:', token);
       localStorage.setItem('authToken', token);
-      
+      localStorage.setItem('userType', 'PROFESSIONAL');
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('📦 Payload del token:', payload);
