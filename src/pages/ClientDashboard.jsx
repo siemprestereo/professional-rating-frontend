@@ -1,7 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart } from 'lucide-react';
+import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart, Edit2, Trash2, Clock } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import Toast from '../components/Toast';
+import api from '../services/api';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -12,9 +15,16 @@ function ClientDashboard() {
   const [stats, setStats] = useState(null);
   const [topBadges, setTopBadges] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [toast, setToast] = useState(null);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
+  // 🔥 VERIFICACIÓN DE VERSIÓN
+useEffect(() => {
+  console.log('🚀🚀🚀 CLIENT DASHBOARD VERSION 2.0 LOADED 🚀🚀🚀');
+  console.log('myRatings:', myRatings);
+  console.log('canEdit del primer rating:', myRatings[0]?.canEdit);
+}, [myRatings]);
     // Primero verificar si hay token en la URL (OAuth redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
@@ -155,6 +165,55 @@ function ClientDashboard() {
     localStorage.removeItem('client');
     setShowUserMenu(false);
     navigate('/');
+  };
+
+  const handleEditRating = (rating) => {
+    // Navegar al formulario de edición con el ID del rating
+    navigate(`/edit-rating/${rating.id}`);
+  };
+
+  const handleDeleteClick = (rating) => {
+    setDeleteModal({
+      ratingId: rating.id,
+      professionalName: rating.professionalName
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal) return;
+
+    try {
+      await api.deleteRating(deleteModal.ratingId);
+      
+      setToast({ 
+        type: 'success', 
+        message: 'Calificación eliminada exitosamente' 
+      });
+
+      // Recargar ratings
+      const token = localStorage.getItem('authToken');
+      loadRatings(client.id, token);
+      
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+      setToast({ 
+        type: 'error', 
+        message: error.response?.data?.message || 'Error al eliminar la calificación' 
+      });
+    } finally {
+      setDeleteModal(null);
+    }
+  };
+
+  const getTimeRemaining = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diff = 30 * 60 * 1000 - (now - created); // 30 minutos en ms
+    
+    if (diff <= 0) return null;
+    
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes} min`;
   };
 
   const renderStars = (score) => {
@@ -304,35 +363,66 @@ function ClientDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentRatings.map((rating) => (
-                <div 
-                  key={rating.id} 
-                  className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold text-gray-800 text-base">{rating.professionalName}</h4>
-                      <p className="text-sm text-gray-500">{rating.businessName}</p>
+              {recentRatings.map((rating) => {
+                const timeRemaining = getTimeRemaining(rating.createdAt);
+                const canEdit = rating.canEdit;
+
+                return (
+                  <div 
+                    key={rating.id} 
+                    className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800 text-base">{rating.professionalName}</h4>
+                        <p className="text-sm text-gray-500">{rating.businessName}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {renderStars(rating.score)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {renderStars(rating.score)}
+                    
+                    {rating.comment && (
+                      <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-xs text-gray-400">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {new Date(rating.createdAt).toLocaleDateString('es-AR', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </div>
+
+                      {/* Botones de editar/eliminar */}
+                      {canEdit && timeRemaining && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                            <Clock className="w-3 h-3" />
+                            <span>{timeRemaining}</span>
+                          </div>
+                          <button
+                            onClick={() => handleEditRating(rating)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar calificación"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(rating)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Eliminar calificación"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  {rating.comment && (
-                    <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>
-                  )}
-                  
-                  <div className="flex items-center text-xs text-gray-400">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(rating.createdAt).toLocaleDateString('es-AR', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -363,7 +453,6 @@ function ClientDashboard() {
             <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
           </button>
 
-          {/* ✅ BOTÓN: Profesionales Guardados con corazón latiendo */}
           <button
             onClick={() => navigate('/saved-professionals')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-300 hover-lift relative"
@@ -373,6 +462,23 @@ function ClientDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={deleteModal !== null}
+        onClose={() => setDeleteModal(null)}
+        onConfirm={handleDeleteConfirm}
+        professionalName={deleteModal?.professionalName}
+      />
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       {/* Estilos de animación heartbeat */}
       <style>{`
