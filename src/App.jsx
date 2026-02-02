@@ -140,6 +140,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route path="/edit-rating/:ratingId" element={<EditRatingForm />} />
         <Route path="/saved-professionals" element={<SavedProfessionals />} />
         <Route path="/compare-professionals" element={<CompareProfessionals />} />
