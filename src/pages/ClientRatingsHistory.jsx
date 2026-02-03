@@ -90,24 +90,41 @@ function ClientRatingsHistory() {
 
   const getTimeRemaining = (createdAt) => {
   try {
-    const now = new Date();
-    const created = new Date(createdAt);
+    // Obtener la hora actual
+    const now = Date.now();
+    
+    // Si la fecha no tiene zona horaria, agregarle 'Z' para forzar UTC
+    let dateString = createdAt;
+    if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
+      dateString = createdAt + 'Z'; // Forzar interpretación como UTC
+    }
+    
+    // Parsear la fecha de creación
+    const created = new Date(dateString).getTime();
     
     // Verificar que la fecha es válida
-    if (isNaN(created.getTime())) {
+    if (isNaN(created)) {
       console.error('Fecha inválida:', createdAt);
       return null;
     }
     
-    const diffMs = now.getTime() - created.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const remainingMinutes = 30 - diffMinutes;
+    // Calcular diferencia en minutos
+    const diffMinutes = Math.floor((now - created) / (1000 * 60));
     
-    if (remainingMinutes <= 0) {
+    // Si han pasado más de 30 minutos, no es editable
+    if (diffMinutes >= 30) {
       return null;
     }
     
+    // Si el tiempo es negativo (fecha en el futuro), return null
+    if (diffMinutes < 0) {
+      console.warn('Fecha aún en el futuro (diferencia de zona horaria?):', createdAt);
+      return null;
+    }
+    
+    const remainingMinutes = 30 - diffMinutes;
     return `${remainingMinutes} min`;
+    
   } catch (error) {
     console.error('Error calculando tiempo:', error);
     return null;

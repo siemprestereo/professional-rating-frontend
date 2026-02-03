@@ -221,10 +221,16 @@ function ClientDashboard() {
   const getTimeRemaining = (createdAt) => {
   try {
     // Obtener la hora actual
-    const now = Date.now(); // Timestamp en milisegundos
+    const now = Date.now();
+    
+    // Si la fecha no tiene zona horaria, agregarle 'Z' para forzar UTC
+    let dateString = createdAt;
+    if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
+      dateString = createdAt + 'Z'; // Forzar interpretación como UTC
+    }
     
     // Parsear la fecha de creación
-    const created = new Date(createdAt).getTime();
+    const created = new Date(dateString).getTime();
     
     // Verificar que la fecha es válida
     if (isNaN(created)) {
@@ -240,9 +246,9 @@ function ClientDashboard() {
       return null;
     }
     
-    // Si el tiempo es negativo (fecha en el futuro), también return null
+    // Si el tiempo es negativo (fecha en el futuro), return null
     if (diffMinutes < 0) {
-      console.warn('Fecha en el futuro detectada:', createdAt);
+      console.warn('Fecha aún en el futuro (diferencia de zona horaria?):', createdAt);
       return null;
     }
     
