@@ -110,9 +110,15 @@ function ClientDashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setMyRatings(data);
-        calculateQuickStats(data);
-        calculateTopBadges(data);
+
+        // ✅ Ordenar por fecha (más reciente primero)
+        const sortedData = data.sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        setMyRatings(sortedData);
+        calculateQuickStats(sortedData);
+        calculateTopBadges(sortedData);
       }
     } catch (error) {
       console.error('Error loading ratings:', error);
@@ -215,13 +221,13 @@ function ClientDashboard() {
   const getTimeRemaining = (createdAt) => {
     const now = new Date();
     const created = new Date(createdAt);
-    const diffInMs = now - created; // Tiempo transcurrido
-    const minutesPassed = Math.floor(diffInMs / 60000);
-    const minutesRemaining = 30 - minutesPassed;
+    const elapsedMs = now - created; // Tiempo transcurrido en milisegundos
+    const elapsedMinutes = Math.floor(elapsedMs / 60000); // Convertir a minutos
+    const remainingMinutes = 30 - elapsedMinutes; // Calcular minutos restantes
 
-    if (minutesRemaining <= 0) return null;
+    if (remainingMinutes <= 0) return null;
 
-    return `${minutesRemaining} min`;
+    return `${remainingMinutes} min`;
   };
 
   const renderStars = (score) => {
@@ -381,8 +387,8 @@ function ClientDashboard() {
                   <div
                     key={rating.id}
                     className={`rounded-xl p-4 hover:shadow-md transition-all ${canEdit && timeRemaining
-                        ? 'border-2 border-blue-400 bg-blue-50/30'
-                        : 'border border-gray-100'
+                      ? 'border-2 border-blue-400 bg-blue-50/30 editable-rating'
+                      : 'border border-gray-100'
                       }`}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -495,25 +501,41 @@ function ClientDashboard() {
 
       {/* Estilos de animación heartbeat */}
       <style>{`
-        @keyframes heartbeat {
-          0%, 100% { 
-            transform: scale(1);
-            filter: brightness(1);
-          }
-          25% { 
-            transform: scale(1.1);
-            filter: brightness(1.2) hue-rotate(-10deg);
-          }
-          50% { 
-            transform: scale(1);
-            filter: brightness(1);
-          }
-        }
-        
-        .animate-heartbeat {
-          animation: heartbeat 2s ease-in-out infinite;
-        }
-      `}</style>
+  @keyframes heartbeat {
+    0%, 100% { 
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    25% { 
+      transform: scale(1.1);
+      filter: brightness(1.2) hue-rotate(-10deg);
+    }
+    50% { 
+      transform: scale(1);
+      filter: brightness(1);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+  }
+  
+  .editable-rating {
+    animation: shimmer 2s ease-in-out infinite;
+  }
+  
+  .animate-heartbeat {
+    animation: heartbeat 2s ease-in-out infinite;
+  }
+`}</style>
     </div>
   );
 }

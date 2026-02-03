@@ -37,7 +37,13 @@ function ClientRatingsHistory() {
 
       if (response.ok) {
         const data = await response.json();
-        setRatings(data);
+        
+        // ✅ Ordenar por fecha (más reciente primero)
+        const sortedData = data.sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        setRatings(sortedData);
       }
     } catch (error) {
       console.error('Error loading ratings:', error);
@@ -85,13 +91,13 @@ function ClientRatingsHistory() {
   const getTimeRemaining = (createdAt) => {
     const now = new Date();
     const created = new Date(createdAt);
-    const diffInMs = now - created;
-    const minutesPassed = Math.floor(diffInMs / 60000);
-    const minutesRemaining = 30 - minutesPassed;
+    const elapsedMs = now - created;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const remainingMinutes = 30 - elapsedMinutes;
     
-    if (minutesRemaining <= 0) return null;
+    if (remainingMinutes <= 0) return null;
     
-    return `${minutesRemaining} min`;
+    return `${remainingMinutes} min`;
   };
 
   const renderStars = (score) => {
@@ -159,7 +165,7 @@ function ClientRatingsHistory() {
                   key={rating.id} 
                   className={`rounded-2xl p-4 hover:shadow-xl transition-all ${
                     canEdit && timeRemaining 
-                      ? 'border-2 border-blue-400 bg-blue-50/30 shadow-lg' 
+                      ? 'border-2 border-blue-400 bg-blue-50/30 shadow-lg editable-rating' 
                       : 'bg-white shadow-lg'
                   }`}
                 >
@@ -248,6 +254,25 @@ function ClientRatingsHistory() {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Estilos de animación */}
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+          50% {
+            box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.4);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+        }
+        
+        .editable-rating {
+          animation: shimmer 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
