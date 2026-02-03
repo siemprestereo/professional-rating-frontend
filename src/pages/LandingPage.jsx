@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getFirstName } from '../utils/formatName';
 
@@ -8,11 +8,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [rotation, setRotation] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startY, setStartY] = useState(0);
-  const containerRef = useRef(null);
-  const rotationRef = useRef(0);
+  const [active, setActive] = useState(1);
 
   const cards = [
     {
@@ -38,8 +34,7 @@ function LandingPage() {
     }
   ];
 
-  const ANGLE_PER_CARD = 360 / cards.length;
-  const RADIUS = 300;
+  const MAX_VISIBILITY = 2;
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -62,97 +57,11 @@ function LandingPage() {
 
   // Auto-rotate
   useEffect(() => {
-    if (isDragging) return;
-    
     const interval = setInterval(() => {
-      rotationRef.current -= ANGLE_PER_CARD;
-      setRotation(rotationRef.current);
-    }, 3500);
-    
+      setActive((prev) => (prev + 1) % cards.length);
+    }, 4000);
     return () => clearInterval(interval);
-  }, [isDragging, ANGLE_PER_CARD]);
-
-  // Mouse/Touch handlers
-  const handleStart = (clientY) => {
-    setIsDragging(true);
-    setStartY(clientY);
-  };
-
-  const handleMove = (clientY) => {
-    if (!isDragging) return;
-    
-    const delta = clientY - startY;
-    const rotationDelta = delta * 0.5;
-    
-    rotationRef.current = rotation + rotationDelta;
-    setRotation(rotationRef.current);
-  };
-
-  const handleEnd = () => {
-    setIsDragging(false);
-    
-    // Snap to nearest card
-    const nearestAngle = Math.round(rotationRef.current / ANGLE_PER_CARD) * ANGLE_PER_CARD;
-    rotationRef.current = nearestAngle;
-    setRotation(nearestAngle);
-  };
-
-  // Touch events
-  const handleTouchStart = (e) => {
-    handleStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e) => {
-    handleMove(e.touches[0].clientY);
-  };
-
-  const handleTouchEnd = () => {
-    handleEnd();
-  };
-
-  // Mouse events
-  const handleMouseDown = (e) => {
-    handleStart(e.clientY);
-  };
-
-  const handleMouseMove = (e) => {
-    handleMove(e.clientY);
-  };
-
-  const handleMouseUp = () => {
-    handleEnd();
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, startY, rotation]);
-
-  // Wheel event
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e) => {
-      e.preventDefault();
-      const delta = e.deltaY * 0.5;
-      rotationRef.current -= delta;
-      setRotation(rotationRef.current);
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
+  }, [cards.length]);
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
@@ -173,7 +82,7 @@ function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn overflow-x-hidden">
       {userInfo ? (
         <div className="h-screen flex flex-col justify-center items-center px-4 text-center">
           <div 
@@ -254,53 +163,58 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* 3D Cylinder Carousel */}
-          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16">
-            <div 
-              ref={containerRef}
-              className="relative w-full h-[600px] flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{ perspective: '1200px' }}
-            >
-              <div 
-                className="relative w-full max-w-md h-full transition-transform duration-300 ease-out"
-                style={{
-                  transformStyle: 'preserve-3d',
-                  transform: `rotateX(${rotation}deg)`
-                }}
-              >
-                {cards.map((card, index) => {
-                  const Icon = card.icon;
-                  const angle = index * ANGLE_PER_CARD;
-                  const yOffset = RADIUS * Math.sin((angle * Math.PI) / 180);
-                  const zOffset = RADIUS * Math.cos((angle * Math.PI) / 180);
-                  
-                  return (
-                    <div
-                      key={index}
-                      className="absolute left-1/2 top-1/2 w-full max-w-sm bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center pointer-events-none"
-                      style={{
-                        transform: `translate(-50%, -50%) translateY(${yOffset}px) translateZ(${zOffset}px) rotateX(${-angle}deg)`,
-                        transformStyle: 'preserve-3d',
-                        backfaceVisibility: 'hidden'
-                      }}
-                    >
+          {/* 3D Carousel */}
+          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 flex items-center justify-center">
+            <div className="carousel-3d">
+              {active > 0 && (
+                <button 
+                  className="nav-button top" 
+                  onClick={() => setActive(i => i - 1)}
+                >
+                  <ChevronUp />
+                </button>
+              )}
+              
+              {cards.map((card, i) => {
+                const Icon = card.icon;
+                const offset = (active - i) / 3;
+                const direction = Math.sign(active - i);
+                const absOffset = Math.abs(active - i) / 3;
+                const isActive = i === active ? 1 : 0;
+                
+                return (
+                  <div
+                    key={i}
+                    className="card-container-3d"
+                    style={{
+                      '--active': isActive,
+                      '--offset': offset,
+                      '--direction': direction,
+                      '--abs-offset': absOffset,
+                      pointerEvents: active === i ? 'auto' : 'none',
+                      opacity: Math.abs(active - i) >= MAX_VISIBILITY ? '0' : '1',
+                      display: Math.abs(active - i) > MAX_VISIBILITY ? 'none' : 'block',
+                    }}
+                  >
+                    <div className="feature-card-3d">
                       <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg`}>
                         <Icon className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-3xl roboto-light text-white mb-3">
-                        {card.title}
-                      </h3>
-                      <p className="text-lg text-white/80">
-                        {card.description}
-                      </p>
+                      <h3 className="card-title">{card.title}</h3>
+                      <p className="card-description">{card.description}</p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
+              
+              {active < cards.length - 1 && (
+                <button 
+                  className="nav-button bottom" 
+                  onClick={() => setActive(i => i + 1)}
+                >
+                  <ChevronDown />
+                </button>
+              )}
             </div>
           </div>
 
@@ -329,7 +243,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
-          <p className="text-sm sm:text-base">© 2026 Calificalo - Tu reputación profesional</p>
+          <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
         </div>
       </footer>
 

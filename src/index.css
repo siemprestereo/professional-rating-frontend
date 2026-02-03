@@ -302,6 +302,118 @@
   transform-style: preserve-3d;
 }
 
+/* 3D Carousel Styles */
+.carousel-3d {
+  position: relative;
+  width: 23rem;
+  height: 30rem;
+  perspective: 500px;
+  transform-style: preserve-3d;
+}
+
+.card-container-3d {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: 
+    rotateX(calc(var(--offset) * 50deg)) 
+    scaleX(calc(1 + var(--abs-offset) * -0.4))
+    translateZ(calc(var(--abs-offset) * -30rem))
+    translateY(calc(var(--direction) * -5rem));
+  filter: blur(calc(var(--abs-offset) * 1rem));
+  transition: all 0.3s ease-out;
+}
+
+.feature-card-3d {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  background-color: hsl(280deg, 40%, calc(100% - var(--abs-offset) * 50%));
+  border-radius: 1.5rem;
+  color: #9CA3AF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.card-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 0 1rem;
+  color: white;
+  transition: all 0.3s ease-out;
+  opacity: var(--active);
+}
+
+.card-description {
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease-out;
+  opacity: var(--active);
+}
+
+.nav-button {
+  color: white;
+  font-size: 3rem;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 50%;
+  z-index: 2;
+  cursor: pointer;
+  user-select: none;
+  background: unset;
+  border: unset;
+  width: 60px;
+  height: 60px;
+  transition: transform 0.2s;
+}
+
+.nav-button:hover {
+  transform: scale(1.2);
+}
+
+.nav-button.top {
+  top: 0;
+  transform: translateX(-50%) translateY(-100%);
+}
+
+.nav-button.top:hover {
+  transform: translateX(-50%) translateY(-100%) scale(1.2);
+}
+
+.nav-button.bottom {
+  bottom: 0;
+  transform: translateX(-50%) translateY(100%);
+}
+
+.nav-button.bottom:hover {
+  transform: translateX(-50%) translateY(100%) scale(1.2);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .carousel-3d {
+    width: 20rem;
+    height: 28rem;
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+  }
+  
+  .card-description {
+    font-size: 1rem;
+  }
+}
+
 /* Prevenir selección de texto durante el swipe */
 .preserve-3d > div {
   user-select: none;
