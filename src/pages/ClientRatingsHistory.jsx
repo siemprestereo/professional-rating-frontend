@@ -166,7 +166,7 @@ function ClientRatingsHistory() {
       </div>
 
       {/* Contenido */}
-      <div className="max-w-4xl mx-auto px-4 -mt-4 pb-8">
+      <div className="max-w-4xl mx-auto px-4 mt-2 pb-8">
         {ratings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
