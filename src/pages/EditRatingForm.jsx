@@ -103,6 +103,47 @@ function EditRatingForm() {
             return 'Tiempo expirado';
         }
     };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (score === 0) {
+            setToast({ type: 'warning', message: 'Por favor seleccioná una calificación' });
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+            const updateData = {
+                professionalId: rating.professionalId,
+                workHistoryId: rating.workHistoryId,
+                score: score,
+                comment: comment.trim() || null
+            };
+
+            await api.updateRating(ratingId, updateData);
+
+            setSuccess(true);
+
+            setTimeout(() => {
+                navigate('/client-dashboard');
+            }, 2000);
+        } catch (error) {
+            console.error('Error al actualizar:', error);
+
+            if (error.response?.status === 401) {
+                setToast({ type: 'error', message: 'Sesión expirada. Por favor iniciá sesión nuevamente' });
+                setTimeout(() => navigate('/client-login'), 2000);
+            } else {
+                const errorMessage = error.response?.data?.message || 'Error al actualizar la calificación';
+                setToast({ type: 'error', message: errorMessage });
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     if (loading) {
         return <LoadingScreen />;
     }
