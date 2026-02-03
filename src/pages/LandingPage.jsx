@@ -8,31 +8,38 @@ function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [currentCard, setCurrentCard] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const [rotation, setRotation] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
   const containerRef = useRef(null);
+  const rotationRef = useRef(0);
 
   const cards = [
     {
       icon: Star,
       title: 'Recibí Calificaciones',
       description: 'Los clientes escanean tu QR y califican tu servicio profesional',
-      color: 'text-yellow-300'
+      color: 'text-yellow-300',
+      gradient: 'from-yellow-400 to-orange-500'
     },
     {
       icon: TrendingUp,
       title: 'Construí tu Reputación',
       description: 'Tu historial y promedio te acompañan a donde vayas',
-      color: 'text-green-300'
+      color: 'text-green-300',
+      gradient: 'from-green-400 to-emerald-500'
     },
     {
       icon: Users,
       title: 'Conseguí Mejores Trabajos',
       description: 'Los empleadores buscan profesionales con buena reputación',
-      color: 'text-blue-300'
+      color: 'text-blue-300',
+      gradient: 'from-blue-400 to-indigo-500'
     }
   ];
+
+  const ANGLE_PER_CARD = 360 / cards.length;
+  const RADIUS = 300;
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -53,26 +60,91 @@ function LandingPage() {
     }
   }, []);
 
-  // Auto-rotate cards
+  // Auto-rotate
   useEffect(() => {
+    if (isDragging) return;
+    
     const interval = setInterval(() => {
-      setCurrentCard((prev) => (prev + 1) % cards.length);
-    }, 4000);
+      rotationRef.current -= ANGLE_PER_CARD;
+      setRotation(rotationRef.current);
+    }, 3500);
+    
     return () => clearInterval(interval);
-  }, [cards.length]);
+  }, [isDragging, ANGLE_PER_CARD]);
 
-  // Wheel event con preventDefault
+  // Mouse/Touch handlers
+  const handleStart = (clientY) => {
+    setIsDragging(true);
+    setStartY(clientY);
+  };
+
+  const handleMove = (clientY) => {
+    if (!isDragging) return;
+    
+    const delta = clientY - startY;
+    const rotationDelta = delta * 0.5;
+    
+    rotationRef.current = rotation + rotationDelta;
+    setRotation(rotationRef.current);
+  };
+
+  const handleEnd = () => {
+    setIsDragging(false);
+    
+    // Snap to nearest card
+    const nearestAngle = Math.round(rotationRef.current / ANGLE_PER_CARD) * ANGLE_PER_CARD;
+    rotationRef.current = nearestAngle;
+    setRotation(nearestAngle);
+  };
+
+  // Touch events
+  const handleTouchStart = (e) => {
+    handleStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e) => {
+    handleMove(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = () => {
+    handleEnd();
+  };
+
+  // Mouse events
+  const handleMouseDown = (e) => {
+    handleStart(e.clientY);
+  };
+
+  const handleMouseMove = (e) => {
+    handleMove(e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    handleEnd();
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, startY, rotation]);
+
+  // Wheel event
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (e) => {
       e.preventDefault();
-      if (e.deltaY > 0) {
-        setCurrentCard((prev) => (prev + 1) % cards.length);
-      } else {
-        setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
-      }
+      const delta = e.deltaY * 0.5;
+      rotationRef.current -= delta;
+      setRotation(rotationRef.current);
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
@@ -80,33 +152,7 @@ function LandingPage() {
     return () => {
       container.removeEventListener('wheel', handleWheel);
     };
-  }, [cards.length]);
-
-  const handleTouchStart = (e) => {
-    setTouchStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.touches[0].clientY);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const minSwipeDistance = 50;
-
-    if (distance > minSwipeDistance) {
-      // Swipe up
-      setCurrentCard((prev) => (prev + 1) % cards.length);
-    } else if (distance < -minSwipeDistance) {
-      // Swipe down
-      setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
-    }
-
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
+  }, []);
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
@@ -124,28 +170,6 @@ function LandingPage() {
     } else {
       navigate('/client-dashboard');
     }
-  };
-
-  const getCardStyle = (index) => {
-    const diff = index - currentCard;
-    const totalCards = cards.length;
-    
-    // Normalizar diff para que siempre tome el camino más corto
-    let normalizedDiff = diff;
-    if (Math.abs(diff) > totalCards / 2) {
-      normalizedDiff = diff > 0 ? diff - totalCards : diff + totalCards;
-    }
-
-    const angle = normalizedDiff * 30; // 30 grados entre cada card
-    const translateZ = Math.abs(normalizedDiff) === 0 ? 0 : -100;
-    const opacity = Math.abs(normalizedDiff) === 0 ? 1 : 0.4;
-    const scale = Math.abs(normalizedDiff) === 0 ? 1 : 0.8;
-
-    return {
-      transform: `rotateX(${-angle}deg) translateZ(${translateZ}px) scale(${scale})`,
-      opacity: opacity,
-      zIndex: 10 - Math.abs(normalizedDiff)
-    };
   };
 
   return (
@@ -181,7 +205,7 @@ function LandingPage() {
         </div>
       ) : (
         <>
-          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
+          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center">
             <div 
               onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
               className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
@@ -230,26 +254,43 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* 3D Rotating Cards */}
-          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 h-[500px] flex items-center justify-center">
+          {/* 3D Cylinder Carousel */}
+          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16">
             <div 
               ref={containerRef}
-              className="relative w-full max-w-md h-[400px]"
+              className="relative w-full h-[600px] flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              style={{ perspective: '1000px' }}
+              style={{ perspective: '1200px' }}
             >
-              <div className="relative w-full h-full preserve-3d">
+              <div 
+                className="relative w-full max-w-md h-full transition-transform duration-300 ease-out"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transform: `rotateX(${rotation}deg)`
+                }}
+              >
                 {cards.map((card, index) => {
                   const Icon = card.icon;
+                  const angle = index * ANGLE_PER_CARD;
+                  const yOffset = RADIUS * Math.sin((angle * Math.PI) / 180);
+                  const zOffset = RADIUS * Math.cos((angle * Math.PI) / 180);
+                  
                   return (
                     <div
                       key={index}
-                      className="absolute w-full bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center transition-all duration-700 ease-out preserve-3d"
-                      style={getCardStyle(index)}
+                      className="absolute left-1/2 top-1/2 w-full max-w-sm bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center pointer-events-none"
+                      style={{
+                        transform: `translate(-50%, -50%) translateY(${yOffset}px) translateZ(${zOffset}px) rotateX(${-angle}deg)`,
+                        transformStyle: 'preserve-3d',
+                        backfaceVisibility: 'hidden'
+                      }}
                     >
-                      <Icon className={`w-16 h-16 ${card.color} mx-auto mb-4`} />
+                      <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                        <Icon className="w-10 h-10 text-white" />
+                      </div>
                       <h3 className="text-3xl roboto-light text-white mb-3">
                         {card.title}
                       </h3>
@@ -288,7 +329,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
-          <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
+          <p className="text-sm sm:text-base">© 2026 Calificalo - Tu reputación profesional</p>
         </div>
       </footer>
 
