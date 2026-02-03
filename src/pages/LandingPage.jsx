@@ -1,5 +1,3 @@
-Landing
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
