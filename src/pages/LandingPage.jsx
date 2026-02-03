@@ -1,49 +1,30 @@
+Landing
+
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-import { getFirstName } from '../utils/formatName';
+import { getFirstName } from '../utils/formatName'; // ← AGREGAR IMPORT
 
 function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-  const [active, setActive] = useState(1);
-
-  const cards = [
-    {
-      icon: Star,
-      title: 'Recibí Calificaciones',
-      description: 'Los clientes escanean tu QR y califican tu servicio profesional',
-      color: 'text-yellow-300',
-      gradient: 'from-yellow-400 to-orange-500'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Construí tu Reputación',
-      description: 'Tu historial y promedio te acompañan a donde vayas',
-      color: 'text-green-300',
-      gradient: 'from-green-400 to-emerald-500'
-    },
-    {
-      icon: Users,
-      title: 'Conseguí Mejores Trabajos',
-      description: 'Los empleadores buscan profesionales con buena reputación',
-      color: 'text-blue-300',
-      gradient: 'from-blue-400 to-indigo-500'
-    }
-  ];
-
-  const MAX_VISIBILITY = 2;
 
   useEffect(() => {
+    // Obtener información del usuario del token
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
+        // Decodificar el JWT para obtener el nombre
         const payload = JSON.parse(atob(token.split('.')[1]));
+        
+        // Obtener el nombre y limpiar espacios
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
-        fullName = fullName.trim();
-        const firstName = getFirstName(fullName.split('@')[0]);
+        fullName = fullName.trim(); // Eliminar espacios al inicio y final
+        
+        // Extraer y capitalizar solo el primer nombre
+        const firstName = getFirstName(fullName.split('@')[0]); // ← USAR FUNCIÓN
         
         setUserInfo({
           name: firstName,
@@ -54,14 +35,6 @@ function LandingPage() {
       }
     }
   }, []);
-
-  // Auto-rotate
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % cards.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [cards.length]);
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
@@ -82,9 +55,12 @@ function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
+      {/* Hero Section - Condicional según si está logueado */}
       {userInfo ? (
+        // Usuario logueado - Mostrar bienvenida con logo grande
         <div className="h-screen flex flex-col justify-center items-center px-4 text-center">
+          {/* Logo grande arriba del mensaje */}
           <div 
             onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-6 sm:mb-10 animate-slideDown"
@@ -113,10 +89,12 @@ function LandingPage() {
           </button>
         </div>
       ) : (
+        // ... resto del código sin cambios
         <>
-          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center">
+          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
+            {/* Logo arriba del título */}
             <div 
-              onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
+              onClick={() => window.location.href = 'https:/www.calificalo.com.ar/'}
               className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
             >
               <img 
@@ -163,62 +141,40 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* 3D Carousel */}
-          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 flex items-center justify-center">
-            <div className="carousel-3d">
-              {active > 0 && (
-                <button 
-                  className="nav-button top" 
-                  onClick={() => setActive(i => i - 1)}
-                >
-                  <ChevronUp />
-                </button>
-              )}
-              
-              {cards.map((card, i) => {
-                const Icon = card.icon;
-                const offset = (active - i) / 3;
-                const direction = Math.sign(active - i);
-                const absOffset = Math.abs(active - i) / 3;
-                const isActive = i === active ? 1 : 0;
-                
-                return (
-                  <div
-                    key={i}
-                    className="card-container-3d"
-                    style={{
-                      '--active': isActive,
-                      '--offset': offset,
-                      '--direction': direction,
-                      '--abs-offset': absOffset,
-                      pointerEvents: active === i ? 'auto' : 'none',
-                      opacity: Math.abs(active - i) >= MAX_VISIBILITY ? '0' : '1',
-                      display: Math.abs(active - i) > MAX_VISIBILITY ? 'none' : 'block',
-                    }}
-                  >
-                    <div className="feature-card-3d">
-                      <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg`}>
-                        <Icon className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="card-title">{card.title}</h3>
-                      <p className="card-description">{card.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {active < cards.length - 1 && (
-                <button 
-                  className="nav-button bottom" 
-                  onClick={() => setActive(i => i + 1)}
-                >
-                  <ChevronDown />
-                </button>
-              )}
+          {/* Features */}
+          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 grid md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-300 hover-lift">
+              <Star className="w-14 sm:w-16 h-14 sm:h-16 text-yellow-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
+                Recibí Calificaciones
+              </h3>
+              <p className="text-base sm:text-lg text-white/80">
+                Los clientes escanean tu QR y califican tu servicio profesional
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-400 hover-lift">
+              <TrendingUp className="w-14 sm:w-16 h-14 sm:h-16 text-green-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
+                Construí tu Reputación
+              </h3>
+              <p className="text-base sm:text-lg text-white/80">
+                Tu historial y promedio te acompañan a donde vayas
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-500 hover-lift">
+              <Users className="w-14 sm:w-16 h-14 sm:h-16 text-blue-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
+                Conseguí Mejores Trabajos
+              </h3>
+              <p className="text-base sm:text-lg text-white/80">
+                Los empleadores buscan profesionales con buena reputación
+              </p>
             </div>
           </div>
 
-          {/* CTA Section */}
+          {/* CTA Section - Solo visible en tablet y desktop */}
           <div className="hidden sm:block max-w-4xl mx-auto px-4 py-12 sm:py-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-12 animate-scaleIn">
               <QrCode className="w-14 sm:w-18 md:w-20 h-14 sm:h-18 md:h-20 text-white mx-auto mb-4 sm:mb-6 animate-pulseGlow" />
@@ -247,6 +203,7 @@ function LandingPage() {
         </div>
       </footer>
 
+      {/* Modal de Login Requerido */}
       {showLoginModal && (
         <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
       )}
