@@ -89,16 +89,30 @@ function ClientRatingsHistory() {
   };
 
   const getTimeRemaining = (createdAt) => {
+  try {
     const now = new Date();
     const created = new Date(createdAt);
-    const elapsedMs = now - created;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const remainingMinutes = 30 - elapsedMinutes;
     
-    if (remainingMinutes <= 0) return null;
+    // Verificar que la fecha es válida
+    if (isNaN(created.getTime())) {
+      console.error('Fecha inválida:', createdAt);
+      return null;
+    }
+    
+    const diffMs = now.getTime() - created.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const remainingMinutes = 30 - diffMinutes;
+    
+    if (remainingMinutes <= 0) {
+      return null;
+    }
     
     return `${remainingMinutes} min`;
-  };
+  } catch (error) {
+    console.error('Error calculando tiempo:', error);
+    return null;
+  }
+};
 
   const renderStars = (score) => {
     return [...Array(5)].map((_, i) => (
@@ -135,7 +149,7 @@ function ClientRatingsHistory() {
       </div>
 
       {/* Contenido */}
-      <div className="max-w-4xl mx-auto px-4 -mt-8 pb-8">
+      <div className="max-w-4xl mx-auto px-4 -mt-4 pb-8">
         {ratings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">

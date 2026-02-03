@@ -219,16 +219,32 @@ function ClientDashboard() {
   };
 
   const getTimeRemaining = (createdAt) => {
+  try {
     const now = new Date();
     const created = new Date(createdAt);
-    const elapsedMs = now - created; // Tiempo transcurrido en milisegundos
-    const elapsedMinutes = Math.floor(elapsedMs / 60000); // Convertir a minutos
-    const remainingMinutes = 30 - elapsedMinutes; // Calcular minutos restantes
-
-    if (remainingMinutes <= 0) return null;
-
+    
+    // Verificar que la fecha es válida
+    if (isNaN(created.getTime())) {
+      console.error('Fecha inválida:', createdAt);
+      return null;
+    }
+    
+    const diffMs = now.getTime() - created.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const remainingMinutes = 30 - diffMinutes;
+    
+    console.log(`Creado hace ${diffMinutes} min, quedan ${remainingMinutes} min`);
+    
+    if (remainingMinutes <= 0) {
+      return null;
+    }
+    
     return `${remainingMinutes} min`;
-  };
+  } catch (error) {
+    console.error('Error calculando tiempo:', error);
+    return null;
+  }
+};
 
   const renderStars = (score) => {
     return [...Array(5)].map((_, i) => (
