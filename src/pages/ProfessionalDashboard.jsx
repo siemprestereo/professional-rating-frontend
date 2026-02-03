@@ -16,6 +16,7 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [hasWorkExperiences, setHasWorkExperiences] = useState(true); // Estado para saber si tiene experiencias
   const dropdownRef = useRef(null);
   
   // Toast y ErrorModal
@@ -95,10 +96,37 @@ function ProfessionalDashboard() {
           const ratingsData = await ratingsResponse.json();
           setRatings(ratingsData);
         }
+
+        // 3. Verificar si tiene experiencias laborales
+        await checkWorkExperiences(professionalData.id, token);
       }
     } catch (error) {
       console.error('Error en auto-refresh:', error);
       // No mostramos error al usuario para no interrumpir la experiencia
+    }
+  };
+
+  // Función para verificar si el profesional tiene experiencias laborales
+  const checkWorkExperiences = async (professionalId, token) => {
+    try {
+      const cvResponse = await fetch(`${backendUrl}/api/cv/professional/${professionalId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (cvResponse.ok) {
+        const cvData = await cvResponse.json();
+        // Verificar si tiene experiencias laborales
+        const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
+        setHasWorkExperiences(hasExperiences);
+        console.log('✅ Tiene experiencias laborales:', hasExperiences);
+      } else {
+        // Si no tiene CV, significa que no tiene experiencias
+        setHasWorkExperiences(false);
+        console.log('⚠️ No tiene CV creado');
+      }
+    } catch (error) {
+      console.error('Error al verificar experiencias laborales:', error);
+      setHasWorkExperiences(true); // Por defecto asumimos que tiene para no molestar
     }
   };
 
@@ -147,6 +175,9 @@ function ProfessionalDashboard() {
           console.error('Error al cargar ratings:', error);
           setRatings([]);
         }
+
+        // 3. Verificar si tiene experiencias laborales
+        await checkWorkExperiences(professionalData.id, token);
         
       } else if (response.status === 401) {
         console.log('Token inválido, redirigiendo al login');
@@ -559,10 +590,26 @@ function ProfessionalDashboard() {
 
           <button
             onClick={handleCV}
-            className="bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-250 hover-lift"
+            className={`bg-white rounded-2xl shadow-lg p-5 text-center animate-slideUp delay-250 hover-lift relative overflow-hidden ${
+              !hasWorkExperiences ? 'cv-glow-animation' : ''
+            }`}
           >
-            <ClipboardList className="w-7 h-7 text-purple-600 mx-auto mb-2" />
-            <p className="font-semibold text-gray-800">Mi CV</p>
+            {/* Efecto de brillo para cuando no tiene experiencias */}
+            {!hasWorkExperiences && (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-300/30 to-transparent animate-shimmer-fast"></div>
+                <div className="absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full animate-ping"></div>
+              </>
+            )}
+            <ClipboardList className={`w-7 h-7 mx-auto mb-2 relative z-10 ${
+              !hasWorkExperiences ? 'text-purple-600 animate-bounce-subtle' : 'text-purple-600'
+            }`} />
+            <p className={`font-semibold text-gray-800 relative z-10 ${
+              !hasWorkExperiences ? 'animate-pulse-text' : ''
+            }`}>
+              Mi CV
+              {!hasWorkExperiences && <span className="text-purple-600 ml-1">✨</span>}
+            </p>
           </button>
         </div>
       </div>

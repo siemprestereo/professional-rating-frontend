@@ -50,22 +50,12 @@ function ProfessionalRegister() {
       console.log('✅ Token recibido de OAuth en register:', token);
       localStorage.setItem('authToken', token);
       localStorage.setItem('userType', 'PROFESSIONAL');
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('📦 Payload del token:', payload);
-        
-        if (payload.userType === 'PROFESSIONAL') {
-          setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
-          setTimeout(() => {
-            navigate('/edit-cv', { replace: true });
-          }, 1000);
-        } else {
-          navigate('/client-dashboard', { replace: true });
-        }
-      } catch (e) {
-        console.error('Error al decodificar token:', e);
-        setToast({ type: 'error', message: 'Error al procesar autenticación' });
-      }
+      
+      // Siempre redirigir a edit-cv después de registro OAuth para que complete su perfil
+      setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
+      setTimeout(() => {
+        navigate('/edit-cv', { replace: true });
+      }, 1000);
     }
   }, [searchParams, navigate]);
 

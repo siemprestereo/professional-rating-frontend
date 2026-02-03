@@ -195,7 +195,6 @@
 .logo-pulse {
   animation: logo-pulse 3s ease-in-out infinite;
 }
-/* Agregar esto al final de tu archivo index.css */
 
 /* Animación breathe para pantallas de carga */
 @keyframes logo-breathe {
@@ -213,3 +212,84 @@
   animation: logo-breathe 2s ease-in-out infinite;
 }
 
+/* Tipografía Roboto Light reutilizable */
+.roboto-light {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300; /* 300 = Light */
+}
+
+.roboto-regular {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400; /* 400 = Regular */
+}
+
+.roboto-bold {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700; /* 700 = Bold */
+}
+
+/* ========== ANIMACIONES PARA BOTÓN "MI CV" (sin experiencias) ========== */
+
+/* Animación de brillo que se mueve de izquierda a derecha más rápido */
+@keyframes shimmer-fast {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer-fast {
+  animation: shimmer-fast 2s infinite;
+}
+
+/* Animación de bounce sutil para el ícono */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* Animación de pulse para el texto */
+@keyframes pulse-text {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-text {
+  animation: pulse-text 2s ease-in-out infinite;
+}
+
+/* Clase principal para el efecto glow del contenedor */
+.cv-glow-animation {
+  position: relative;
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3), 0 0 40px rgba(147, 51, 234, 0.1);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3), 0 0 40px rgba(147, 51, 234, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(147, 51, 234, 0.5), 0 0 60px rgba(147, 51, 234, 0.2);
+  }
+}
+
+/* Efecto hover más intenso para el botón con animación */
+.cv-glow-animation:hover {
+  box-shadow: 0 0 30px rgba(147, 51, 234, 0.5), 0 0 60px rgba(147, 51, 234, 0.3) !important;
+  transform: scale(1.05);
+}
