@@ -1,28 +1,47 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-import { getFirstName } from '../utils/formatName'; // ← AGREGAR IMPORT
+import { getFirstName } from '../utils/formatName';
 
 function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [currentCard, setCurrentCard] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const containerRef = useRef(null);
+
+  const cards = [
+    {
+      icon: Star,
+      title: 'Recibí Calificaciones',
+      description: 'Los clientes escanean tu QR y califican tu servicio profesional',
+      color: 'text-yellow-300'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Construí tu Reputación',
+      description: 'Tu historial y promedio te acompañan a donde vayas',
+      color: 'text-green-300'
+    },
+    {
+      icon: Users,
+      title: 'Conseguí Mejores Trabajos',
+      description: 'Los empleadores buscan profesionales con buena reputación',
+      color: 'text-blue-300'
+    }
+  ];
 
   useEffect(() => {
-    // Obtener información del usuario del token
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        // Decodificar el JWT para obtener el nombre
         const payload = JSON.parse(atob(token.split('.')[1]));
-        
-        // Obtener el nombre y limpiar espacios
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
-        fullName = fullName.trim(); // Eliminar espacios al inicio y final
-        
-        // Extraer y capitalizar solo el primer nombre
-        const firstName = getFirstName(fullName.split('@')[0]); // ← USAR FUNCIÓN
+        fullName = fullName.trim();
+        const firstName = getFirstName(fullName.split('@')[0]);
         
         setUserInfo({
           name: firstName,
@@ -33,6 +52,49 @@ function LandingPage() {
       }
     }
   }, []);
+
+  // Auto-rotate cards
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCard((prev) => (prev + 1) % cards.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      // Swipe up
+      setCurrentCard((prev) => (prev + 1) % cards.length);
+    } else if (distance < -minSwipeDistance) {
+      // Swipe down
+      setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    if (e.deltaY > 0) {
+      setCurrentCard((prev) => (prev + 1) % cards.length);
+    } else {
+      setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
+    }
+  };
 
   const handleSearchClick = () => {
     const token = localStorage.getItem('authToken');
@@ -52,13 +114,32 @@ function LandingPage() {
     }
   };
 
+  const getCardStyle = (index) => {
+    const diff = index - currentCard;
+    const totalCards = cards.length;
+    
+    // Normalizar diff para que siempre tome el camino más corto
+    let normalizedDiff = diff;
+    if (Math.abs(diff) > totalCards / 2) {
+      normalizedDiff = diff > 0 ? diff - totalCards : diff + totalCards;
+    }
+
+    const angle = normalizedDiff * 30; // 30 grados entre cada card
+    const translateZ = Math.abs(normalizedDiff) === 0 ? 0 : -100;
+    const opacity = Math.abs(normalizedDiff) === 0 ? 1 : 0.4;
+    const scale = Math.abs(normalizedDiff) === 0 ? 1 : 0.8;
+
+    return {
+      transform: `rotateX(${-angle}deg) translateZ(${translateZ}px) scale(${scale})`,
+      opacity: opacity,
+      zIndex: 10 - Math.abs(normalizedDiff)
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 animate-fadeIn">
-      {/* Hero Section - Condicional según si está logueado */}
       {userInfo ? (
-        // Usuario logueado - Mostrar bienvenida con logo grande
         <div className="h-screen flex flex-col justify-center items-center px-4 text-center">
-          {/* Logo grande arriba del mensaje */}
           <div 
             onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-6 sm:mb-10 animate-slideDown"
@@ -87,12 +168,10 @@ function LandingPage() {
           </button>
         </div>
       ) : (
-        // ... resto del código sin cambios
         <>
           <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
-            {/* Logo arriba del título */}
             <div 
-              onClick={() => window.location.href = 'https:/www.calificalo.com.ar/'}
+              onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
               className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
             >
               <img 
@@ -139,40 +218,56 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* Features */}
-          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 grid md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-300 hover-lift">
-              <Star className="w-14 sm:w-16 h-14 sm:h-16 text-yellow-300 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
-                Recibí Calificaciones
-              </h3>
-              <p className="text-base sm:text-lg text-white/80">
-                Los clientes escanean tu QR y califican tu servicio profesional
-              </p>
+          {/* 3D Rotating Cards */}
+          <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 h-[500px] flex items-center justify-center">
+            <div 
+              ref={containerRef}
+              className="relative w-full max-w-md h-[400px] perspective-1000"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onWheel={handleWheel}
+              style={{ perspective: '1000px' }}
+            >
+              <div className="relative w-full h-full preserve-3d">
+                {cards.map((card, index) => {
+                  const Icon = card.icon;
+                  return (
+                    <div
+                      key={index}
+                      className="absolute w-full bg-white/10 backdrop-blur-md rounded-3xl p-8 text-center transition-all duration-700 ease-out preserve-3d"
+                      style={getCardStyle(index)}
+                    >
+                      <Icon className={`w-16 h-16 ${card.color} mx-auto mb-4`} />
+                      <h3 className="text-3xl roboto-light text-white mb-3">
+                        {card.title}
+                      </h3>
+                      <p className="text-lg text-white/80">
+                        {card.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-400 hover-lift">
-              <TrendingUp className="w-14 sm:w-16 h-14 sm:h-16 text-green-300 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
-                Construí tu Reputación
-              </h3>
-              <p className="text-base sm:text-lg text-white/80">
-                Tu historial y promedio te acompañan a donde vayas
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-8 text-center animate-slideUp delay-500 hover-lift">
-              <Users className="w-14 sm:w-16 h-14 sm:h-16 text-blue-300 mx-auto mb-3 sm:mb-4" />
-              <h3 className="text-2xl sm:text-3xl roboto-light text-white mb-2 sm:mb-3">
-                Conseguí Mejores Trabajos
-              </h3>
-              <p className="text-base sm:text-lg text-white/80">
-                Los empleadores buscan profesionales con buena reputación
-              </p>
+            {/* Indicadores */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+              {cards.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentCard(index)}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    currentCard === index 
+                      ? 'bg-white w-8' 
+                      : 'bg-white/50'
+                  }`}
+                />
+              ))}
             </div>
           </div>
 
-          {/* CTA Section - Solo visible en tablet y desktop */}
+          {/* CTA Section */}
           <div className="hidden sm:block max-w-4xl mx-auto px-4 py-12 sm:py-16 text-center">
             <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 sm:p-12 animate-scaleIn">
               <QrCode className="w-14 sm:w-18 md:w-20 h-14 sm:h-18 md:h-20 text-white mx-auto mb-4 sm:mb-6 animate-pulseGlow" />
@@ -201,7 +296,6 @@ function LandingPage() {
         </div>
       </footer>
 
-      {/* Modal de Login Requerido */}
       {showLoginModal && (
         <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
       )}
