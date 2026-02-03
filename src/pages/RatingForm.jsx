@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase } from 'lucide-react';
+import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase, Clock } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import api from '../services/api.js';
@@ -9,10 +9,10 @@ import LoadingScreen from '../components/LoadingScreen';
 function RatingForm({ professionalIdFromToken }) {
   const { professionalId: professionalIdFromUrl } = useParams();
   const navigate = useNavigate();
-  
+
   // ✅ Usar el ID del token si existe, sino usar el de la URL (para compatibilidad con rutas viejas)
   const professionalId = professionalIdFromToken || professionalIdFromUrl;
-  
+
   const [professional, setProfessional] = useState(null);
   const [score, setScore] = useState(0);
   const [hoverScore, setHoverScore] = useState(0);
@@ -34,20 +34,20 @@ function RatingForm({ professionalIdFromToken }) {
     try {
       const data = await api.getProfessionalProfile(professionalId);
       console.log('👤 Professional data:', data);
-      
+
       // Mapear professionalName a name para compatibilidad
       const mappedData = {
         ...data,
         name: data.professionalName || data.name
       };
-      
+
       console.log('📋 Work history:', mappedData.workHistory);
       setProfessional(mappedData);
-      
+
       // Auto-seleccionar si solo hay 1 trabajo activo
       const activeJobs = mappedData.workHistory?.filter(w => w.isActive) || [];
       console.log('✅ Active jobs:', activeJobs);
-      
+
       if (activeJobs.length === 1) {
         setSelectedWorkplace(activeJobs[0]);
       }
@@ -60,14 +60,14 @@ function RatingForm({ professionalIdFromToken }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (score === 0) {
       setToast({ type: 'warning', message: 'Por favor seleccioná una calificación' });
       return;
     }
 
     const activeJobs = professional?.workHistory?.filter(w => w.isActive) || [];
-    
+
     // Validar workplace si hay múltiples trabajos activos
     if (activeJobs.length > 1 && !selectedWorkplace) {
       setToast({ type: 'warning', message: 'Por favor seleccioná dónde te atendió este profesional' });
@@ -79,14 +79,14 @@ function RatingForm({ professionalIdFromToken }) {
     try {
       // Determinar qué trabajo usar
       const workplaceToUse = selectedWorkplace || activeJobs[0];
-      
+
       console.log('🔍 workplaceToUse:', workplaceToUse);
       console.log('🔍 activeJobs:', activeJobs);
-      
+
       if (!workplaceToUse || !workplaceToUse.workHistoryId) {
-        setToast({ 
-          type: 'error', 
-          message: 'No se pudo determinar el lugar de trabajo' 
+        setToast({
+          type: 'error',
+          message: 'No se pudo determinar el lugar de trabajo'
         });
         setSubmitting(false);
         return;
@@ -104,7 +104,7 @@ function RatingForm({ professionalIdFromToken }) {
       await api.createRating(ratingData);
 
       setSuccess(true);
-      
+
       setTimeout(() => {
         navigate('/client-dashboard');
       }, 2000);
@@ -112,7 +112,7 @@ function RatingForm({ professionalIdFromToken }) {
       console.error('❌ Error completo:', error);
       console.error('❌ Error response:', error.response?.data);
       console.error('❌ Error status:', error.response?.status);
-      
+
       // Mensaje más específico según el tipo de error
       if (error.response?.status === 401) {
         setErrorModal({
@@ -136,9 +136,9 @@ function RatingForm({ professionalIdFromToken }) {
       } else {
         // Mostrar el mensaje de error real del backend
         const errorMessage = error.response?.data?.message || 'Error al enviar la calificación. Intentá nuevamente.';
-        setToast({ 
-          type: 'error', 
-          message: errorMessage 
+        setToast({
+          type: 'error',
+          message: errorMessage
         });
       }
     } finally {
@@ -211,18 +211,16 @@ function RatingForm({ professionalIdFromToken }) {
                       key={job.workHistoryId}
                       type="button"
                       onClick={() => setSelectedWorkplace(job)}
-                      className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                        selectedWorkplace?.workHistoryId === job.workHistoryId
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-200 hover:border-purple-300'
-                      }`}
+                      className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${selectedWorkplace?.workHistoryId === job.workHistoryId
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-300'
+                        }`}
                     >
                       <div className="flex items-center">
-                        <Briefcase className={`w-5 h-5 mr-3 ${
-                          selectedWorkplace?.workHistoryId === job.workHistoryId
-                            ? 'text-purple-600'
-                            : 'text-gray-400'
-                        }`} />
+                        <Briefcase className={`w-5 h-5 mr-3 ${selectedWorkplace?.workHistoryId === job.workHistoryId
+                          ? 'text-purple-600'
+                          : 'text-gray-400'
+                          }`} />
                         <div>
                           <p className="font-semibold text-gray-800 text-base">{job.businessName}</p>
                           <p className="text-sm text-gray-500">{job.position}</p>
@@ -250,11 +248,10 @@ function RatingForm({ professionalIdFromToken }) {
                     className="focus:outline-none transform transition-all duration-200 hover:scale-125 active:scale-110"
                   >
                     <Star
-                      className={`w-12 h-12 transition-all duration-200 ${
-                        star <= (hoverScore || score)
-                          ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg'
-                          : 'text-gray-300'
-                      }`}
+                      className={`w-12 h-12 transition-all duration-200 ${star <= (hoverScore || score)
+                        ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg'
+                        : 'text-gray-300'
+                        }`}
                     />
                   </button>
                 ))}
@@ -284,6 +281,21 @@ function RatingForm({ professionalIdFromToken }) {
               />
               <div className="text-right text-sm text-gray-400 mt-1">
                 {comment.length}/500
+              </div>
+            </div>
+
+            {/* Aviso de edición */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4 animate-slideUp delay-450">
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-blue-800 font-semibold mb-1">
+                    Podrás editar o eliminar tu calificación
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Tenés 30 minutos desde el envío para modificar o eliminar tu calificación
+                  </p>
+                </div>
               </div>
             </div>
 
