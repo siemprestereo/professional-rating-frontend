@@ -220,26 +220,35 @@ function ClientDashboard() {
 
   const getTimeRemaining = (createdAt) => {
   try {
-    const now = new Date();
-    const created = new Date(createdAt);
+    // Obtener la hora actual
+    const now = Date.now(); // Timestamp en milisegundos
+    
+    // Parsear la fecha de creación
+    const created = new Date(createdAt).getTime();
     
     // Verificar que la fecha es válida
-    if (isNaN(created.getTime())) {
+    if (isNaN(created)) {
       console.error('Fecha inválida:', createdAt);
       return null;
     }
     
-    const diffMs = now.getTime() - created.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const remainingMinutes = 30 - diffMinutes;
+    // Calcular diferencia en minutos
+    const diffMinutes = Math.floor((now - created) / (1000 * 60));
     
-    console.log(`Creado hace ${diffMinutes} min, quedan ${remainingMinutes} min`);
-    
-    if (remainingMinutes <= 0) {
+    // Si han pasado más de 30 minutos, no es editable
+    if (diffMinutes >= 30) {
       return null;
     }
     
+    // Si el tiempo es negativo (fecha en el futuro), también return null
+    if (diffMinutes < 0) {
+      console.warn('Fecha en el futuro detectada:', createdAt);
+      return null;
+    }
+    
+    const remainingMinutes = 30 - diffMinutes;
     return `${remainingMinutes} min`;
+    
   } catch (error) {
     console.error('Error calculando tiempo:', error);
     return null;
