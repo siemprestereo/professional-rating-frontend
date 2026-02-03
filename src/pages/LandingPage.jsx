@@ -59,7 +59,28 @@ function LandingPage() {
       setCurrentCard((prev) => (prev + 1) % cards.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [cards.length]);
+
+  // Wheel event con preventDefault
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (e.deltaY > 0) {
+        setCurrentCard((prev) => (prev + 1) % cards.length);
+      } else {
+        setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [cards.length]);
 
   const handleTouchStart = (e) => {
     setTouchStart(e.touches[0].clientY);
@@ -85,15 +106,6 @@ function LandingPage() {
 
     setTouchStart(0);
     setTouchEnd(0);
-  };
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    if (e.deltaY > 0) {
-      setCurrentCard((prev) => (prev + 1) % cards.length);
-    } else {
-      setCurrentCard((prev) => (prev - 1 + cards.length) % cards.length);
-    }
   };
 
   const handleSearchClick = () => {
@@ -222,11 +234,10 @@ function LandingPage() {
           <div className="max-w-6xl mx-auto px-4 py-12 sm:py-16 h-[500px] flex items-center justify-center">
             <div 
               ref={containerRef}
-              className="relative w-full max-w-md h-[400px] perspective-1000"
+              className="relative w-full max-w-md h-[400px]"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              onWheel={handleWheel}
               style={{ perspective: '1000px' }}
             >
               <div className="relative w-full h-full preserve-3d">
@@ -249,21 +260,6 @@ function LandingPage() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Indicadores */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-              {cards.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentCard(index)}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    currentCard === index 
-                      ? 'bg-white w-8' 
-                      : 'bg-white/50'
-                  }`}
-                />
-              ))}
             </div>
           </div>
 
