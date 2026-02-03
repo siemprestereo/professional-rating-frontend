@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Calendar } from 'lucide-react';
+import { Star, Home, ArrowLeft, Calendar, Edit2, Trash2, Clock } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import Toast from '../components/Toast';
+import api from '../services/api';
 
 function ClientRatingsHistory() {
   const navigate = useNavigate();
@@ -9,6 +12,8 @@ function ClientRatingsHistory() {
   
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     loadRatings();
@@ -39,6 +44,54 @@ function ClientRatingsHistory() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditRating = (rating) => {
+    navigate(`/edit-rating/${rating.id}`);
+  };
+
+  const handleDeleteClick = (rating) => {
+    setDeleteModal({
+      ratingId: rating.id,
+      professionalName: rating.professionalName
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal) return;
+
+    try {
+      await api.deleteRating(deleteModal.ratingId);
+      
+      setToast({ 
+        type: 'success', 
+        message: 'Calificación eliminada exitosamente' 
+      });
+
+      // Recargar ratings
+      loadRatings();
+      
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+      setToast({ 
+        type: 'error', 
+        message: error.response?.data?.message || 'Error al eliminar la calificación' 
+      });
+    } finally {
+      setDeleteModal(null);
+    }
+  };
+
+  const getTimeRemaining = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInMs = now - created;
+    const minutesPassed = Math.floor(diffInMs / 60000);
+    const minutesRemaining = 30 - minutesPassed;
+    
+    if (minutesRemaining <= 0) return null;
+    
+    return `${minutesRemaining} min`;
   };
 
   const renderStars = (score) => {
@@ -97,39 +150,74 @@ function ClientRatingsHistory() {
           </div>
         ) : (
           <div className="space-y-3">
-            {ratings.map((rating) => (
-              <div 
-                key={rating.id} 
-                className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-800 text-lg">
-                      {rating.professionalName}
-                    </h4>
-                    <p className="text-sm text-gray-500">{rating.businessName}</p>
+            {ratings.map((rating) => {
+              const timeRemaining = getTimeRemaining(rating.createdAt);
+              const canEdit = rating.canEdit;
+
+              return (
+                <div 
+                  key={rating.id} 
+                  className={`rounded-2xl p-4 hover:shadow-xl transition-all ${
+                    canEdit && timeRemaining 
+                      ? 'border-2 border-blue-400 bg-blue-50/30 shadow-lg' 
+                      : 'bg-white shadow-lg'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-800 text-lg">
+                        {rating.professionalName}
+                      </h4>
+                      <p className="text-sm text-gray-500">{rating.businessName}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {renderStars(rating.score)}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {renderStars(rating.score)}
+                  
+                  {rating.comment && (
+                    <p className="text-gray-600 text-sm mb-2 italic bg-gray-50 p-3 rounded-xl">
+                      "{rating.comment}"
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-xs text-gray-400">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {new Date(rating.createdAt).toLocaleDateString('es-AR', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </div>
+
+                    {/* Botones de editar/eliminar */}
+                    {canEdit && timeRemaining && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg font-semibold">
+                          <Clock className="w-3 h-3" />
+                          <span>{timeRemaining}</span>
+                        </div>
+                        <button
+                          onClick={() => handleEditRating(rating)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Editar calificación"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(rating)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                          title="Eliminar calificación"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                {rating.comment && (
-                  <p className="text-gray-600 text-sm mb-2 italic bg-gray-50 p-3 rounded-xl">
-                    "{rating.comment}"
-                  </p>
-                )}
-                
-                <div className="flex items-center text-xs text-gray-400">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  {new Date(rating.createdAt).toLocaleDateString('es-AR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -143,6 +231,23 @@ function ClientRatingsHistory() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={deleteModal !== null}
+        onClose={() => setDeleteModal(null)}
+        onConfirm={handleDeleteConfirm}
+        professionalName={deleteModal?.professionalName}
+      />
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

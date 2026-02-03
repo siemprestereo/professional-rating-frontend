@@ -8,7 +8,7 @@ import api from '../services/api';
 
 function ClientDashboard() {
   console.log('🚀 CLIENT DASHBOARD VERSION 2.0 🚀');
-  
+
   const navigate = useNavigate();
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const [client, setClient] = useState(null);
@@ -25,15 +25,15 @@ function ClientDashboard() {
     // Primero verificar si hay token en la URL (OAuth redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
-    
+
     if (tokenFromUrl) {
       console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
       localStorage.setItem('authToken', tokenFromUrl);
-      
+
       // Limpiar la URL (quitar el ?token=xxx)
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-    
+
     loadClientData();
 
     // Cerrar dropdown al hacer click fuera
@@ -44,7 +44,7 @@ function ClientDashboard() {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -61,7 +61,7 @@ function ClientDashboard() {
   const loadClientData = async () => {
     // Verificar si hay token
     const token = localStorage.getItem('authToken');
-    
+
     if (!token) {
       console.log('No hay token, redirigiendo al login');
       navigate('/client-login');
@@ -152,7 +152,7 @@ function ClientDashboard() {
     // Medallas especiales
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
     const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
-    
+
     if (commentPercentage >= 80) {
       badges.push({ icon: '💬', name: 'Comunicador' });
     }
@@ -191,21 +191,21 @@ function ClientDashboard() {
 
     try {
       await api.deleteRating(deleteModal.ratingId);
-      
-      setToast({ 
-        type: 'success', 
-        message: 'Calificación eliminada exitosamente' 
+
+      setToast({
+        type: 'success',
+        message: 'Calificación eliminada exitosamente'
       });
 
       // Recargar ratings
       const token = localStorage.getItem('authToken');
       loadRatings(client.id, token);
-      
+
     } catch (error) {
       console.error('Error al eliminar:', error);
-      setToast({ 
-        type: 'error', 
-        message: error.response?.data?.message || 'Error al eliminar la calificación' 
+      setToast({
+        type: 'error',
+        message: error.response?.data?.message || 'Error al eliminar la calificación'
       });
     } finally {
       setDeleteModal(null);
@@ -215,12 +215,13 @@ function ClientDashboard() {
   const getTimeRemaining = (createdAt) => {
     const now = new Date();
     const created = new Date(createdAt);
-    const diff = 30 * 60 * 1000 - (now - created); // 30 minutos en ms
-    
-    if (diff <= 0) return null;
-    
-    const minutes = Math.floor(diff / 60000);
-    return `${minutes} min`;
+    const diffInMs = now - created; // Tiempo transcurrido
+    const minutesPassed = Math.floor(diffInMs / 60000);
+    const minutesRemaining = 30 - minutesPassed;
+
+    if (minutesRemaining <= 0) return null;
+
+    return `${minutesRemaining} min`;
   };
 
   const renderStars = (score) => {
@@ -258,7 +259,7 @@ function ClientDashboard() {
           >
             Calificalo
           </button>
-          
+
           {/* Menú desplegable */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -284,9 +285,9 @@ function ClientDashboard() {
                     <BarChart3 className="w-5 h-5 text-teal-600" />
                     <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
                   </button>
-                  
+
                   <div className="border-t border-gray-200 my-2"></div>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
@@ -299,7 +300,7 @@ function ClientDashboard() {
             )}
           </div>
         </div>
-        
+
         <div className="text-center">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
             {client.name ? client.name.charAt(0) : 'U'}
@@ -357,7 +358,7 @@ function ClientDashboard() {
               </button>
             )}
           </div>
-          
+
           {myRatings.length === 0 ? (
             <div className="text-center py-8">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-3" />
@@ -377,9 +378,12 @@ function ClientDashboard() {
                 console.log(`Rating ${rating.id} - canEdit: ${canEdit}, timeRemaining: ${timeRemaining}`);
 
                 return (
-                  <div 
-                    key={rating.id} 
-                    className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all"
+                  <div
+                    key={rating.id}
+                    className={`rounded-xl p-4 hover:shadow-md transition-all ${canEdit && timeRemaining
+                        ? 'border-2 border-blue-400 bg-blue-50/30'
+                        : 'border border-gray-100'
+                      }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
@@ -390,11 +394,11 @@ function ClientDashboard() {
                         {renderStars(rating.score)}
                       </div>
                     </div>
-                    
+
                     {rating.comment && (
                       <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>
                     )}
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-xs text-gray-400">
                         <Calendar className="w-3 h-3 mr-1" />
@@ -408,20 +412,20 @@ function ClientDashboard() {
                       {/* Botones de editar/eliminar */}
                       {canEdit && timeRemaining && (
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                          <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg font-semibold">
                             <Clock className="w-3 h-3" />
                             <span>{timeRemaining}</span>
                           </div>
                           <button
                             onClick={() => handleEditRating(rating)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                             title="Editar calificación"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(rating)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                             title="Eliminar calificación"
                           >
                             <Trash2 className="w-4 h-4" />
