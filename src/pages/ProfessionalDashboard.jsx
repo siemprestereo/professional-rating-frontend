@@ -16,7 +16,8 @@ function ProfessionalDashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingQR, setGeneratingQR] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [hasWorkExperiences, setHasWorkExperiences] = useState(true); // Estado para saber si tiene experiencias
+  const [hasWorkExperiences, setHasWorkExperiences] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(null); // NUEVO: Estado para el countdown
   const dropdownRef = useRef(null);
   
   // Toast y ErrorModal
@@ -70,6 +71,40 @@ function ProfessionalDashboard() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // NUEVO: Countdown para el QR
+  useEffect(() => {
+    if (!qrCode?.expiresAt) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const expiry = new Date(qrCode.expiresAt).getTime();
+      const diff = Math.max(0, expiry - now);
+      
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      
+      return diff > 0 ? { minutes, seconds, expired: false } : { minutes: 0, seconds: 0, expired: true };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const interval = setInterval(() => {
+      const time = calculateTimeLeft();
+      setTimeLeft(time);
+      
+      if (time.expired) {
+        clearInterval(interval);
+        setQrCode(null); // Auto-cerrar QR expirado
+        setToast({ type: 'warning', message: 'El QR expiró. Generá uno nuevo.' });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [qrCode]);
 
   // Nueva función para refresh silencioso
   const refreshDashboardData = async () => {
@@ -461,20 +496,28 @@ function ProfessionalDashboard() {
                         className="mx-auto border-2 border-orange-200 rounded-lg w-full max-w-[240px] md:max-w-xs animate-pulseGlow"
                       />
                     </div>
-                    <p className="text-sm md:text-base text-white/90 mb-1 px-2">
+                    <p className="text-sm md:text-base text-white/90 mb-2 px-2">
                       <span className="font-semibold">Código:</span> {qrCode.code}
                     </p>
-                    <p className="text-sm md:text-base text-white/90 mb-2 md:mb-3 px-2">
-                      <span className="font-semibold">Válido hasta las </span>
-                      {qrCode.expiresAt ? 
-                        new Date(qrCode.expiresAt).toLocaleTimeString('es-AR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false,
-                          timeZone: 'America/Argentina/Buenos_Aires'
-                        }) + ' hs'
-                        : 'Fecha inválida'}
-                    </p>
+
+                    {/* COUNTDOWN */}
+                    {timeLeft && !timeLeft.expired && (
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 mb-3 mx-auto max-w-xs">
+                        <p className="text-white/90 text-sm mb-2 text-center">⏱️ Tiempo restante</p>
+                        <div className="flex items-center justify-center">
+                          <div className="bg-white rounded-lg px-4 py-2">
+                            <span className={`text-2xl md:text-3xl font-bold ${
+                              timeLeft.minutes === 0 && timeLeft.seconds <= 30 
+                                ? 'text-red-600 animate-pulse' 
+                                : 'text-orange-600'
+                            }`}>
+                              {String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       onClick={handleGenerateQR}
                       className="bg-white text-orange-600 px-4 md:px-6 py-2 rounded-full font-semibold hover:scale-105 transition-all duration-300 ripple shadow-lg text-sm md:text-base"
