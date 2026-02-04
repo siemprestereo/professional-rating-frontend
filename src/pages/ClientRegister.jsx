@@ -4,6 +4,17 @@ import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 
+// Función para capitalizar y limpiar el nombre
+const formatName = (input) => {
+  // Eliminar todo lo que no sea letra o espacio
+  const cleaned = input.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+  
+  // Capitalizar primera letra de cada palabra
+  return cleaned
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 function ClientRegister() {
   const navigate = useNavigate();
@@ -168,7 +179,7 @@ function ClientRegister() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(formatName(e.target.value))}
               placeholder="Juan Pérez"
               required
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-green-500 focus:outline-none transition-all text-base"
