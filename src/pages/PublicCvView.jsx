@@ -186,19 +186,19 @@ function PublicCvView() {
             <span className={badge.color}>{badge.name}</span>
           </div>
 
-          {/* ✅ Estrellas y calificaciones clickeables */}
-          <button
+          {/* ✅ Estrellas y calificaciones clickeables - usando DIV */}
+          <div 
             onClick={() => navigate(`/stats-public/${professionalId}`)}
-            className="hover:scale-105 transition-transform cursor-pointer"
+            className="cursor-pointer hover:scale-105 transition-transform"
           >
-            <div className="flex items-center justify-center mb-3 animate-slideUp delay-100">
+            <div className="flex items-center justify-center mb-3">
               {renderStars(cvData.reputationScore || 0)}
               <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
             </div>
-            <p className="text-white/80 text-sm hover:text-white transition-all">
+            <p className="text-white/80 text-sm">
               {cvData.totalRatings || 0} {cvData.totalRatings === 1 ? 'calificación' : 'calificaciones'}
             </p>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -409,10 +409,11 @@ function PublicCvView() {
         <div className="fixed top-20 right-4 z-50 animate-slideUp">
           <button
             onClick={toggleFavorite}
-            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${isFavorite
+            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
+              isFavorite
                 ? 'bg-red-500 hover:bg-red-600'
                 : 'bg-white hover:bg-gray-100'
-              }`}
+            }`}
           >
             <svg
               className={`w-7 h-7 ${isFavorite ? 'text-white fill-white' : 'text-gray-400'}`}
