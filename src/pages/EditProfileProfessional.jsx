@@ -14,7 +14,6 @@ function EditProfileProfessional() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  // Campos del formulario
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -22,17 +21,13 @@ function EditProfileProfessional() {
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [professionType, setProfessionType] = useState('');
   
-  // ✅ NUEVO: Estado para verificar si ya es cliente
   const [isAlreadyClient, setIsAlreadyClient] = useState(false);
   
-  // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   
-  // Modal cambiar a cliente
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   
-  // Toast y ErrorModal
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -57,27 +52,9 @@ function EditProfileProfessional() {
 
   useEffect(() => {
     loadProfile();
-    checkIfAlreadyClient();
   }, []);
 
-  const checkIfAlreadyClient = async () => {
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${backendUrl}/api/role/current`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Role check:', data);
-      // Si activeRole es CLIENT, entonces ya es cliente
-      setIsAlreadyClient(data.activeRole === 'CLIENT');
-    }
-  } catch (error) {
-    console.error('Error checking role:', error);
-  }
-};
-
+  // ✅ OPTIMIZACIÓN: Carga paralela de profile y rol
   const loadProfile = async () => {
     const savedData = localStorage.getItem('professional');
     const token = localStorage.getItem('authToken');
@@ -90,15 +67,19 @@ function EditProfileProfessional() {
     const localData = JSON.parse(savedData);
     
     try {
-      // Cargar datos actualizados desde el backend
-      const response = await fetch(`${backendUrl}/api/professionals/${localData.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // ✅ Cargar profile y verificar rol EN PARALELO
+      const [profileResponse, roleResponse] = await Promise.all([
+        fetch(`${backendUrl}/api/professionals/${localData.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${backendUrl}/api/role/current`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
+      // Procesar respuesta del perfil
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
         console.log('Backend data:', data);
         
         setProfessional(data);
@@ -119,6 +100,14 @@ function EditProfileProfessional() {
         setProfessionalTitle(localData.professionalTitle || '');
         setProfessionType(localData.professionType || '');
       }
+
+      // Procesar respuesta del rol
+      if (roleResponse.ok) {
+        const roleData = await roleResponse.json();
+        console.log('Role check:', roleData);
+        setIsAlreadyClient(roleData.activeRole === 'CLIENT');
+      }
+
     } catch (error) {
       console.error('Error loading profile:', error);
       setProfessional(localData);
@@ -213,14 +202,11 @@ function EditProfileProfessional() {
     }
   };
 
-  // ✅ MODIFICADO: Handler para cambiar a cliente
   const handleSwitchToClient = () => {
     if (isAlreadyClient) {
-      // Ya tiene rol de cliente, solo cambiar al dashboard
       localStorage.setItem('userType', 'CLIENT');
       navigate('/client-dashboard');
     } else {
-      // No tiene rol de cliente, mostrar modal para confirmar
       setShowSwitchModal(true);
     }
   };
@@ -231,7 +217,6 @@ function EditProfileProfessional() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
-      {/* Header sin navbar */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
@@ -246,12 +231,9 @@ function EditProfileProfessional() {
         </div>
       </div>
 
-      {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
-        {/* Formulario */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <form onSubmit={handleSave}>
-            {/* Nombre (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <User className="w-5 h-5 mr-2 text-purple-600" />
@@ -266,7 +248,6 @@ function EditProfileProfessional() {
               <p className="text-sm text-gray-500 mt-1">El nombre no se puede modificar</p>
             </div>
 
-            {/* Email (solo lectura) */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Mail className="w-5 h-5 mr-2 text-purple-600" />
@@ -281,7 +262,6 @@ function EditProfileProfessional() {
               <p className="text-sm text-gray-500 mt-1">El email no se puede modificar</p>
             </div>
 
-            {/* Tipo de profesión */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
@@ -302,7 +282,6 @@ function EditProfileProfessional() {
               <p className="text-sm text-gray-500 mt-1">Tu área de especialización</p>
             </div>
 
-            {/* Título Profesional */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Award className="w-5 h-5 mr-2 text-purple-600" />
@@ -319,7 +298,6 @@ function EditProfileProfessional() {
               <p className="text-sm text-gray-500 mt-1">Tu título o especialización profesional</p>
             </div>
 
-            {/* Teléfono */}
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Phone className="w-5 h-5 mr-2 text-purple-600" />
@@ -334,7 +312,6 @@ function EditProfileProfessional() {
               />
             </div>
 
-            {/* Ubicación */}
             <div className="mb-6">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <MapPin className="w-5 h-5 mr-2 text-purple-600" />
@@ -349,7 +326,6 @@ function EditProfileProfessional() {
               />
             </div>
 
-            {/* Botón Guardar */}
             <button
               type="submit"
               disabled={saving}
@@ -370,7 +346,6 @@ function EditProfileProfessional() {
           </form>
         </div>
 
-        {/* Cambiar a Cliente */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-green-200 animate-slideUp delay-50">
           <h3 className="text-xl roboto-light text-gray-800 mb-2 flex items-center">
             <UserCheck className="w-6 h-6 mr-2 text-green-600" />
@@ -391,7 +366,6 @@ function EditProfileProfessional() {
           </button>
         </div>
 
-        {/* Zona de peligro - Eliminar cuenta */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center">
             <Trash2 className="w-6 h-6 mr-2" />
@@ -409,7 +383,6 @@ function EditProfileProfessional() {
         </div>
       </div>
 
-      {/* Botón Home flotante fijo abajo centrado */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
         <button 
           onClick={() => navigate('/professional-dashboard')}
@@ -420,7 +393,6 @@ function EditProfileProfessional() {
         </button>
       </div>
       
-      {/* Modal de confirmación eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -458,7 +430,6 @@ function EditProfileProfessional() {
         </div>
       )}
 
-      {/* Modal de cambio a Cliente - SOLO SI NO ES CLIENTE */}
       {showSwitchModal && !isAlreadyClient && (
         <SwitchToClientModal
           onClose={() => setShowSwitchModal(false)}
@@ -471,7 +442,6 @@ function EditProfileProfessional() {
         />
       )}
 
-      {/* Toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -480,7 +450,6 @@ function EditProfileProfessional() {
         />
       )}
       
-      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

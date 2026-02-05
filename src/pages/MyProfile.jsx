@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Briefcase, Award, Loader2, Edit, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
+import { Star, Briefcase, Award, Edit, Home, ChevronDown, User, FileText, LogOut, Mail, Phone, MapPin, Info } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 
 function MyProfile() {
   const navigate = useNavigate();
+  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  
   const [professional, setProfessional] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,6 @@ function MyProfile() {
   useEffect(() => {
     loadMyProfile();
 
-    // Cerrar dropdown al hacer click fuera
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowUserMenu(false);
@@ -25,41 +26,53 @@ function MyProfile() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // ✅ OPTIMIZACIÓN: Carga paralela con Promise.all()
   const loadMyProfile = async () => {
     console.log('📍 loadMyProfile ejecutándose...');
     
-    // Intentar cargar desde localStorage primero
     const savedData = localStorage.getItem('professional');
     console.log('📦 savedData:', savedData ? 'EXISTS' : 'NULL');
     
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      console.log('✅ Professional data loaded:', data);
-      setProfessional(data);
-      loadRatings(data.id);
+    if (!savedData) {
+      console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
+      navigate('/professional-login');
       setLoading(false);
       return;
     }
 
-    // Si no hay datos en localStorage, cargar desde el backend
-    console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
-    navigate('/professional-login');
-    setLoading(false);
-  };
+    const data = JSON.parse(savedData);
+    console.log('✅ Professional data loaded:', data);
+    setProfessional(data);
 
-  const loadRatings = async (professionalId) => {
     try {
-      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-      const response = await fetch(`${backendUrl}/api/ratings/professional/${professionalId}`, {
-        credentials: 'include'
-      });
+      const token = localStorage.getItem('authToken');
+      
+      // ✅ Ejecutar peticiones EN PARALELO
+      const [meResponse, ratingsResponse] = await Promise.all([
+        fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${backendUrl}/api/ratings/professional/${data.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
 
-      if (response.ok) {
-        const data = await response.json();
-        setRatings(data);
+      // Actualizar datos del profesional si es necesario
+      if (meResponse.ok) {
+        const updatedData = await meResponse.json();
+        setProfessional(updatedData);
+        localStorage.setItem('professional', JSON.stringify(updatedData));
+      }
+
+      // Cargar ratings
+      if (ratingsResponse.ok) {
+        const ratingsData = await ratingsResponse.json();
+        setRatings(ratingsData);
       }
     } catch (error) {
-      console.error('Error loading ratings:', error);
+      console.error('Error loading profile data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,23 +97,23 @@ function MyProfile() {
     ));
   };
 
-  // Función para traducir el professionType
   const getProfessionTypeLabel = (type) => {
     const translations = {
-      'WAITER': 'Mozo/a',
+      'WAITER': 'Mozo/Camarero',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
       'CHEF': 'Chef',
-      'BARTENDER': 'Bartender',
-      'SOMMELIER': 'Sommelier',
-      'HOST': 'Anfitrión/a',
-      'MANAGER': 'Manager',
       'BARISTA': 'Barista',
-      'COOK': 'Cocinero/a',
-      'DISHWASHER': 'Lavavajillas',
-      'DELIVERY': 'Delivery',
-      'CASHIER': 'Cajero/a',
+      'BARTENDER': 'Bartender',
       'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
       'SECURITY': 'Seguridad',
-      'VALET': 'Valet parking',
+      'RECEPTIONIST': 'Recepcionista',
       'OTHER': 'Otro'
     };
     return translations[type] || type;
@@ -129,8 +142,6 @@ function MyProfile() {
   const reputationScore = professional.reputationScore || professional.averageRating || 0;
   const totalRatings = professional.totalRatings || 0;
   const professionalName = professional.name || professional.professionalName || 'Mi Perfil';
-  
-  // Extraer solo el primer nombre para el menú
   const firstName = professionalName.split(' ')[0];
 
   return (
@@ -139,14 +150,13 @@ function MyProfile() {
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
           <button
-            onClick={() => window.location.href = 'https://professional-rating-frontend.vercel.app/'}
+            onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
             className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
             style={{ fontFamily: 'Playball, cursive' }}
           >
             Calificalo
           </button>
           
-          {/* Menú desplegable */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -157,7 +167,6 @@ function MyProfile() {
               <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
                 <div className="py-2">
@@ -205,35 +214,108 @@ function MyProfile() {
 
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
-        {/* Tipo de profesión */}
-        {professional.professionType && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
-            <h2 className="text-xl roboto-light text-gray-800 mb-3">Tipo de Profesión</h2>
-            <p className="text-gray-600 text-base">{getProfessionTypeLabel(professional.professionType)}</p>
+        
+        {/* Información Personal */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl roboto-light text-gray-800 flex items-center">
+              <Info className="w-6 h-6 mr-2 text-blue-600" />
+              Información Personal
+            </h2>
+            <button
+              onClick={() => navigate('/edit-profile-professional')}
+              className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm font-semibold"
+            >
+              <Edit className="w-4 h-4" />
+              Editar
+            </button>
           </div>
-        )}
+          
+          <div className="space-y-4">
+            {/* Nombre */}
+            <div>
+              <div className="flex items-center text-gray-500 text-sm mb-1">
+                <User className="w-4 h-4 mr-2" />
+                <span className="font-semibold">Nombre completo</span>
+              </div>
+              <p className="text-gray-800 text-base ml-6">{professionalName}</p>
+            </div>
 
-        {/* Información del perfil */}
-        {professional.professionalTitle && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
-            <h2 className="text-xl roboto-light text-gray-800 mb-3">Título Profesional</h2>
-            <p className="text-gray-600 text-base">{professional.professionalTitle}</p>
-          </div>
-        )}
+            {/* Email */}
+            <div>
+              <div className="flex items-center text-gray-500 text-sm mb-1">
+                <Mail className="w-4 h-4 mr-2" />
+                <span className="font-semibold">Email</span>
+              </div>
+              <p className="text-gray-800 text-base ml-6">{professional.email || 'No especificado'}</p>
+            </div>
 
-        {professional.phone && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
-            <h2 className="text-xl roboto-light text-gray-800 mb-3">Contacto</h2>
-            <p className="text-gray-600 text-base">📞 {professional.phone}</p>
+            {/* Teléfono */}
+            {professional.phone && (
+              <div>
+                <div className="flex items-center text-gray-500 text-sm mb-1">
+                  <Phone className="w-4 h-4 mr-2" />
+                  <span className="font-semibold">Teléfono</span>
+                </div>
+                <p className="text-gray-800 text-base ml-6">{professional.phone}</p>
+              </div>
+            )}
+
+            {/* Ubicación */}
             {professional.location && (
-              <p className="text-gray-600 mt-2 text-base">📍 {professional.location}</p>
+              <div>
+                <div className="flex items-center text-gray-500 text-sm mb-1">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  <span className="font-semibold">Ubicación</span>
+                </div>
+                <p className="text-gray-800 text-base ml-6">{professional.location}</p>
+              </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Información Profesional */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+          <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+            <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
+            Información Profesional
+          </h2>
+          
+          <div className="space-y-4">
+            {/* Tipo de profesión */}
+            {professional.professionType && (
+              <div>
+                <p className="text-gray-500 text-sm font-semibold mb-1">Tipo de Profesión</p>
+                <p className="text-gray-800 text-base">{getProfessionTypeLabel(professional.professionType)}</p>
+              </div>
+            )}
+
+            {/* Título Profesional */}
+            {professional.professionalTitle && (
+              <div>
+                <p className="text-gray-500 text-sm font-semibold mb-1">Título Profesional</p>
+                <p className="text-gray-800 text-base">{professional.professionalTitle}</p>
+              </div>
+            )}
+
+            {/* Mensaje si no hay datos profesionales */}
+            {!professional.professionType && !professional.professionalTitle && (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm mb-2">No has completado tu información profesional</p>
+                <button
+                  onClick={() => navigate('/edit-profile-professional')}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
+                >
+                  Completar ahora →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Calificaciones recientes */}
         {ratings.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <Award className="w-6 h-6 mr-2 text-yellow-500" />
               Mis Calificaciones Recientes
@@ -275,7 +357,7 @@ function MyProfile() {
         )}
 
         {ratings.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 text-center animate-slideUp delay-200 hover-lift">
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 text-center animate-slideUp delay-100 hover-lift">
             <Award className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-base">Aún no tenés calificaciones</p>
             <p className="text-sm text-gray-400 mt-2">
@@ -284,19 +366,19 @@ function MyProfile() {
           </div>
         )}
 
-        {/* Botón Editar Perfil - MOVIDO AL FINAL */}
-        <div className="mb-6 flex justify-center">
+        {/* Botón Editar Perfil completo */}
+        <div className="mb-6">
           <button
             onClick={() => navigate('/edit-profile-professional')}
-            className="bg-white rounded-2xl shadow-lg p-6 text-center animate-slideUp delay-250 hover-lift max-w-xs w-full"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 animate-slideUp delay-150"
           >
-            <Edit className="w-10 h-10 text-blue-600 mx-auto mb-3" />
-            <p className="font-semibold text-gray-800 text-lg">Editar Perfil</p>
+            <Edit className="w-5 h-5" />
+            Editar Perfil Completo
           </button>
         </div>
       </div>
 
-      {/* Botón Home flotante fijo abajo centrado */}
+      {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
         <button 
           onClick={() => navigate('/professional-dashboard')}
