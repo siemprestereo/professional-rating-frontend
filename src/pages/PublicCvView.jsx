@@ -18,49 +18,50 @@ function PublicCvView() {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    loadPublicCV();
-    checkIfFavorite();
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalId]);
 
-  const loadPublicCV = async () => {
-    try {
-      const response = await fetch(`${backendUrl}/api/cv/professional/${professionalId}`);
-      if (!response.ok) throw new Error('CV no encontrado');
-      const data = await response.json();
-      setCvData(data);
-    } catch (error) {
-      console.error('Error loading public CV:', error);
-      setError('No se pudo cargar el CV');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkIfFavorite = async () => {
+  // ✅ OPTIMIZACIÓN: Carga paralela con Promise.all()
+  const loadData = async () => {
     try {
       const token = localStorage.getItem('authToken');
       const userType = localStorage.getItem('userType');
       
-      if (!token || userType !== 'CLIENT') {
-        setCheckingFavorite(false);
-        return;
+      // Preparar peticiones
+      const cvPromise = fetch(`${backendUrl}/api/cv/professional/${professionalId}`);
+      
+      // Solo agregar petición de favoritos si es cliente autenticado
+      const promises = [cvPromise];
+      
+      if (token && userType === 'CLIENT') {
+        const favoritePromise = fetch(
+          `${backendUrl}/api/clients/me/favorites/${professionalId}/check`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        promises.push(favoritePromise);
       }
 
-      const response = await fetch(
-        `${backendUrl}/api/clients/me/favorites/${professionalId}/check`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      // ✅ Ejecutar todas las peticiones EN PARALELO
+      const responses = await Promise.all(promises);
+      
+      // Procesar respuesta del CV
+      const cvResponse = responses[0];
+      if (!cvResponse.ok) throw new Error('CV no encontrado');
+      const data = await cvResponse.json();
+      setCvData(data);
 
-      if (response.ok) {
-        const data = await response.json();
-        setIsFavorite(data.isFavorite);
+      // Procesar respuesta de favoritos (si existe)
+      if (responses.length > 1 && responses[1].ok) {
+        const favoriteData = await responses[1].json();
+        setIsFavorite(favoriteData.isFavorite);
       }
+
     } catch (error) {
-      console.error('Error checking favorite:', error);
+      console.error('Error loading data:', error);
+      setError('No se pudo cargar el CV');
     } finally {
+      setLoading(false);
       setCheckingFavorite(false);
     }
   };
@@ -446,5 +447,3 @@ function PublicCvView() {
     </div>
   );
 }
-
-export default PublicCvView;
