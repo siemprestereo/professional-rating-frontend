@@ -186,13 +186,19 @@ function PublicCvView() {
             <span className={badge.color}>{badge.name}</span>
           </div>
           
-          <div className="flex items-center justify-center mb-3">
-            {renderStars(cvData.reputationScore || 0)}
-            <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
-          </div>
-          <p className="text-white/80 text-sm">
-            {cvData.totalRatings || 0} {cvData.totalRatings === 1 ? 'calificación' : 'calificaciones'}
-          </p>
+          {/* ✅ BOTÓN CLICKEABLE - Estrellas y calificaciones */}
+          <button
+            onClick={() => navigate(`/stats-public/${professionalId}`)}
+            className="text-center hover:scale-105 transition-transform cursor-pointer animate-slideUp delay-100"
+          >
+            <div className="flex items-center justify-center mb-2">
+              {renderStars(cvData.reputationScore || 0)}
+              <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
+            </div>
+            <p className="text-white/80 text-sm hover:text-white hover:underline transition-all">
+              {cvData.totalRatings || 0} {cvData.totalRatings === 1 ? 'calificación' : 'calificaciones'}
+            </p>
+          </button>
         </div>
       </div>
 
