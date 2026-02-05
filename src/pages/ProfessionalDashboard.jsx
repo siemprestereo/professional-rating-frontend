@@ -17,35 +17,29 @@ function ProfessionalDashboard() {
   const [generatingQR, setGeneratingQR] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [hasWorkExperiences, setHasWorkExperiences] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(null); // NUEVO: Estado para el countdown
+  const [timeLeft, setTimeLeft] = useState(null);
   const dropdownRef = useRef(null);
   
-  // Toast y ErrorModal
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
   useEffect(() => {
-    // Primero verificar si hay token en la URL (OAuth redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
     
     if (tokenFromUrl) {
       console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
       localStorage.setItem('authToken', tokenFromUrl);
-      
-      // Limpiar la URL (quitar el ?token=xxx)
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
     loadDashboardData();
     
-    // Auto-refresh cada 5 minutos
     const refreshInterval = setInterval(() => {
       console.log('🔄 Auto-refresh: actualizando datos...');
       refreshDashboardData();
-    }, 300000); // 300000 ms = 5 minutos
+    }, 300000);
     
-    // Refresh cuando el usuario vuelve al tab
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         console.log('👁️ Usuario volvió al tab, refrescando...');
@@ -55,7 +49,6 @@ function ProfessionalDashboard() {
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Cerrar dropdown al hacer click fuera
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowUserMenu(false);
@@ -64,7 +57,6 @@ function ProfessionalDashboard() {
 
     document.addEventListener('mousedown', handleClickOutside);
     
-    // Limpiar todos al desmontar
     return () => {
       clearInterval(refreshInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -72,7 +64,6 @@ function ProfessionalDashboard() {
     };
   }, []);
 
-  // NUEVO: Countdown para el QR
   useEffect(() => {
     if (!qrCode?.expiresAt) {
       setTimeLeft(null);
@@ -98,7 +89,7 @@ function ProfessionalDashboard() {
       
       if (time.expired) {
         clearInterval(interval);
-        setQrCode(null); // Auto-cerrar QR expirado
+        setQrCode(null);
         setToast({ type: 'warning', message: 'El QR expiró. Generá uno nuevo.' });
       }
     }, 1000);
@@ -106,65 +97,59 @@ function ProfessionalDashboard() {
     return () => clearInterval(interval);
   }, [qrCode]);
 
-  // Nueva función para refresh silencioso
+  // ✅ OPTIMIZACIÓN: Función de refresh con Promise.all()
   const refreshDashboardData = async () => {
     const token = localStorage.getItem('authToken');
     if (!token) return;
 
     try {
-      // 1. Actualizar datos del profesional (reputación)
-      const response = await fetch(`${backendUrl}/api/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // ✅ Ejecutar peticiones EN PARALELO
+      const [meResponse, professionalData] = await Promise.all([
+        fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.ok ? res.json() : null)
+      ]);
       
-      if (response.ok) {
-        const professionalData = await response.json();
+      if (meResponse.ok && professionalData) {
         setProfessional(professionalData);
         localStorage.setItem('professional', JSON.stringify(professionalData));
         
-        // 2. Actualizar ratings
-        const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // ✅ Segunda ronda de peticiones EN PARALELO (dependen del ID del profesional)
+        const [ratingsResponse, cvResponse] = await Promise.all([
+          fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${backendUrl}/api/cv/professional/${professionalData.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
         
+        // Procesar ratings
         if (ratingsResponse.ok) {
           const ratingsData = await ratingsResponse.json();
           setRatings(ratingsData);
         }
 
-        // 3. Verificar si tiene experiencias laborales
-        await checkWorkExperiences(professionalData.id, token);
+        // Procesar experiencias laborales
+        if (cvResponse.ok) {
+          const cvData = await cvResponse.json();
+          const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
+          setHasWorkExperiences(hasExperiences);
+          console.log('✅ Tiene experiencias laborales:', hasExperiences);
+        } else {
+          setHasWorkExperiences(false);
+          console.log('⚠️ No tiene CV creado');
+        }
       }
     } catch (error) {
       console.error('Error en auto-refresh:', error);
-      // No mostramos error al usuario para no interrumpir la experiencia
     }
   };
 
-  // Función para verificar si el profesional tiene experiencias laborales
-  const checkWorkExperiences = async (professionalId, token) => {
-    try {
-      const cvResponse = await fetch(`${backendUrl}/api/cv/professional/${professionalId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (cvResponse.ok) {
-        const cvData = await cvResponse.json();
-        // Verificar si tiene experiencias laborales
-        const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
-        setHasWorkExperiences(hasExperiences);
-        console.log('✅ Tiene experiencias laborales:', hasExperiences);
-      } else {
-        // Si no tiene CV, significa que no tiene experiencias
-        setHasWorkExperiences(false);
-        console.log('⚠️ No tiene CV creado');
-      }
-    } catch (error) {
-      console.error('Error al verificar experiencias laborales:', error);
-      setHasWorkExperiences(true); // Por defecto asumimos que tiene para no molestar
-    }
-  };
-
+  // ✅ OPTIMIZACIÓN: Carga inicial con Promise.all()
   const loadDashboardData = async () => {
     const token = localStorage.getItem('authToken');
     
@@ -176,45 +161,50 @@ function ProfessionalDashboard() {
     }
 
     try {
-      // 1. Cargar datos del profesional
-      const response = await fetch(`${backendUrl}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // ✅ Primera petición para obtener el ID del profesional
+      const meResponse = await fetch(`${backendUrl}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (response.ok) {
-        const professionalData = await response.json();
+      if (meResponse.ok) {
+        const professionalData = await meResponse.json();
         console.log('✅ Datos del profesional:', professionalData);
         
         setProfessional(professionalData);
         localStorage.setItem('professional', JSON.stringify(professionalData));
         
-        // 2. Cargar ratings del profesional
-        try {
-          const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (ratingsResponse.ok) {
-            const ratingsData = await ratingsResponse.json();
-            console.log('✅ Ratings cargados:', ratingsData);
-            setRatings(ratingsData);
-          } else {
-            console.error('Error al cargar ratings:', ratingsResponse.status);
-            setRatings([]);
-          }
-        } catch (error) {
-          console.error('Error al cargar ratings:', error);
+        // ✅ Segunda ronda: Cargar ratings y CV EN PARALELO
+        const [ratingsResponse, cvResponse] = await Promise.all([
+          fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${backendUrl}/api/cv/professional/${professionalData.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+        
+        // Procesar ratings
+        if (ratingsResponse.ok) {
+          const ratingsData = await ratingsResponse.json();
+          console.log('✅ Ratings cargados:', ratingsData);
+          setRatings(ratingsData);
+        } else {
+          console.error('Error al cargar ratings:', ratingsResponse.status);
           setRatings([]);
         }
 
-        // 3. Verificar si tiene experiencias laborales
-        await checkWorkExperiences(professionalData.id, token);
+        // Procesar experiencias laborales
+        if (cvResponse.ok) {
+          const cvData = await cvResponse.json();
+          const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
+          setHasWorkExperiences(hasExperiences);
+          console.log('✅ Tiene experiencias laborales:', hasExperiences);
+        } else {
+          setHasWorkExperiences(false);
+          console.log('⚠️ No tiene CV creado');
+        }
         
-      } else if (response.status === 401) {
+      } else if (meResponse.status === 401) {
         console.log('Token inválido, redirigiendo al login');
         localStorage.removeItem('authToken');
         localStorage.removeItem('professional');
@@ -298,7 +288,6 @@ function ProfessionalDashboard() {
     if (!token) return;
 
     try {
-      // Verificar si el CV existe
       const response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -306,18 +295,16 @@ function ProfessionalDashboard() {
       });
 
       if (response.ok) {
-        // CV existe, ir a verlo
         navigate('/cv-view');
       } else if (response.status === 400 || response.status === 404) {
-        // CV no existe, ir a crearlo
         navigate('/edit-cv');
       } else {
         console.error('Error al verificar CV:', response.status);
-        navigate('/edit-cv'); // Por defecto ir a editar
+        navigate('/edit-cv');
       }
     } catch (error) {
       console.error('Error al verificar CV:', error);
-      navigate('/edit-cv'); // Por defecto ir a editar
+      navigate('/edit-cv');
     }
   };
 
@@ -338,7 +325,6 @@ function ProfessionalDashboard() {
     return null;
   }
 
-  // Usar funciones utilitarias para formatear nombres
   const firstName = getFirstName(professional.name);
   const fullName = capitalizeName(professional.name);
   const badge = getProfessionalBadge(professional.totalRatings || 0);
@@ -356,7 +342,6 @@ function ProfessionalDashboard() {
             Calificalo
           </button>
           
-          {/* Menú desplegable */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -367,7 +352,6 @@ function ProfessionalDashboard() {
               <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
                 <div className="py-2">
@@ -400,7 +384,6 @@ function ProfessionalDashboard() {
           </div>
           <h2 className="text-2xl roboto-light text-white mb-3 animate-slideUp">{fullName}</h2>
           
-          {/* Medalla */}
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2 animate-slideUp delay-50`}>
             <span className="text-xl">{badge.emoji}</span>
             <span className={badge.color}>{badge.name}</span>
@@ -418,24 +401,18 @@ function ProfessionalDashboard() {
         </div>
       </div>
 
-      {/* Contenido*/}
       <div className="px-4 -mt-16">
-
-        {/* 🔥 GENERAR QR - PRIMERO Y MÁS DESTACADO */}
         <div 
           className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-4 md:p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden"
           onClick={(e) => {
-            // Cerrar QR si se hace click fuera del contenido del QR
             if (qrCode && e.target === e.currentTarget) {
               setQrCode(null);
             }
           }}
         >
-          {/* Efecto de brillo animado */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
           
           <div className="relative z-10">
-            {/* Botón X para cerrar (solo visible cuando hay QR) */}
             {qrCode && (
               <button
                 onClick={(e) => {
@@ -500,7 +477,6 @@ function ProfessionalDashboard() {
                       <span className="font-semibold">Código:</span> {qrCode.code}
                     </p>
 
-                    {/* COUNTDOWN */}
                     {timeLeft && !timeLeft.expired && (
                       <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 mb-3 mx-auto max-w-xs">
                         <p className="text-white/90 text-sm mb-2 text-center">⏱️ Tiempo restante</p>
@@ -533,7 +509,6 @@ function ProfessionalDashboard() {
           </div>
         </div>
 
-        {/* Ver estadísticas - SEGUNDO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50 hover-lift">
           <h3 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
             <TrendingUp className="w-6 h-6 mr-2 text-green-600" />
@@ -548,7 +523,6 @@ function ProfessionalDashboard() {
           </button>
         </div>
 
-        {/* Calificaciones recientes */}
         <div 
           onClick={() => {
             console.log('🔍 Click detectado en calificaciones recientes');
@@ -603,7 +577,6 @@ function ProfessionalDashboard() {
           )}
         </div>
 
-        {/* NUEVO: Buscar Profesionales */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150 hover-lift">
           <h3 className="text-xl roboto-light text-white mb-2 flex items-center">
             <Search className="w-6 h-6 mr-2" />
@@ -621,7 +594,6 @@ function ProfessionalDashboard() {
           </button>
         </div>
 
-        {/* Acciones rápidas - 2 botones en fila */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             onClick={() => navigate('/my-profile')}
@@ -637,7 +609,6 @@ function ProfessionalDashboard() {
               !hasWorkExperiences ? 'cv-glow-animation' : ''
             }`}
           >
-            {/* Efecto de brillo para cuando no tiene experiencias */}
             {!hasWorkExperiences && (
               <>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-300/30 to-transparent animate-shimmer-fast"></div>
@@ -657,7 +628,6 @@ function ProfessionalDashboard() {
         </div>
       </div>
 
-      {/* Toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -666,7 +636,6 @@ function ProfessionalDashboard() {
         />
       )}
       
-      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}
