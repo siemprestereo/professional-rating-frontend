@@ -447,3 +447,5 @@ function PublicCvView() {
     </div>
   );
 }
+
+export default PublicCvView;
