@@ -210,13 +210,7 @@ function MyProfile() {
               <Info className="w-6 h-6 mr-2 text-blue-600" />
               Información Personal
             </h2>
-            <button
-              onClick={() => navigate('/edit-profile-professional')}
-              className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm font-semibold"
-            >
-              <Edit className="w-4 h-4" />
-              Editar
-            </button>
+            
           </div>
           
           <div className="space-y-4">
