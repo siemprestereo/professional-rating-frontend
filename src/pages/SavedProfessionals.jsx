@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Trash2 } from 'lucide-react';
+import { Star, Home, ArrowLeft, Trash2, Eye } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
@@ -61,13 +61,19 @@ function SavedProfessionals() {
   };
 
   const handleCardClick = (e, professionalId) => {
-    // Si clickeó en el checkbox o botón, no navegar
-    if (e.target.type === 'checkbox' || e.target.closest('button')) return;
+    // Si clickeó en un botón, no hacer nada
+    if (e.target.closest('button')) return;
+    // Toggle selection
+    toggleSelection(professionalId);
+  };
+
+  const handleViewCV = (e, professionalId) => {
+    e.stopPropagation(); // Evitar que se active el toggle
     navigate(`/public-cv/${professionalId}`);
   };
 
   const handleRemoveFavorite = async (e, professionalId) => {
-    e.stopPropagation(); // Evitar que se abra el CV
+    e.stopPropagation(); // Evitar que se active el toggle
     
     try {
       const token = localStorage.getItem('authToken');
@@ -192,23 +198,32 @@ function SavedProfessionals() {
           <div className="space-y-3">
             {professionals.map((prof) => {
               const badge = getProfessionalBadge(prof.totalRatings);
+              const isSelected = selectedIds.includes(prof.professionalId);
               
               return (
                 <div
                   key={prof.professionalId}
                   onClick={(e) => handleCardClick(e, prof.professionalId)}
-                  className="bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all"
+                  className={`bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all overflow-hidden border-2 ${
+                    isSelected 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-transparent hover:border-gray-200'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    {/* Checkbox */}
+                    {/* Checkbox visual */}
                     <div className="flex-shrink-0">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(prof.professionalId)}
-                        onChange={() => toggleSelection(prof.professionalId)}
-                        className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                        isSelected 
+                          ? 'bg-green-500 border-green-500' 
+                          : 'border-gray-300 bg-white'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
 
                     {/* Avatar */}
@@ -218,10 +233,10 @@ function SavedProfessionals() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-bold text-gray-800 truncate">
+                      <h3 className="text-base font-bold text-gray-800 break-words">
                         {prof.professionalName}
                       </h3>
-                      <p className="text-sm text-purple-600 mb-1">
+                      <p className="text-sm text-purple-600 mb-1 break-words">
                         {translateProfession(prof.professionType)}
                       </p>
                       
@@ -231,8 +246,8 @@ function SavedProfessionals() {
                         <span className={badge.color}>{badge.name}</span>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex flex-shrink-0">
                           {renderStars(prof.reputationScore || 0)}
                         </div>
                         <span className="text-xs text-gray-600">
@@ -240,27 +255,34 @@ function SavedProfessionals() {
                         </span>
                       </div>
                     </div>
-
-                    {/* Botón eliminar */}
-                    <div className="flex-shrink-0">
-                      <button
-                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                        className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
                   </div>
 
                   {/* Notas (si existen) */}
                   {prof.notes && (
-                    <div className="mt-3 pl-20">
-                      <p className="text-sm text-gray-500 italic">
+                    <div className="mt-3 pl-12">
+                      <p className="text-sm text-gray-500 italic break-words">
                         📝 {prof.notes}
                       </p>
                     </div>
                   )}
+
+                  {/* Botones de acción */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3 pl-12">
+                    <button
+                      onClick={(e) => handleViewCV(e, prof.professionalId)}
+                      className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm flex items-center justify-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver CV
+                    </button>
+                    <button
+                      onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
+                      className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               );
             })}
