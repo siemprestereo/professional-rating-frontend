@@ -30,29 +30,30 @@ function MyProfile() {
     console.log('📍 loadMyProfile ejecutándose...');
     
     const savedData = localStorage.getItem('professional');
+    const token = localStorage.getItem('authToken');
+    
     console.log('📦 savedData:', savedData ? 'EXISTS' : 'NULL');
     
-    if (!savedData) {
+    if (!savedData || !token) {
       console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
       navigate('/professional-login');
       setLoading(false);
       return;
     }
 
-    const data = JSON.parse(savedData);
-    console.log('✅ Professional data loaded:', data);
-    setProfessional(data);
+    const localData = JSON.parse(savedData);
+    console.log('✅ Professional data loaded:', localData);
+    setProfessional(localData);
 
     try {
-      const token = localStorage.getItem('authToken');
-      
-      // ✅ Cargar datos actualizados del profesional
-      const meResponse = await fetch(`${backendUrl}/api/auth/me`, {
+      // ✅ Cargar desde el endpoint correcto que tiene TODOS los datos
+      const response = await fetch(`${backendUrl}/api/professionals/${localData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (meResponse.ok) {
-        const updatedData = await meResponse.json();
+      if (response.ok) {
+        const updatedData = await response.json();
+        console.log('✅ Datos actualizados desde backend:', updatedData);
         setProfessional(updatedData);
         localStorage.setItem('professional', JSON.stringify(updatedData));
       }
