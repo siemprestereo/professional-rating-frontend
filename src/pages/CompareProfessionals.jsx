@@ -421,7 +421,7 @@ function CompareProfessionals() {
             return (
               <div
                 key={prof.professionalId}
-                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all"
+                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all overflow-hidden"
               >
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
@@ -430,11 +430,11 @@ function CompareProfessionals() {
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-gray-800 break-words">
                       {prof.professionalName}
                     </h3>
-                    <p className="text-purple-600 mb-2">
+                    <p className="text-purple-600 mb-2 break-words">
                       {translateProfession(prof.professionType)}
                     </p>
 
@@ -470,8 +470,8 @@ function CompareProfessionals() {
                     )}
 
                     {/* Estadísticas */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <div className="flex flex-shrink-0">
                         {renderStars(stats.avgScore || 0)}
                       </div>
                       <span className="text-lg font-bold text-gray-800">
@@ -483,16 +483,16 @@ function CompareProfessionals() {
                     </div>
 
                     {prof.notes && (
-                      <p className="text-sm text-gray-500 mt-2 italic">
+                      <p className="text-sm text-gray-500 mt-2 italic break-words">
                         📝 {prof.notes}
                       </p>
                     )}
 
                     {/* Botones */}
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
                       <button
                         onClick={() => removeProfessional(prof.professionalId)}
-                        className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center gap-2"
+                        className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center justify-center gap-2"
                       >
                         <Trash2 className="w-4 h-4" />
                         Eliminar de la lista
