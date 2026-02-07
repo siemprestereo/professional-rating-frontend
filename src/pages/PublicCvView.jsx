@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GraduationCap, Star, ChevronRight, Home, Heart } from 'lucide-react';
+import { GraduationCap, Star, ChevronRight, Home, Heart, Share2 } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
+import ShareModal from '../components/ShareModal';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function PublicCvView() {
@@ -16,6 +17,7 @@ function PublicCvView() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [checkingFavorite, setCheckingFavorite] = useState(true);
   const [toast, setToast] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -272,6 +274,21 @@ function PublicCvView() {
                 </div>
               </div>
             )}
+
+            {/* ✅ NUEVO BOTÓN: Compartir CV */}
+            <button 
+              onClick={() => setShowShareModal(true)}
+              className="w-full flex items-center gap-3 p-4 border-2 border-purple-200 rounded-xl hover:bg-purple-50 hover:border-purple-400 transition-all group"
+            >
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
+                <Share2 className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-xs text-gray-500 font-semibold">Compartir</p>
+                <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">Compartir este CV</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </button>
           </div>
         </div>
 
@@ -439,6 +456,15 @@ function PublicCvView() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* ✅ Share Modal */}
+      {showShareModal && (
+        <ShareModal
+          professionalId={professionalId}
+          professionalName={cvData.professionalName}
+          onClose={() => setShowShareModal(false)}
         />
       )}
     </div>
