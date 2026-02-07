@@ -91,7 +91,8 @@ function ClientDashboard() {
 
         // ✅ Cargar ratings en paralelo sin bloquear
         console.time('⏱️ Carga de ratings');
-        const ratingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+        // ✅ OPTIMIZACIÓN: Solo traer las últimas 10 calificaciones para el dashboard
+        const ratingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}?limit=10`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -103,14 +104,20 @@ function ClientDashboard() {
           })
           .then(data => {
             console.log(`📊 Ratings cargados: ${data.length} calificaciones`);
-            // Ordenar por fecha (más reciente primero)
-            const sortedData = data.sort((a, b) => {
+            
+            // ✅ OPTIMIZACIÓN: Solo usar las primeras 10 para reducir procesamiento
+            const limitedData = data.slice(0, 10);
+            
+            // Ordenar solo las primeras 10 (más eficiente)
+            const sortedData = limitedData.sort((a, b) => {
               return new Date(b.createdAt) - new Date(a.createdAt);
             });
 
             setMyRatings(sortedData);
-            calculateQuickStats(sortedData);
-            calculateTopBadges(sortedData);
+            
+            // ✅ Calcular estadísticas con TODOS los datos (pero solo una vez)
+            calculateQuickStats(data);
+            calculateTopBadges(data);
           })
           .catch(error => {
             console.error('Error loading ratings:', error);
@@ -137,7 +144,7 @@ function ClientDashboard() {
 
   const loadRatings = async (clientId, token) => {
     try {
-      const response = await fetch(`${backendUrl}/api/ratings/client/${clientId}`, {
+      const response = await fetch(`${backendUrl}/api/ratings/client/${clientId}?limit=10`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -403,65 +410,74 @@ function ClientDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Quick Stats - Ahora clickeable como un solo botón */}
-        {stats && stats.total > 0 ? (
-          <button
-            onClick={() => navigate('/client-stats')}
-            className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp hover:scale-[1.02] transition-transform"
-          >
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold mb-1">{stats.total}</p>
-              <p className="text-xs opacity-90">Calificaciones otorgadas</p>
-            </div>
-            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold mb-1">{stats.average}</p>
-              <p className="text-xs opacity-90">Tu promedio otorgado</p>
-            </div>
-          </button>
-        ) : stats ? (
-          // Mostrar cuando stats existe pero está en 0
-          <div className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp opacity-50">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold mb-1">0</p>
-              <p className="text-xs opacity-90">Calificaciones otorgadas</p>
-            </div>
-            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
-              <p className="text-2xl font-bold mb-1">0</p>
-              <p className="text-xs opacity-90">Tu Promedio</p>
-            </div>
-          </div>
-        ) : (
-          // Skeleton mientras carga
-          <div className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-pulse">
-              <div className="h-8 bg-white/20 rounded mb-1 w-12"></div>
-              <div className="h-3 bg-white/20 rounded w-24"></div>
-            </div>
-            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg animate-pulse">
-              <div className="h-8 bg-white/20 rounded mb-1 w-12"></div>
-              <div className="h-3 bg-white/20 rounded w-16"></div>
-            </div>
-          </div>
-        )}
-
-        {/* Botones de acceso rápido - Ahora arriba del mensaje de bienvenida */}
-        <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp delay-100">
+        {/* Botones principales - MÁS PROMINENTES CON GRADIENTES */}
+        <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
           <button
             onClick={() => navigate('/search')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift"
+            className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
           >
-            <Search className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
+            <Search className="w-10 h-10 text-white mx-auto mb-3" />
+            <p className="text-sm font-bold text-white">Buscar Profesional</p>
           </button>
 
           <button
             onClick={() => navigate('/saved-professionals')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift relative"
+            className="bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all relative overflow-hidden"
           >
-            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2 animate-heartbeat" />
-            <p className="text-xs font-semibold text-gray-800">Mis Profesionales</p>
+            <Heart className="w-10 h-10 text-white mx-auto mb-3 animate-heartbeat" />
+            <p className="text-sm font-bold text-white">Mis Profesionales</p>
           </button>
         </div>
+
+        {/* Quick Stats - Más sutiles y compactas */}
+        {stats && stats.total > 0 ? (
+          <button
+            onClick={() => navigate('/client-stats')}
+            className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp delay-100 hover:shadow-lg transition-all"
+          >
+            <div className="flex items-center justify-around">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
+                <p className="text-xs text-gray-500">Calificaciones</p>
+              </div>
+              <div className="h-12 w-px bg-gray-200"></div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-500">{stats.average}</p>
+                <p className="text-xs text-gray-500">Promedio</p>
+              </div>
+            </div>
+          </button>
+        ) : stats ? (
+          // Mostrar cuando stats existe pero está en 0
+          <div className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp delay-100 opacity-50">
+            <div className="flex items-center justify-around">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">0</p>
+                <p className="text-xs text-gray-500">Calificaciones</p>
+              </div>
+              <div className="h-12 w-px bg-gray-200"></div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-500">0</p>
+                <p className="text-xs text-gray-500">Promedio</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Skeleton mientras carga
+          <div className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp delay-100 animate-pulse">
+            <div className="flex items-center justify-around">
+              <div className="text-center">
+                <div className="h-8 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded w-20 mx-auto"></div>
+              </div>
+              <div className="h-12 w-px bg-gray-200"></div>
+              <div className="text-center">
+                <div className="h-8 bg-gray-200 rounded w-12 mx-auto mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded w-16 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
