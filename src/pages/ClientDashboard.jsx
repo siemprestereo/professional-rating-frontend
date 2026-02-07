@@ -89,35 +89,39 @@ function ClientDashboard() {
         // ✅ INMEDIATAMENTE quitar loading para mostrar la UI
         setLoading(false);
 
-        // ✅ Cargar ratings en paralelo sin bloquear
-        console.time('⏱️ Carga de ratings');
-        // ✅ OPTIMIZACIÓN: Solo traer las últimas 10 calificaciones para el dashboard
-        const ratingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}?limit=10`, {
+        // ✅ OPTIMIZACIÓN: Cargar stats completas Y ratings recientes EN PARALELO
+        console.time('⏱️ Carga de datos');
+        
+        // Petición 1: Todas las calificaciones para calcular stats
+        const allRatingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        // Petición 2: Solo las últimas 10 para mostrar
+        const recentRatingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}?limit=10`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        ratingsPromise
-          .then(response => {
-            console.timeEnd('⏱️ Carga de ratings');
-            console.log('📡 Status de ratings:', response.status);
-            return response.json();
+        Promise.all([allRatingsPromise, recentRatingsPromise])
+          .then(([allResponse, recentResponse]) => {
+            console.timeEnd('⏱️ Carga de datos');
+            return Promise.all([allResponse.json(), recentResponse.json()]);
           })
-          .then(data => {
-            console.log(`📊 Ratings cargados: ${data.length} calificaciones`);
+          .then(([allData, recentData]) => {
+            console.log(`📊 Total de calificaciones: ${allData.length}`);
+            console.log(`📝 Calificaciones recientes cargadas: ${recentData.length}`);
             
-            // ✅ OPTIMIZACIÓN: Solo usar las primeras 10 para reducir procesamiento
-            const limitedData = data.slice(0, 10);
-            
-            // Ordenar solo las primeras 10 (más eficiente)
-            const sortedData = limitedData.sort((a, b) => {
+            // Ordenar las recientes
+            const sortedRecent = recentData.sort((a, b) => {
               return new Date(b.createdAt) - new Date(a.createdAt);
             });
 
-            setMyRatings(sortedData);
+            // Usar recientes para mostrar
+            setMyRatings(sortedRecent);
             
-            // ✅ Calcular estadísticas con TODOS los datos (pero solo una vez)
-            calculateQuickStats(data);
-            calculateTopBadges(data);
+            // Usar TODAS para calcular estadísticas correctas
+            calculateQuickStats(allData);
+            calculateTopBadges(allData);
           })
           .catch(error => {
             console.error('Error loading ratings:', error);
@@ -414,7 +418,7 @@ function ClientDashboard() {
         <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
           <button
             onClick={() => navigate('/search')}
-            className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
+            className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
           >
             <Search className="w-10 h-10 text-white mx-auto mb-3" />
             <p className="text-sm font-bold text-white">Buscar Profesional</p>
