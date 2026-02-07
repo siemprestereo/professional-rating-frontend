@@ -205,7 +205,7 @@ function PublicCvView() {
 
       {/* BOTÓN FAVORITOS - Posicionado arriba a la derecha pero sin fixed */}
       {isClient && !checkingFavorite && (
-        <div className="max-w-4xl mx-auto px-4 -mt-20 mb-8 flex justify-end relative z-10">
+        <div className="max-w-4xl mx-auto px-4 -mt-32 mb-20 flex justify-end relative z-10">
           <button
             onClick={toggleFavorite}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
