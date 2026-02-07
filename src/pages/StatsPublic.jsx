@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TrendingUp, Award, Calendar, Building2, Home, Loader2 } from 'lucide-react';
+import { TrendingUp, Building2, Home, Loader2, ChevronRight } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 
 function StatsPublic() {
@@ -105,47 +105,78 @@ function StatsPublic() {
   };
 
   if (loading) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
-  <div className="max-w-6xl mx-auto">
-    <h1 className="text-3xl roboto-light text-white mb-2">Estadísticas Profesionales</h1>
-    <p className="text-white/90 roboto-regular">Métricas, análisis y desempeño</p>
-  </div>
-</div>
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl roboto-light text-white mb-2">Estadísticas Profesionales</h1>
+          <p className="text-white/90 roboto-regular">Métricas, análisis y desempeño</p>
+        </div>
+      </div>
 
       <div className="max-w-6xl mx-auto px-4 mt-4">
-        {/* Resumen General */}
+        {/* Stats compactas estilo ClientDashboard */}
         {professionData && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Award className="w-6 h-6 mr-2 text-purple-600" />
-              Resumen General
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Total de Calificaciones</p>
-                <p className="text-3xl font-bold text-purple-600">{professionData.totalRatings}</p>
+          <div className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp">
+            <div className="flex items-center justify-around">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{professionData.totalRatings}</p>
+                <p className="text-xs text-gray-500">Calificaciones recibidas</p>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Promedio General</p>
-                <p className="text-3xl font-bold text-blue-600">{professionData.averageScore.toFixed(1)} ⭐</p>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-xl">
-                <p className="text-sm text-gray-600 mb-1">Tipo de Profesión</p>
-                <p className="text-2xl font-bold text-green-600">{translateProfession(professionData.professionType)}</p>
+              <div className="h-12 w-px bg-gray-200"></div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-500">{professionData.averageScore.toFixed(1)}</p>
+                <p className="text-xs text-gray-500">Promedio</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Evolución Mensual */}
-        {monthlyData.length > 0 && (
+        {/* Desempeño por lugar - Ahora como botones clickeables */}
+        {businessData.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <Building2 className="w-6 h-6 mr-2 text-purple-600" />
+              Desempeño en cada sitio de trabajo
+            </h2>
+            <div className="space-y-3">
+              {businessData.map((business, index) => (
+                <button
+                  key={index}
+                  onClick={() => navigate(`/ratings-history?workHistoryId=${business.workHistoryId}`)}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:border-purple-400 border-2 border-transparent transition-all group"
+                >
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">{business.business}</p>
+                    <p className="text-sm text-gray-600">{business.count} calificaciones</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-purple-600">{business.average.toFixed(1)}</p>
+                      <p className="text-xs text-gray-500">promedio</p>
+                    </div>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={i < Math.round(business.average) ? 'text-yellow-400' : 'text-gray-300'}>
+                          ⭐
+                        </span>
+                      ))}
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Evolución Mensual - Ahora al final */}
+        {monthlyData.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
               <TrendingUp className="w-6 h-6 mr-2 text-purple-600" />
               Evolución Mensual (últimos 6 meses)
@@ -228,40 +259,8 @@ function StatsPublic() {
             </div>
           </div>
         )}
-
-        {/* Por Lugar de Trabajo */}
-        {businessData.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <Building2 className="w-6 h-6 mr-2 text-purple-600" />
-              Desempeño en cada uno de los sitios de trabajo
-            </h2>
-            <div className="space-y-3">
-              {businessData.map((business, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{business.business}</p>
-                    <p className="text-sm text-gray-600">{business.count} calificaciones</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-purple-600">{business.average.toFixed(1)}</p>
-                      <p className="text-xs text-gray-500">promedio</p>
-                    </div>
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className={i < Math.round(business.average) ? 'text-yellow-400' : 'text-gray-300'}>
-                          ⭐
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
       {/* Botón Home flotante fijo abajo centrado */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
         <button 
