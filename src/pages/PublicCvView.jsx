@@ -200,27 +200,26 @@ function PublicCvView() {
               {cvData.totalRatings || 0} {cvData.totalRatings === 1 ? 'calificación' : 'calificaciones'}
             </p>
           </div>
-
-          {/* BOTÓN FAVORITOS INTEGRADO EN HEADER - Solo para clientes */}
-          {isClient && !checkingFavorite && (
-            <div className="mt-4">
-              <button
-                onClick={toggleFavorite}
-                className={`w-full max-w-md mx-auto font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 ${
-                  isFavorite
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-white hover:bg-gray-100 text-gray-800'
-                }`}
-              >
-                <Heart 
-                  className={`w-5 h-5 ${isFavorite ? 'fill-white' : 'fill-none'}`}
-                />
-                {isFavorite ? 'Guardado en favoritos' : 'Guardar en favoritos'}
-              </button>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* BOTÓN FAVORITOS - Posicionado arriba a la derecha pero sin fixed */}
+      {isClient && !checkingFavorite && (
+        <div className="max-w-4xl mx-auto px-4 -mt-24 mb-4 flex justify-end relative z-10">
+          <button
+            onClick={toggleFavorite}
+            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
+              isFavorite
+                ? 'bg-red-500 hover:bg-red-600'
+                : 'bg-white hover:bg-gray-100'
+            }`}
+          >
+            <Heart 
+              className={`w-7 h-7 ${isFavorite ? 'text-white fill-white' : 'text-gray-400'}`}
+            />
+          </button>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
