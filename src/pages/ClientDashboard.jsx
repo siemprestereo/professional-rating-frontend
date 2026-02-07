@@ -70,20 +70,24 @@ function ClientDashboard() {
     }
 
     try {
-      // Llamar al backend con el token JWT
-      const response = await fetch(`${backendUrl}/api/auth/me/client`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // ✅ OPTIMIZACIÓN: Cargar datos del cliente Y ratings EN PARALELO
+      const clientPromise = fetch(`${backendUrl}/api/auth/me/client`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        const clientData = await response.json();
+      const [clientResponse] = await Promise.all([clientPromise]);
+
+      // Procesar respuesta del cliente
+      if (clientResponse.ok) {
+        const clientData = await clientResponse.json();
         console.log('✅ Datos del cliente:', clientData);
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
+
+        // ✅ Cargar ratings en paralelo (no esperar para mostrar la UI)
         loadRatings(clientData.id, token);
-      } else if (response.status === 401) {
+        
+      } else if (clientResponse.status === 401) {
         // Token inválido o expirado
         console.log('Token inválido, redirigiendo al login');
         localStorage.removeItem('authToken');
@@ -123,6 +127,8 @@ function ClientDashboard() {
     } catch (error) {
       console.error('Error loading ratings:', error);
       setMyRatings([]);
+      // Mostrar stats vacías si falla
+      setStats({ total: 0, average: 0, categories: 0 });
     }
   };
 
@@ -366,8 +372,8 @@ function ClientDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Quick Stats - Ahora clickeable como un solo botón */}
-        {stats && stats.total > 0 && (
+        {/* Quick Stats */}
+        {stats && stats.total > 0 ? (
           <button
             onClick={() => navigate('/client-stats')}
             className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp hover:scale-[1.02] transition-transform"
@@ -378,9 +384,33 @@ function ClientDashboard() {
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
               <p className="text-2xl font-bold mb-1">{stats.average}</p>
-              <p className="text-xs opacity-90">Tu Promedio</p>
+              <p className="text-xs opacity-90">Tu promedio otorgado</p>
             </div>
           </button>
+        ) : stats ? (
+          // Mostrar cuando stats existe pero está en 0
+          <div className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp opacity-50">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
+              <p className="text-2xl font-bold mb-1">0</p>
+              <p className="text-xs opacity-90">Calificaciones otorgadas</p>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg">
+              <p className="text-2xl font-bold mb-1">0</p>
+              <p className="text-xs opacity-90">Tu Promedio</p>
+            </div>
+          </div>
+        ) : (
+          // Skeleton mientras carga
+          <div className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-pulse">
+              <div className="h-8 bg-white/20 rounded mb-1 w-12"></div>
+              <div className="h-3 bg-white/20 rounded w-24"></div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg animate-pulse">
+              <div className="h-8 bg-white/20 rounded mb-1 w-12"></div>
+              <div className="h-3 bg-white/20 rounded w-16"></div>
+            </div>
+          </div>
         )}
 
         {/* Botones de acceso rápido - Ahora arriba del mensaje de bienvenida */}
@@ -408,7 +438,7 @@ function ClientDashboard() {
             ¡Hola, {firstName}! 👋
           </h3>
           <p className="text-gray-600 text-base">
-            Para calificar a un profesional, pídele que te muestre su código QR y ábrelo con la cámara de tu teléfono
+            Para calificar a un profesional, pídele que te muestre su código QR y escanéalo con la cámara del teléfono.
           </p>
         </div>
 
