@@ -13,7 +13,8 @@ function RatingsHistory() {
   const [loading, setLoading] = useState(true);
   const [selectedRating, setSelectedRating] = useState(null);
   const [filterInfo, setFilterInfo] = useState(null);
-  const filterInfoRef = useRef(null); // ← AGREGAR REF para mantener estable
+  const [professionalId, setProfessionalId] = useState(null);
+  const filterInfoRef = useRef(null);
 
   useEffect(() => {
     loadRatings();
@@ -38,19 +39,19 @@ function RatingsHistory() {
           console.log('✅ Ratings públicos cargados:', data);
           setRatings(data);
           
-          // Establecer info del filtro
+          // ✅ GUARDAR professionalId para poder volver a sus stats
           if (data.length > 0) {
+            setProfessionalId(data[0].professionalId);
+            
             const filter = {
               position: data[0].workplacePosition,
               businessName: data[0].businessName || data[0].workplaceName
             };
             console.log('✅ filterInfo set:', filter);
             
-            // ✅ SETEAR EN REF Y STATE SIMULTÁNEAMENTE
             filterInfoRef.current = filter;
             setFilterInfo(filter);
             
-            // ✅ FORZAR UN RE-RENDER ADICIONAL
             setTimeout(() => {
               if (!filterInfo && filterInfoRef.current) {
                 console.log('🔄 Forcing re-render with filterInfo');
@@ -102,8 +103,13 @@ function RatingsHistory() {
     }
   };
 
-  const clearFilter = () => {
-    navigate('/ratings-history');
+  // ✅ MODIFICADO: Volver a las estadísticas públicas del profesional
+  const handleBackToStats = () => {
+    if (professionalId) {
+      navigate(`/stats-public/${professionalId}`);
+    } else {
+      navigate('/ratings-history');
+    }
   };
 
   const renderStars = (score) => {
@@ -154,8 +160,9 @@ function RatingsHistory() {
           </div>
           {workHistoryIdFilter && (
             <button 
-              onClick={clearFilter}
+              onClick={handleBackToStats}
               className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
+              aria-label="Volver a estadísticas"
             >
               <X className="w-5 h-5" />
             </button>
