@@ -70,23 +70,54 @@ function ClientDashboard() {
     }
 
     try {
-      // ✅ OPTIMIZACIÓN: Cargar datos del cliente Y ratings EN PARALELO
+      console.time('⏱️ Carga de cliente');
+      // ✅ OPTIMIZACIÓN MÁXIMA: Cargar cliente y ratings COMPLETAMENTE EN PARALELO
       const clientPromise = fetch(`${backendUrl}/api/auth/me/client`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      const [clientResponse] = await Promise.all([clientPromise]);
+      // Esperar solo la respuesta del cliente para obtener el ID
+      const clientResponse = await clientPromise;
+      console.timeEnd('⏱️ Carga de cliente');
 
-      // Procesar respuesta del cliente
       if (clientResponse.ok) {
         const clientData = await clientResponse.json();
         console.log('✅ Datos del cliente:', clientData);
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
 
-        // ✅ Cargar ratings en paralelo (no esperar para mostrar la UI)
-        loadRatings(clientData.id, token);
-        
+        // ✅ INMEDIATAMENTE quitar loading para mostrar la UI
+        setLoading(false);
+
+        // ✅ Cargar ratings en paralelo sin bloquear
+        console.time('⏱️ Carga de ratings');
+        const ratingsPromise = fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        ratingsPromise
+          .then(response => {
+            console.timeEnd('⏱️ Carga de ratings');
+            console.log('📡 Status de ratings:', response.status);
+            return response.json();
+          })
+          .then(data => {
+            console.log(`📊 Ratings cargados: ${data.length} calificaciones`);
+            // Ordenar por fecha (más reciente primero)
+            const sortedData = data.sort((a, b) => {
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+
+            setMyRatings(sortedData);
+            calculateQuickStats(sortedData);
+            calculateTopBadges(sortedData);
+          })
+          .catch(error => {
+            console.error('Error loading ratings:', error);
+            setMyRatings([]);
+            setStats({ total: 0, average: 0, categories: 0 });
+          });
+
       } else if (clientResponse.status === 401) {
         // Token inválido o expirado
         console.log('Token inválido, redirigiendo al login');
@@ -372,7 +403,7 @@ function ClientDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Quick Stats */}
+        {/* Quick Stats - Ahora clickeable como un solo botón */}
         {stats && stats.total > 0 ? (
           <button
             onClick={() => navigate('/client-stats')}
@@ -438,7 +469,7 @@ function ClientDashboard() {
             ¡Hola, {firstName}! 👋
           </h3>
           <p className="text-gray-600 text-base">
-            Para calificar a un profesional, pídele que te muestre su código QR y escanéalo con la cámara del teléfono.
+            Para calificar a un profesional, pídele que te muestre su código QR.
           </p>
         </div>
 
