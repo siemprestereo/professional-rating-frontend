@@ -265,21 +265,21 @@ function SavedProfessionals() {
                       )}
                     </div>
 
-                    {/* Botones de acción - AHORA AL LADO DERECHO */}
+                    {/* Botones de acción - AL LADO DERECHO con texto */}
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       <button
                         onClick={(e) => handleViewCV(e, prof.professionalId)}
-                        className="bg-purple-100 text-purple-600 p-2 rounded-xl hover:bg-purple-200 transition-all"
-                        title="Ver CV"
+                        className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
                       >
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-4 h-4" />
+                        Ver CV
                       </button>
                       <button
                         onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                        className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
-                        title="Eliminar"
+                        className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
+                        Eliminar
                       </button>
                     </div>
                   </div>
