@@ -205,7 +205,7 @@ function PublicCvView() {
 
       {/* BOTÓN FAVORITOS - Posicionado arriba a la derecha pero sin fixed */}
       {isClient && !checkingFavorite && (
-        <div className="max-w-4xl mx-auto px-4 -mt-24 mb-4 flex justify-end relative z-10">
+        <div className="max-w-4xl mx-auto px-4 -mt-20 mb-8 flex justify-end relative z-10">
           <button
             onClick={toggleFavorite}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
@@ -221,7 +221,7 @@ function PublicCvView() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 -mt-16 pb-8">
+      <div className="max-w-4xl mx-auto px-4 -mt-12 pb-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
             <span className="text-2xl mr-2">📞</span> Contacto
