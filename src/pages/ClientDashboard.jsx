@@ -418,7 +418,7 @@ function ClientDashboard() {
         <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
           <button
             onClick={() => navigate('/search')}
-            className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
+            className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
           >
             <Search className="w-10 h-10 text-white mx-auto mb-3" />
             <p className="text-sm font-bold text-white">Buscar Profesional</p>
@@ -426,7 +426,7 @@ function ClientDashboard() {
 
           <button
             onClick={() => navigate('/saved-professionals')}
-            className="bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all relative overflow-hidden"
+            className="bg-gradient-to-br from-pink-500 to-fuchsia-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all relative overflow-hidden"
           >
             <Heart className="w-10 h-10 text-white mx-auto mb-3 animate-heartbeat" />
             <p className="text-sm font-bold text-white">Mis Profesionales</p>
@@ -442,12 +442,12 @@ function ClientDashboard() {
             <div className="flex items-center justify-around">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-                <p className="text-xs text-gray-500">Calificaciones torgadas</p>
+                <p className="text-xs text-gray-500">Calificaciones</p>
               </div>
               <div className="h-12 w-px bg-gray-200"></div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-orange-500">{stats.average}</p>
-                <p className="text-xs text-gray-500">Tu promedio otorgado</p>
+                <p className="text-xs text-gray-500">Promedio</p>
               </div>
             </div>
           </button>
