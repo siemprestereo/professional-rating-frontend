@@ -315,6 +315,17 @@ function ClientDashboard() {
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
+                      navigate('/edit-profile');
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-green-50 transition-colors flex items-center gap-3"
+                  >
+                    <User className="w-5 h-5 text-green-600" />
+                    <span className="font-medium text-sm sm:text-base">Mi perfil</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
                       navigate('/client-stats');
                     }}
                     className="w-full px-4 py-3 text-left text-gray-700 hover:bg-teal-50 transition-colors flex items-center gap-3"
@@ -355,9 +366,12 @@ function ClientDashboard() {
 
       {/* Contenido */}
       <div className="px-4 -mt-16">
-        {/* Quick Stats */}
+        {/* Quick Stats - Ahora clickeable como un solo botón */}
         {stats && stats.total > 0 && (
-          <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
+          <button
+            onClick={() => navigate('/client-stats')}
+            className="w-full grid grid-cols-2 gap-3 mb-4 animate-slideUp hover:scale-[1.02] transition-transform"
+          >
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
               <p className="text-2xl font-bold mb-1">{stats.total}</p>
               <p className="text-xs opacity-90">Calificaciones otorgadas</p>
@@ -366,21 +380,40 @@ function ClientDashboard() {
               <p className="text-2xl font-bold mb-1">{stats.average}</p>
               <p className="text-xs opacity-90">Tu Promedio</p>
             </div>
-          </div>
+          </button>
         )}
 
+        {/* Botones de acceso rápido - Ahora arriba del mensaje de bienvenida */}
+        <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp delay-100">
+          <button
+            onClick={() => navigate('/search')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift"
+          >
+            <Search className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/saved-professionals')}
+            className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift relative"
+          >
+            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2 animate-heartbeat" />
+            <p className="text-xs font-semibold text-gray-800">Mis Profesionales</p>
+          </button>
+        </div>
+
         {/* Mensaje de bienvenida */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <h3 className="text-xl roboto-light text-gray-800 mb-2">
             ¡Hola, {firstName}! 👋
           </h3>
           <p className="text-gray-600 text-base">
-            Para calificar a un profesional, pídele que te muestre su código QR.
+            Para calificar a un profesional, pídele que te muestre su código QR y ábrelo con la cámara de tu teléfono
           </p>
         </div>
 
         {/* Calificaciones Recientes */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl roboto-light text-gray-800 flex items-center">
               <Star className="w-5 h-5 mr-2 text-yellow-500" />
@@ -423,22 +456,22 @@ function ClientDashboard() {
                       }`}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800 text-base">{rating.professionalName}</h4>
-                        <p className="text-sm text-gray-500">{rating.businessName}</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-800 text-base break-words">{rating.professionalName}</h4>
+                        <p className="text-sm text-gray-500 break-words">{rating.businessName}</p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         {renderStars(rating.score)}
                       </div>
                     </div>
 
                     {rating.comment && (
-                      <p className="text-gray-600 text-sm mb-2 italic">"{rating.comment}"</p>
+                      <p className="text-gray-600 text-sm mb-2 italic break-words">"{rating.comment}"</p>
                     )}
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center text-xs text-gray-400">
-                        <Calendar className="w-3 h-3 mr-1" />
+                        <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
                         {new Date(rating.createdAt).toLocaleDateString('es-AR', {
                           day: '2-digit',
                           month: 'long',
@@ -475,41 +508,6 @@ function ClientDashboard() {
               })}
             </div>
           )}
-        </div>
-
-        {/* Acciones rápidas */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <button
-            onClick={() => navigate('/client-stats')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-150 hover-lift"
-          >
-            <BarChart3 className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Mis estadísticas</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/edit-profile')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-200 hover-lift"
-          >
-            <User className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Mi Perfil</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/search')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-250 hover-lift"
-          >
-            <Search className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-gray-800">Buscar Profesional</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/saved-professionals')}
-            className="bg-white rounded-2xl shadow-lg p-4 text-center animate-slideUp delay-300 hover-lift relative"
-          >
-            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2 animate-heartbeat" />
-            <p className="text-xs font-semibold text-gray-800">Mis Profesionales</p>
-          </button>
         </div>
       </div>
 
