@@ -42,8 +42,17 @@ function ClientLogin() {
         
         if (payload.userType === 'CLIENT') {
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+          
+          // ✅ Verificar si hay una redirección pendiente
+          const redirectPath = localStorage.getItem('redirectAfterLogin');
+          
           setTimeout(() => {
-            window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
+            if (redirectPath) {
+              localStorage.removeItem('redirectAfterLogin');
+              window.location.href = `https://www.calificalo.com.ar${redirectPath}`;
+            } else {
+              window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
+            }
           }, 1000);
         } else {
           window.location.href = 'https://www.calificalo.com.ar/professional-dashboard';
@@ -94,8 +103,16 @@ function ClientLogin() {
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
+      // ✅ Verificar si hay una redirección pendiente
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      
       setTimeout(() => {
-        window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
+        if (redirectPath) {
+          localStorage.removeItem('redirectAfterLogin');
+          window.location.href = `https://www.calificalo.com.ar${redirectPath}`;
+        } else {
+          window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
+        }
       }, 1000);
     } catch (err) {
       setLoginError('Error de conexión. Intentá nuevamente.');

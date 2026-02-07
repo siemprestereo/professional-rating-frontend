@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-import { getFirstName } from '../utils/formatName'; // ← AGREGAR IMPORT
+import { getFirstName } from '../utils/formatName';
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -19,10 +19,10 @@ function LandingPage() {
         
         // Obtener el nombre y limpiar espacios
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
-        fullName = fullName.trim(); // Eliminar espacios al inicio y final
+        fullName = fullName.trim();
         
         // Extraer y capitalizar solo el primer nombre
-        const firstName = getFirstName(fullName.split('@')[0]); // ← USAR FUNCIÓN
+        const firstName = getFirstName(fullName.split('@')[0]);
         
         setUserInfo({
           name: firstName,
@@ -40,6 +40,8 @@ function LandingPage() {
     if (token) {
       navigate('/search');
     } else {
+      // ✅ Guardar que el usuario quería ir a /search
+      localStorage.setItem('redirectAfterLogin', '/search');
       setShowLoginModal(true);
     }
   };
@@ -87,12 +89,11 @@ function LandingPage() {
           </button>
         </div>
       ) : (
-        // ... resto del código sin cambios
         <>
           <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
             {/* Logo arriba del título */}
             <div 
-              onClick={() => window.location.href = 'https:/www.calificalo.com.ar/'}
+              onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
               className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
             >
               <img 
