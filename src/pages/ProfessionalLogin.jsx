@@ -34,15 +34,24 @@ function ProfessionalLogin() {
     if (token) {
       console.log('✅ Token recibido de OAuth:', token);
       localStorage.setItem('authToken', token);
-      
+      localStorage.setItem('userType', 'PROFESSIONAL');
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         console.log('📦 Payload del token:', payload);
         
         if (payload.userType === 'PROFESSIONAL') {
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+          
+          // ✅ Verificar si hay una redirección pendiente
+          const redirectPath = localStorage.getItem('redirectAfterLogin');
+          
           setTimeout(() => {
-            navigate('/professional-dashboard', { replace: true });
+            if (redirectPath) {
+              localStorage.removeItem('redirectAfterLogin');
+              navigate(redirectPath, { replace: true });
+            } else {
+              navigate('/professional-dashboard', { replace: true });
+            }
           }, 1000);
         } else {
           navigate('/client-dashboard', { replace: true });
@@ -92,8 +101,16 @@ function ProfessionalLogin() {
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
+      // ✅ Verificar si hay una redirección pendiente
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      
       setTimeout(() => {
-        navigate('/professional-dashboard');
+        if (redirectPath) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectPath);
+        } else {
+          navigate('/professional-dashboard');
+        }
       }, 1000);
     } catch (err) {
       setLoginError('Error de conexión. Intentá nuevamente.');
