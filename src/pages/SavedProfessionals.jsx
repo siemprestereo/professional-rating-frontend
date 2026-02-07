@@ -210,9 +210,9 @@ function SavedProfessionals() {
                       : 'border-transparent hover:border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     {/* Checkbox visual */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 pt-1">
                       <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                         isSelected 
                           ? 'bg-green-500 border-green-500' 
@@ -231,7 +231,7 @@ function SavedProfessionals() {
                       {prof.professionalName.charAt(0)}
                     </div>
 
-                    {/* Info */}
+                    {/* Info central */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-gray-800 break-words">
                         {prof.professionalName}
@@ -254,34 +254,34 @@ function SavedProfessionals() {
                           {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
                         </span>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Notas (si existen) */}
-                  {prof.notes && (
-                    <div className="mt-3 pl-12">
-                      <p className="text-sm text-gray-500 italic break-words">
-                        📝 {prof.notes}
-                      </p>
+                      {/* Notas (si existen) */}
+                      {prof.notes && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500 italic break-words">
+                            📝 {prof.notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {/* Botones de acción */}
-                  <div className="flex flex-col sm:flex-row gap-2 mt-3 pl-12">
-                    <button
-                      onClick={(e) => handleViewCV(e, prof.professionalId)}
-                      className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm flex items-center justify-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Ver CV
-                    </button>
-                    <button
-                      onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                      className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center justify-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Eliminar
-                    </button>
+                    {/* Botones de acción - AHORA AL LADO DERECHO */}
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <button
+                        onClick={(e) => handleViewCV(e, prof.professionalId)}
+                        className="bg-purple-100 text-purple-600 p-2 rounded-xl hover:bg-purple-200 transition-all"
+                        title="Ver CV"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
+                        className="bg-red-100 text-red-600 p-2 rounded-xl hover:bg-red-200 transition-all"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
