@@ -442,12 +442,12 @@ function ClientDashboard() {
             <div className="flex items-center justify-around">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-                <p className="text-xs text-gray-500">Calificaciones</p>
+                <p className="text-xs text-gray-500">Calificaciones torgadas</p>
               </div>
               <div className="h-12 w-px bg-gray-200"></div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-orange-500">{stats.average}</p>
-                <p className="text-xs text-gray-500">Promedio</p>
+                <p className="text-xs text-gray-500">Tu promedio otorgado</p>
               </div>
             </div>
           </button>
