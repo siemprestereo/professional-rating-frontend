@@ -175,7 +175,8 @@ function PublicCvView() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8 pb-10">
+      {/* Header extendido con más altura */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8 pb-32">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600">
             {cvData.professionalName?.charAt(0) || 'P'}
@@ -183,13 +184,32 @@ function PublicCvView() {
           <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
           {cvData.professionType && <p className="text-white/90 text-lg mb-3">{translateProfession(cvData.professionType)}</p>}
 
-          {/* Medalla */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2`}>
-            <span className="text-xl">{badge.emoji}</span>
-            <span className={badge.color}>{badge.name}</span>
+          {/* Medalla y Corazón en la misma línea */}
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${badge.bgColor} ${badge.borderColor} border-2`}>
+              <span className="text-xl">{badge.emoji}</span>
+              <span className={badge.color}>{badge.name}</span>
+            </div>
+
+            {/* Corazón de favoritos - solo si es cliente */}
+            {isClient && !checkingFavorite && (
+              <button
+                onClick={toggleFavorite}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg border-2 border-white active:scale-90 ${
+                  isFavorite
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-white hover:bg-gray-100'
+                }`}
+                aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              >
+                <Heart 
+                  className={`w-6 h-6 transition-transform ${isFavorite ? 'text-white fill-white scale-110' : 'text-gray-400'}`}
+                />
+              </button>
+            )}
           </div>
 
-          {/* ✅ Estrellas y calificaciones clickeables - usando DIV */}
+          {/* Estrellas y calificaciones clickeables */}
           <div 
             onClick={() => navigate(`/stats-public/${professionalId}`)}
             className="cursor-pointer hover:scale-105 transition-transform"
@@ -205,25 +225,8 @@ function PublicCvView() {
         </div>
       </div>
 
-      {/* BOTÓN FAVORITOS - Posicionado arriba a la derecha pero sin fixed */}
-      {isClient && !checkingFavorite && (
-        <div className="max-w-4xl mx-auto px-4 -mt-32 mb-20 flex justify-end relative z-10">
-          <button
-            onClick={toggleFavorite}
-            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white ${
-              isFavorite
-                ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-white hover:bg-gray-100'
-            }`}
-          >
-            <Heart 
-              className={`w-7 h-7 ${isFavorite ? 'text-white fill-white' : 'text-gray-400'}`}
-            />
-          </button>
-        </div>
-      )}
-
-      <div className="max-w-4xl mx-auto px-4 -mt-12 pb-8">
+      {/* Bloque de Contacto - ahora con más espacio arriba */}
+      <div className="max-w-4xl mx-auto px-4 -mt-20 pb-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
             <span className="text-2xl mr-2">📞</span> Contacto
