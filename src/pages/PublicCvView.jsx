@@ -4,6 +4,7 @@ import { GraduationCap, Star, ChevronRight, Home, Heart, Share2 } from 'lucide-r
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import ShareModal from '../components/ShareModal';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 
 function PublicCvView() {
@@ -18,8 +19,20 @@ function PublicCvView() {
   const [checkingFavorite, setCheckingFavorite] = useState(true);
   const [toast, setToast] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
+    // ✅ Verificar si el usuario está logueado
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      // Guardar la URL actual para redirigir después del login
+      localStorage.setItem('redirectAfterLogin', `/public-cv/${professionalId}`);
+      setShowLoginModal(true);
+      setLoading(false);
+      return;
+    }
+
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalId]);
@@ -148,6 +161,11 @@ function PublicCvView() {
   };
 
   if (loading) return <LoadingScreen message="Cargando CV..." />;
+
+  // ✅ Si no está logueado, mostrar solo el modal
+  if (showLoginModal) {
+    return <LoginRequiredModal onClose={() => navigate('/')} />;
+  }
 
   if (error || !cvData) {
     return (
