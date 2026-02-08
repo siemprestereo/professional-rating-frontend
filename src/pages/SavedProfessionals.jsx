@@ -4,7 +4,7 @@ import { Home, ArrowLeft, Trash2, Eye } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
-import { translateProfession, renderStars } from '../utils/professionalUtils';
+import { translateProfession, RenderStars } from '../utils/professionalUtils';
 
 function SavedProfessionals() {
   const navigate = useNavigate();
@@ -218,7 +218,7 @@ function SavedProfessionals() {
                       
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className="flex flex-shrink-0">
-                          {renderStars(prof.reputationScore || 0)}
+                          <RenderStars score={prof.reputationScore || 0} />
                         </div>
                         <span className="text-xs text-gray-600">
                           {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})

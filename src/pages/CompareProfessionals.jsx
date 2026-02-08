@@ -4,7 +4,7 @@ import { Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye } from '
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge, getAdjustedScore } from '../utils/professionalBadge';
-import { translateProfession, renderStars } from '../utils/professionalUtils';
+import { translateProfession, RenderStars } from '../utils/professionalUtils';
 
 function CompareProfessionals() {
   const navigate = useNavigate();
@@ -440,7 +440,7 @@ function CompareProfessionals() {
                     {/* Estrellas - última línea */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex flex-shrink-0">
-                        {renderStars(stats.avgScore || 0, 'w-4 h-4')}
+                        <RenderStars score={stats.avgScore || 0} size="w-4 h-4" />
                       </div>
                       <span className="text-xs text-gray-600">
                         {(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})
