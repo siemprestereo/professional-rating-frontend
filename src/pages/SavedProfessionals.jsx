@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Trash2, Eye } from 'lucide-react';
+import { Home, ArrowLeft, Trash2, Eye } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
+import { translateProfession, renderStars } from '../utils/professionalUtils';
 
 function SavedProfessionals() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function SavedProfessionals() {
 
   useEffect(() => {
     loadFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadFavorites = async () => {
@@ -33,7 +35,6 @@ function SavedProfessionals() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Favoritos cargados:', data);
         setProfessionals(data);
       } else {
         throw new Error('Error al cargar favoritos');
@@ -46,34 +47,32 @@ function SavedProfessionals() {
     }
   };
 
-  const toggleSelection = (professionalId) => {
+  const toggleSelection = useCallback((professionalId) => {
     setSelectedIds(prev => 
       prev.includes(professionalId)
         ? prev.filter(id => id !== professionalId)
         : [...prev, professionalId]
     );
-  };
+  }, []);
 
-  const handleCompare = () => {
+  const handleCompare = useCallback(() => {
     if (selectedIds.length < 2) return;
     const selected = professionals.filter(p => selectedIds.includes(p.professionalId));
     navigate('/compare-professionals', { state: { professionals: selected } });
-  };
+  }, [selectedIds, professionals, navigate]);
 
-  const handleCardClick = (e, professionalId) => {
-    // Si clickeó en un botón, no hacer nada
+  const handleCardClick = useCallback((e, professionalId) => {
     if (e.target.closest('button')) return;
-    // Toggle selection
     toggleSelection(professionalId);
-  };
+  }, [toggleSelection]);
 
-  const handleViewCV = (e, professionalId) => {
-    e.stopPropagation(); // Evitar que se active el toggle
+  const handleViewCV = useCallback((e, professionalId) => {
+    e.stopPropagation();
     navigate(`/public-cv/${professionalId}`);
-  };
+  }, [navigate]);
 
-  const handleRemoveFavorite = async (e, professionalId) => {
-    e.stopPropagation(); // Evitar que se active el toggle
+  const handleRemoveFavorite = useCallback(async (e, professionalId) => {
+    e.stopPropagation();
     
     try {
       const token = localStorage.getItem('authToken');
@@ -97,43 +96,14 @@ function SavedProfessionals() {
       console.error('Error removing favorite:', error);
       setToast({ type: 'error', message: 'Error al eliminar profesional' });
     }
-  };
+  }, [backendUrl]);
 
-  const renderStars = (score) => {
-    return [...Array(5)].map((_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${i < Math.round(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
-
-  const translateProfession = (type) => {
-    const translations = {
-      'WAITER': 'Mozo',
-      'ELECTRICIAN': 'Electricista',
-      'PAINTER': 'Pintor',
-      'HAIRDRESSER': 'Peluquero',
-      'PLUMBER': 'Plomero',
-      'CARPENTER': 'Carpintero',
-      'MECHANIC': 'Mecánico',
-      'CHEF': 'Chef',
-      'BARISTA': 'Barista',
-      'BARTENDER': 'Bartender',
-      'CLEANER': 'Personal de limpieza',
-      'GARDENER': 'Jardinero',
-      'DRIVER': 'Conductor',
-      'SECURITY': 'Seguridad',
-      'RECEPTIONIST': 'Recepcionista'
-    };
-    return translations[type] || type;
-  };
+  // ✅ Memoizar canCompare
+  const canCompare = useMemo(() => selectedIds.length >= 2, [selectedIds.length]);
 
   if (loading) {
     return <LoadingScreen message="Cargando profesionales..." />;
   }
-
-  const canCompare = selectedIds.length >= 2;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye } from 'lucide-react';
+import { Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge, getAdjustedScore } from '../utils/professionalBadge';
+import { translateProfession, renderStars } from '../utils/professionalUtils';
 
 function CompareProfessionals() {
   const navigate = useNavigate();
@@ -232,36 +233,6 @@ function CompareProfessionals() {
     }
   };
 
-  const renderStars = (score) => {
-    return [...Array(5)].map((_, i) => (
-      <Star
-        key={i}
-        className={`w-5 h-5 ${i < Math.round(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
-
-  const translateProfession = (type) => {
-    const translations = {
-      'WAITER': 'Mozo',
-      'ELECTRICIAN': 'Electricista',
-      'PAINTER': 'Pintor',
-      'HAIRDRESSER': 'Peluquero',
-      'PLUMBER': 'Plomero',
-      'CARPENTER': 'Carpintero',
-      'MECHANIC': 'Mecánico',
-      'CHEF': 'Chef',
-      'BARISTA': 'Barista',
-      'BARTENDER': 'Bartender',
-      'CLEANER': 'Personal de limpieza',
-      'GARDENER': 'Jardinero',
-      'DRIVER': 'Conductor',
-      'SECURITY': 'Seguridad',
-      'RECEPTIONIST': 'Recepcionista'
-    };
-    return translations[type] || type;
-  };
-
   if (loading) {
     return <LoadingScreen message="Aplicando filtros..." />;
   }
@@ -469,7 +440,7 @@ function CompareProfessionals() {
                     {/* Estrellas - última línea */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex flex-shrink-0">
-                        {renderStars(stats.avgScore || 0)}
+                        {renderStars(stats.avgScore || 0, 'w-4 h-4')}
                       </div>
                       <span className="text-xs text-gray-600">
                         {(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})
