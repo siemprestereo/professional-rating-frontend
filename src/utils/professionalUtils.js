@@ -17,7 +17,7 @@ export const translateProfession = (type) => {
     'GARDENER': 'Jardinero',
     'DRIVER': 'Conductor',
     'SECURITY': 'Seguridad',
-    'RECEPTIONIST': 'Recepcionista '
+    'RECEPTIONIST': 'Recepcionista'
   };
   return translations[type] || type;
 };
