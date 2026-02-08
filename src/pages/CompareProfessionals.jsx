@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Star, Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Star, Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge, getAdjustedScore } from '../utils/professionalBadge';
@@ -421,89 +421,87 @@ function CompareProfessionals() {
             return (
               <div
                 key={prof.professionalId}
-                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all overflow-hidden"
+                className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all overflow-hidden"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3">
                   {/* Avatar */}
-                  <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center text-3xl font-bold text-purple-600 flex-shrink-0">
+                  <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
                     {prof.professionalName.charAt(0)}
                   </div>
 
-                  {/* Info */}
+                  {/* Info central */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-gray-800 break-words">
+                    <h3 className="text-base font-bold text-gray-800 break-words">
                       {prof.professionalName}
                     </h3>
-                    <p className="text-purple-600 mb-2 break-words">
+                    <p className="text-sm text-purple-600 mb-1 break-words">
                       {translateProfession(prof.professionType)}
                     </p>
 
                     {/* Medalla */}
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2`}>
-                      <span className="text-lg">{badge.emoji}</span>
+                    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-1 ${badge.bgColor} ${badge.borderColor} border`}>
+                      <span className="text-sm">{badge.emoji}</span>
                       <span className={badge.color}>{badge.name}</span>
                     </div>
 
                     {/* Dropdown de trabajos */}
                     {hasMultipleWorks && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-600 mb-1">
-                          📍 Lugar de trabajo
-                        </label>
+                      <div className="mb-2">
                         <div className="relative">
                           <select
                             value={selectedWorks[prof.professionalId] || 'all'}
                             onChange={(e) => handleWorkChange(prof.professionalId, e.target.value)}
-                            className="w-full appearance-none border-2 border-gray-200 rounded-xl px-3 py-2 pr-10 focus:border-purple-500 focus:outline-none bg-white cursor-pointer text-sm"
+                            className="w-full appearance-none border-2 border-gray-200 rounded-xl px-3 py-1.5 pr-8 focus:border-purple-500 focus:outline-none bg-white cursor-pointer text-xs"
                           >
-                            <option value="all">Todos los trabajos</option>
+                            <option value="all">📍 Todos los trabajos</option>
                             {prof.workHistory.map((work) => (
                               <option key={work.id} value={work.id}>
                                 {work.businessName} - {work.position}
-                                {work.isActive ? ' (Actual)' : ' (Pasado)'}
+                                {work.isActive ? ' (Actual)' : ''}
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
                         </div>
                       </div>
                     )}
 
-                    {/* Estadísticas */}
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {/* Estrellas - última línea */}
+                    <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex flex-shrink-0">
                         {renderStars(stats.avgScore || 0)}
                       </div>
-                      <span className="text-lg font-bold text-gray-800">
-                        {(stats.avgScore || 0).toFixed(1)}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        ({stats.totalRatings || 0} calificaciones)
+                      <span className="text-xs text-gray-600">
+                        {(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})
                       </span>
                     </div>
 
+                    {/* Notas (si existen) */}
                     {prof.notes && (
-                      <p className="text-sm text-gray-500 mt-2 italic break-words">
-                        📝 {prof.notes}
-                      </p>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 italic break-words">
+                          📝 {prof.notes}
+                        </p>
+                      </div>
                     )}
+                  </div>
 
-                    {/* Botones */}
-                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                      <button
-                        onClick={() => removeProfessional(prof.professionalId)}
-                        className="bg-red-100 text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-200 transition-all text-sm flex items-center justify-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Eliminar de la lista
-                      </button>
-                      <button
-                        onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
-                        className="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition-all text-sm"
-                      >
-                        Ver CV
-                      </button>
-                    </div>
+                  {/* Botones de acción - AL LADO DERECHO */}
+                  <div className="flex flex-col gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
+                      className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver CV
+                    </button>
+                    <button
+                      onClick={() => removeProfessional(prof.professionalId)}
+                      className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Quitar
+                    </button>
                   </div>
                 </div>
               </div>
