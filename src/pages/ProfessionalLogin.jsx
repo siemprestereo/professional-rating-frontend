@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import { decodeToken, handlePostLoginRedirect, saveAuthData, getLoginErrorMessage } from '../utils/authUtils';
 
 function ProfessionalLogin() {
   const navigate = useNavigate();
@@ -16,9 +17,8 @@ function ProfessionalLogin() {
   const [loginError, setLoginError] = useState('');
   const [shake, setShake] = useState(false);
 
-  // Detectar errores de OAuth y capturar token
+  // ✅ Detectar errores de OAuth y capturar token
   useEffect(() => {
-    // Detectar errores de OAuth
     const errorParam = searchParams.get('error');
     
     if (errorParam === 'email_already_registered_as_client') {
@@ -29,36 +29,36 @@ function ProfessionalLogin() {
       return;
     }
 
-    // Capturar token de OAuth
     const token = searchParams.get('token');
     if (token) {
       console.log('✅ Token recibido de OAuth:', token);
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userType', 'PROFESSIONAL');
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('📦 Payload del token:', payload);
-        
-        if (payload.userType === 'PROFESSIONAL') {
-          setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
-          
-          // ✅ Verificar si hay una redirección pendiente
-          const redirectPath = localStorage.getItem('redirectAfterLogin');
-          
-          setTimeout(() => {
-            if (redirectPath) {
-              localStorage.removeItem('redirectAfterLogin');
-              navigate(redirectPath, { replace: true });
-            } else {
-              navigate('/professional-dashboard', { replace: true });
-            }
-          }, 1000);
-        } else {
-          navigate('/client-dashboard', { replace: true });
-        }
-      } catch (e) {
-        console.error('Error al decodificar token:', e);
+      
+      // ✅ MEJORA 1: Usar función centralizada con soporte Unicode
+      const payload = decodeToken(token);
+      
+      if (!payload) {
         setToast({ type: 'error', message: 'Error al procesar autenticación' });
+        return;
+      }
+      
+      console.log('📦 Payload del token:', payload);
+      
+      // ✅ MEJORA 2: Usar función centralizada para guardar datos
+      saveAuthData('PROFESSIONAL', token, {
+        id: payload.sub || payload.id,
+        email: payload.email,
+        name: payload.name
+      });
+      
+      if (payload.userType === 'PROFESSIONAL') {
+        setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+        
+        // ✅ MEJORA 4: Reducir delay de 1000ms a 300ms
+        setTimeout(() => {
+          handlePostLoginRedirect('/professional-dashboard', navigate, true);
+        }, 300);
+      } else {
+        handlePostLoginRedirect('/client-dashboard', navigate, true);
       }
     }
   }, [searchParams, navigate]);
@@ -78,41 +78,40 @@ function ProfessionalLogin() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        // ✅ MEJORA 6: Mensajes de error específicos
+        const errorMessage = await getLoginErrorMessage(response);
         
-        setLoginError('Email o contraseña incorrectos');
+        setLoginError(errorMessage);
         setShake(true);
+        setPassword(''); // Limpiar password
         
         setTimeout(() => setShake(false), 500);
-        
         setLoading(false);
         return;
       }
 
       const data = await response.json();
       
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userType', 'PROFESSIONAL');
-      localStorage.setItem('professional', JSON.stringify({
+      // ✅ MEJORA 2 y 5: Guardar datos correctamente estructurados
+      saveAuthData('PROFESSIONAL', data.token, {
         id: data.id,
         email: data.email,
-        name: data.name
-      }));
+        name: data.name,
+        // Campos adicionales que pueda necesitar ProfessionalDashboard
+        professionType: data.professionType,
+        totalRatings: data.totalRatings || 0,
+        reputationScore: data.reputationScore || 0
+      });
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
-      // ✅ Verificar si hay una redirección pendiente
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      
+      // ✅ MEJORA 3 y 4: Redirect rápido con replace: true
       setTimeout(() => {
-        if (redirectPath) {
-          localStorage.removeItem('redirectAfterLogin');
-          navigate(redirectPath);
-        } else {
-          navigate('/professional-dashboard');
-        }
-      }, 1000);
+        handlePostLoginRedirect('/professional-dashboard', navigate, true);
+      }, 300);
+      
     } catch (err) {
+      console.error('Error en login:', err);
       setLoginError('Error de conexión. Intentá nuevamente.');
       setShake(true);
       setTimeout(() => setShake(false), 500);
@@ -130,6 +129,7 @@ function ProfessionalLogin() {
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
         <button
+          type="button"
           onClick={() => navigate('/')}
           className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
@@ -145,12 +145,12 @@ function ProfessionalLogin() {
             Ingreso Profesionales
           </h1>
           <p className="text-sm sm:text-base text-gray-600">
-            Accedé a tu dashboard profesional
+            Accedé para gestionar tu perfil
           </p>
         </div>
 
-        {/* Botón de Google */}
         <button
+          type="button"
           onClick={handleGoogleLogin}
           className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base"
         >
@@ -185,18 +185,19 @@ function ProfessionalLogin() {
                 setLoginError('');
               }}
               placeholder="tu@email.com"
+              autoComplete="email"
               required
               className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
                 loginError 
                   ? 'border-red-500 focus:border-red-500' 
-                  : 'border-gray-200 focus:border-purple-500'
+                  : 'border-gray-200 focus:border-blue-500'
               } ${shake ? 'animate-shake' : ''}`}
             />
           </div>
 
           <div className="mb-2">
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Contraseña
+              Password
             </label>
             <div className="relative">
               <input
@@ -207,11 +208,12 @@ function ProfessionalLogin() {
                   setLoginError('');
                 }}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
                 className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
                   loginError 
                     ? 'border-red-500 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-purple-500'
+                    : 'border-gray-200 focus:border-blue-500'
                 } ${shake ? 'animate-shake' : ''}`}
               />
               <button
@@ -228,7 +230,6 @@ function ProfessionalLogin() {
             </div>
           </div>
 
-          {/* Mensaje de error inline */}
           {loginError && (
             <div className="mb-3 sm:mb-4 flex items-center gap-2 text-red-600 text-xs sm:text-sm animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -251,13 +252,12 @@ function ProfessionalLogin() {
             )}
           </button>
 
-          {/* Botón olvidaste tu contraseña */}
           <button
             type="button"
             onClick={() => {
               console.log('Recuperar contraseña');
             }}
-            className="w-full text-purple-600 font-semibold hover:text-purple-700 transition-colors text-sm sm:text-base"
+            className="w-full text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm sm:text-base"
           >
             ¿Olvidaste tu contraseña?
           </button>
@@ -267,8 +267,9 @@ function ProfessionalLogin() {
           <p className="text-gray-600 text-sm sm:text-base">
             ¿No tenés cuenta?{' '}
             <button
+              type="button"
               onClick={() => navigate('/professional-register')}
-              className="text-purple-600 font-semibold hover:text-purple-700"
+              className="text-blue-600 font-semibold hover:text-blue-700"
             >
               Registrate acá
             </button>
@@ -276,7 +277,6 @@ function ProfessionalLogin() {
         </div>
       </div>
 
-      {/* Toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -285,7 +285,6 @@ function ProfessionalLogin() {
         />
       )}
       
-      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}
@@ -294,7 +293,6 @@ function ProfessionalLogin() {
         />
       )}
 
-      {/* Estilos de animación shake */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }

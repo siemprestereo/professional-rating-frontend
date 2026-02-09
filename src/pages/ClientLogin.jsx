@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import { decodeToken, handlePostLoginRedirect, saveAuthData, getLoginErrorMessage } from '../utils/authUtils';
 
 function ClientLogin() {
   const navigate = useNavigate();
@@ -16,9 +17,8 @@ function ClientLogin() {
   const [loginError, setLoginError] = useState('');
   const [shake, setShake] = useState(false);
 
-  // Detectar errores de OAuth y capturar token
+  // ✅ Detectar errores de OAuth y capturar token
   useEffect(() => {
-    // Detectar errores de OAuth
     const errorParam = searchParams.get('error');
     
     if (errorParam === 'email_already_registered_as_professional') {
@@ -29,40 +29,39 @@ function ClientLogin() {
       return;
     }
 
-    // Capturar token de OAuth
     const token = searchParams.get('token');
     if (token) {
       console.log('✅ Token recibido de OAuth:', token);
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userType', 'CLIENT');
       
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('📦 Payload del token:', payload);
-        
-        if (payload.userType === 'CLIENT') {
-          setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
-          
-          // ✅ Verificar si hay una redirección pendiente
-          const redirectPath = localStorage.getItem('redirectAfterLogin');
-          
-          setTimeout(() => {
-            if (redirectPath) {
-              localStorage.removeItem('redirectAfterLogin');
-              window.location.href = `https://www.calificalo.com.ar${redirectPath}`;
-            } else {
-              window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
-            }
-          }, 1000);
-        } else {
-          window.location.href = 'https://www.calificalo.com.ar/professional-dashboard';
-        }
-      } catch (e) {
-        console.error('Error al decodificar token:', e);
+      // ✅ MEJORA 1: Usar función centralizada con soporte Unicode
+      const payload = decodeToken(token);
+      
+      if (!payload) {
         setToast({ type: 'error', message: 'Error al procesar autenticación' });
+        return;
+      }
+      
+      console.log('📦 Payload del token:', payload);
+      
+      // ✅ MEJORA 2: Usar función centralizada para guardar datos
+      saveAuthData('CLIENT', token, {
+        id: payload.sub || payload.id,
+        email: payload.email,
+        name: payload.name
+      });
+      
+      if (payload.userType === 'CLIENT') {
+        setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+        
+        // ✅ MEJORA 4: Reducir delay de 1000ms a 300ms
+        setTimeout(() => {
+          handlePostLoginRedirect('/client-dashboard', navigate, true);
+        }, 300);
+      } else {
+        handlePostLoginRedirect('/professional-dashboard', navigate, true);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,42 +78,36 @@ function ClientLogin() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        // ✅ MEJORA 6: Mensajes de error específicos
+        const errorMessage = await getLoginErrorMessage(response);
         
-        setLoginError('Email o contraseña incorrectos');
+        setLoginError(errorMessage);
         setShake(true);
+        setPassword(''); // Limpiar password
         
         setTimeout(() => setShake(false), 500);
-        
         setLoading(false);
         return;
       }
 
       const data = await response.json();
       
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userType', 'CLIENT');
-      
-      localStorage.setItem('client', JSON.stringify({
+      // ✅ MEJORA 2 y 5: Guardar datos correctamente estructurados
+      saveAuthData('CLIENT', data.token, {
         id: data.id,
         email: data.email,
         name: data.name
-      }));
+      });
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
-      // ✅ Verificar si hay una redirección pendiente
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      
+      // ✅ MEJORA 3 y 4: Redirect rápido con replace: true
       setTimeout(() => {
-        if (redirectPath) {
-          localStorage.removeItem('redirectAfterLogin');
-          window.location.href = `https://www.calificalo.com.ar${redirectPath}`;
-        } else {
-          window.location.href = 'https://www.calificalo.com.ar/client-dashboard';
-        }
-      }, 1000);
+        handlePostLoginRedirect('/client-dashboard', navigate, true);
+      }, 300);
+      
     } catch (err) {
+      console.error('Error en login:', err);
       setLoginError('Error de conexión. Intentá nuevamente.');
       setShake(true);
       setTimeout(() => setShake(false), 500);
@@ -132,6 +125,7 @@ function ClientLogin() {
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
         <button
+          type="button"
           onClick={() => navigate('/')}
           className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
@@ -151,8 +145,8 @@ function ClientLogin() {
           </p>
         </div>
 
-        {/* Botón de Google */}
         <button
+          type="button"
           onClick={handleGoogleLogin}
           className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base"
         >
@@ -187,6 +181,7 @@ function ClientLogin() {
                 setLoginError('');
               }}
               placeholder="tu@email.com"
+              autoComplete="email"
               required
               className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
                 loginError 
@@ -209,6 +204,7 @@ function ClientLogin() {
                   setLoginError('');
                 }}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
                 className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
                   loginError 
@@ -230,7 +226,6 @@ function ClientLogin() {
             </div>
           </div>
 
-          {/* Mensaje de error inline */}
           {loginError && (
             <div className="mb-3 sm:mb-4 flex items-center gap-2 text-red-600 text-xs sm:text-sm animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -253,7 +248,6 @@ function ClientLogin() {
             )}
           </button>
 
-          {/* Botón olvidaste tu contraseña */}
           <button
             type="button"
             onClick={() => {
@@ -269,6 +263,7 @@ function ClientLogin() {
           <p className="text-gray-600 text-sm sm:text-base">
             ¿No tenés cuenta?{' '}
             <button
+              type="button"
               onClick={() => navigate('/client-register')}
               className="text-green-600 font-semibold hover:text-green-700"
             >
@@ -278,7 +273,6 @@ function ClientLogin() {
         </div>
       </div>
 
-      {/* Toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -287,7 +281,6 @@ function ClientLogin() {
         />
       )}
       
-      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}
@@ -296,7 +289,6 @@ function ClientLogin() {
         />
       )}
 
-      {/* Estilos de animación shake */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
