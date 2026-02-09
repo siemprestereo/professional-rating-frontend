@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, QrCode, LogOut, User, Loader2, ClipboardList, TrendingUp, ChevronDown, FileText, Search } from 'lucide-react';
+import { Star, LogOut, User, ClipboardList, TrendingUp, ChevronDown, FileText, Search } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import LoadingScreen from '../components/LoadingScreen';
+import QRCodeCard from '../components/QRCodeCard';
 import { capitalizeName, getFirstName } from '../utils/formatName';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 
@@ -62,6 +63,7 @@ function ProfessionalDashboard() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('mousedown', handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -97,28 +99,22 @@ function ProfessionalDashboard() {
     return () => clearInterval(interval);
   }, [qrCode]);
 
-  // ✅ OPTIMIZACIÓN: Función de refresh con Promise.all()
-  const refreshDashboardData = async () => {
+  // ✅ OPTIMIZACIÓN 1 y 2: Eliminar petición redundante + Evitar cascada
+  const refreshDashboardData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
+    const cachedProfessional = localStorage.getItem('professional');
+    
     if (!token) return;
 
     try {
-      // ✅ Ejecutar peticiones EN PARALELO
-      const [meResponse, professionalData] = await Promise.all([
-        fetch(`${backendUrl}/api/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${backendUrl}/api/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).then(res => res.ok ? res.json() : null)
-      ]);
-      
-      if (meResponse.ok && professionalData) {
-        setProfessional(professionalData);
-        localStorage.setItem('professional', JSON.stringify(professionalData));
+      // ✅ Si tenemos el ID en caché, disparar las 3 peticiones EN PARALELO
+      if (cachedProfessional) {
+        const professionalData = JSON.parse(cachedProfessional);
         
-        // ✅ Segunda ronda de peticiones EN PARALELO (dependen del ID del profesional)
-        const [ratingsResponse, cvResponse] = await Promise.all([
+        const [meResponse, ratingsResponse, cvResponse] = await Promise.all([
+          fetch(`${backendUrl}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
           fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
@@ -126,6 +122,13 @@ function ProfessionalDashboard() {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
+        
+        // Procesar profesional
+        if (meResponse.ok) {
+          const newProfessionalData = await meResponse.json();
+          setProfessional(newProfessionalData);
+          localStorage.setItem('professional', JSON.stringify(newProfessionalData));
+        }
         
         // Procesar ratings
         if (ratingsResponse.ok) {
@@ -138,20 +141,52 @@ function ProfessionalDashboard() {
           const cvData = await cvResponse.json();
           const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
           setHasWorkExperiences(hasExperiences);
-          console.log('✅ Tiene experiencias laborales:', hasExperiences);
         } else {
           setHasWorkExperiences(false);
-          console.log('⚠️ No tiene CV creado');
+        }
+      } else {
+        // Si no hay caché, hacer la petición secuencial
+        const meResponse = await fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (meResponse.ok) {
+          const professionalData = await meResponse.json();
+          setProfessional(professionalData);
+          localStorage.setItem('professional', JSON.stringify(professionalData));
+          
+          const [ratingsResponse, cvResponse] = await Promise.all([
+            fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${backendUrl}/api/cv/professional/${professionalData.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+          ]);
+          
+          if (ratingsResponse.ok) {
+            const ratingsData = await ratingsResponse.json();
+            setRatings(ratingsData);
+          }
+
+          if (cvResponse.ok) {
+            const cvData = await cvResponse.json();
+            const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
+            setHasWorkExperiences(hasExperiences);
+          } else {
+            setHasWorkExperiences(false);
+          }
         }
       }
     } catch (error) {
       console.error('Error en auto-refresh:', error);
     }
-  };
+  }, [backendUrl]);
 
-  // ✅ OPTIMIZACIÓN: Carga inicial con Promise.all()
-  const loadDashboardData = async () => {
+  // ✅ OPTIMIZACIÓN 2: Carga inicial optimizada
+  const loadDashboardData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
+    const cachedProfessional = localStorage.getItem('professional');
     
     if (!token) {
       console.log('No hay token, redirigiendo al login');
@@ -161,20 +196,15 @@ function ProfessionalDashboard() {
     }
 
     try {
-      // ✅ Primera petición para obtener el ID del profesional
-      const meResponse = await fetch(`${backendUrl}/api/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (meResponse.ok) {
-        const professionalData = await meResponse.json();
-        console.log('✅ Datos del profesional:', professionalData);
+      // ✅ Si ya tenemos el ID del profesional, disparar todas las peticiones EN PARALELO
+      if (cachedProfessional) {
+        const professionalData = JSON.parse(cachedProfessional);
+        console.log('✅ Usando professional.id del localStorage:', professionalData.id);
         
-        setProfessional(professionalData);
-        localStorage.setItem('professional', JSON.stringify(professionalData));
-        
-        // ✅ Segunda ronda: Cargar ratings y CV EN PARALELO
-        const [ratingsResponse, cvResponse] = await Promise.all([
+        const [meResponse, ratingsResponse, cvResponse] = await Promise.all([
+          fetch(`${backendUrl}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
           fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
@@ -183,13 +213,26 @@ function ProfessionalDashboard() {
           })
         ]);
         
+        // Procesar profesional
+        if (meResponse.ok) {
+          const newProfessionalData = await meResponse.json();
+          console.log('✅ Datos del profesional actualizados:', newProfessionalData);
+          setProfessional(newProfessionalData);
+          localStorage.setItem('professional', JSON.stringify(newProfessionalData));
+        } else if (meResponse.status === 401) {
+          console.log('Token inválido, redirigiendo al login');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('professional');
+          navigate('/professional-login');
+          return;
+        }
+        
         // Procesar ratings
         if (ratingsResponse.ok) {
           const ratingsData = await ratingsResponse.json();
           console.log('✅ Ratings cargados:', ratingsData);
           setRatings(ratingsData);
         } else {
-          console.error('Error al cargar ratings:', ratingsResponse.status);
           setRatings([]);
         }
 
@@ -201,16 +244,55 @@ function ProfessionalDashboard() {
           console.log('✅ Tiene experiencias laborales:', hasExperiences);
         } else {
           setHasWorkExperiences(false);
-          console.log('⚠️ No tiene CV creado');
         }
         
-      } else if (meResponse.status === 401) {
-        console.log('Token inválido, redirigiendo al login');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('professional');
-        navigate('/professional-login');
       } else {
-        throw new Error('Error al cargar datos del profesional');
+        // Sin caché: hacer la petición secuencial
+        const meResponse = await fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (meResponse.ok) {
+          const professionalData = await meResponse.json();
+          console.log('✅ Datos del profesional:', professionalData);
+          
+          setProfessional(professionalData);
+          localStorage.setItem('professional', JSON.stringify(professionalData));
+          
+          const [ratingsResponse, cvResponse] = await Promise.all([
+            fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${backendUrl}/api/cv/professional/${professionalData.id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+          ]);
+          
+          if (ratingsResponse.ok) {
+            const ratingsData = await ratingsResponse.json();
+            console.log('✅ Ratings cargados:', ratingsData);
+            setRatings(ratingsData);
+          } else {
+            setRatings([]);
+          }
+
+          if (cvResponse.ok) {
+            const cvData = await cvResponse.json();
+            const hasExperiences = cvData.workExperiences && cvData.workExperiences.length > 0;
+            setHasWorkExperiences(hasExperiences);
+            console.log('✅ Tiene experiencias laborales:', hasExperiences);
+          } else {
+            setHasWorkExperiences(false);
+          }
+          
+        } else if (meResponse.status === 401) {
+          console.log('Token inválido, redirigiendo al login');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('professional');
+          navigate('/professional-login');
+        } else {
+          throw new Error('Error al cargar datos del profesional');
+        }
       }
       
     } catch (error) {
@@ -219,9 +301,9 @@ function ProfessionalDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [backendUrl, navigate]);
 
-  const handleGenerateQR = async () => {
+  const handleGenerateQR = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/professional-login');
@@ -272,20 +354,20 @@ function ProfessionalDashboard() {
     } finally {
       setGeneratingQR(false);
     }
-  };
+  }, [backendUrl, navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('professional');
     setShowUserMenu(false);
     navigate('/');
-  };
+  }, [navigate]);
 
-  const handleCV = async () => {
+  const handleCV = useCallback(async () => {
     setShowUserMenu(false);
     
     const token = localStorage.getItem('authToken');
-    if (!token) return;
+    if (!token || !professional) return;
 
     try {
       const response = await fetch(`${backendUrl}/api/cv/professional/${professional.id}`, {
@@ -306,16 +388,32 @@ function ProfessionalDashboard() {
       console.error('Error al verificar CV:', error);
       navigate('/edit-cv');
     }
-  };
+  }, [professional, backendUrl, navigate]);
 
-  const renderStars = (score) => {
+  const renderStars = useCallback((score) => {
     return [...Array(5)].map((_, i) => (
       <Star
         key={i}
         className={`w-4 h-4 transition-all duration-300 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
       />
     ));
-  };
+  }, []);
+
+  // ✅ Memoizar valores derivados
+  const firstName = useMemo(() => 
+    professional ? getFirstName(professional.name) : '', 
+    [professional]
+  );
+  
+  const fullName = useMemo(() => 
+    professional ? capitalizeName(professional.name) : '', 
+    [professional]
+  );
+  
+  const badge = useMemo(() => 
+    getProfessionalBadge(professional?.totalRatings || 0), 
+    [professional?.totalRatings]
+  );
 
   if (loading) {
     return <LoadingScreen />;
@@ -324,10 +422,6 @@ function ProfessionalDashboard() {
   if (!professional) {
     return null;
   }
-
-  const firstName = getFirstName(professional.name);
-  const fullName = capitalizeName(professional.name);
-  const badge = getProfessionalBadge(professional.totalRatings || 0);
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
@@ -402,112 +496,14 @@ function ProfessionalDashboard() {
       </div>
 
       <div className="px-4 -mt-16">
-        <div 
-          className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl p-4 md:p-6 mb-4 animate-slideUp hover-lift relative overflow-hidden"
-          onClick={(e) => {
-            if (qrCode && e.target === e.currentTarget) {
-              setQrCode(null);
-            }
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-          
-          <div className="relative z-10">
-            {qrCode && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setQrCode(null);
-                }}
-                className="absolute -top-1 -right-1 md:top-0 md:right-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
-                aria-label="Cerrar QR"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-
-            <div className="flex items-center justify-center mb-2 md:mb-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 md:p-3 animate-pulse-slow">
-                <QrCode className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-lg" />
-              </div>
-            </div>
-            
-            <h3 className="text-xl md:text-2xl roboto-light text-white text-center mb-1 md:mb-2 drop-shadow-md px-2">
-              🎯 Código QR para Calificaciones
-            </h3>
-            <p className="text-white/90 text-center text-sm md:text-base mb-3 md:mb-4 px-2">
-              Generá tu QR y recibí calificaciones en tiempo real
-            </p>
-            
-            {!qrCode ? (
-              <button
-                onClick={handleGenerateQR}
-                disabled={generatingQR}
-                className="w-full bg-white text-orange-600 font-bold py-3 md:py-4 rounded-xl shadow-xl disabled:opacity-50 hover:scale-105 transition-all duration-300 ripple hover:shadow-2xl text-base md:text-lg"
-              >
-                {generatingQR ? (
-                  <span className="flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 md:w-6 md:h-6 mr-2 animate-spin" />
-                    Generando...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <QrCode className="w-5 h-5 md:w-6 md:h-6" />
-                    Generar QR (Estará activo por 3 min)
-                  </span>
-                )}
-              </button>
-            ) : (
-              <div 
-                className="text-center animate-scaleIn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {qrCode.qrPngBase64 ? (
-                  <>
-                    <div className="bg-white rounded-xl p-3 md:p-4 mb-2 md:mb-3 mx-auto inline-block max-w-full">
-                      <img
-                        src={`data:image/png;base64,${qrCode.qrPngBase64}`}
-                        alt="QR Code"
-                        className="mx-auto border-2 border-orange-200 rounded-lg w-full max-w-[240px] md:max-w-xs animate-pulseGlow"
-                      />
-                    </div>
-                    <p className="text-sm md:text-base text-white/90 mb-2 px-2">
-                      <span className="font-semibold">Código:</span> {qrCode.code}
-                    </p>
-
-                    {timeLeft && !timeLeft.expired && (
-                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 mb-3 mx-auto max-w-xs">
-                        <p className="text-white/90 text-sm mb-2 text-center">⏱️ Tiempo restante</p>
-                        <div className="flex items-center justify-center">
-                          <div className="bg-white rounded-lg px-4 py-2">
-                            <span className={`text-2xl md:text-3xl font-bold ${
-                              timeLeft.minutes === 0 && timeLeft.seconds <= 30 
-                                ? 'text-red-600 animate-pulse' 
-                                : 'text-orange-600'
-                            }`}>
-                              {String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={handleGenerateQR}
-                      className="bg-white text-orange-600 px-4 md:px-6 py-2 rounded-full font-semibold hover:scale-105 transition-all duration-300 ripple shadow-lg text-sm md:text-base"
-                    >
-                      Generar nuevo QR
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-white animate-shake">Error: No se pudo generar la imagen del QR</p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* ✅ OPTIMIZACIÓN 3: Componente QR memoizado */}
+        <QRCodeCard
+          qrCode={qrCode}
+          generatingQR={generatingQR}
+          timeLeft={timeLeft}
+          onGenerate={handleGenerateQR}
+          onClose={() => setQrCode(null)}
+        />
 
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50 hover-lift">
           <h3 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
