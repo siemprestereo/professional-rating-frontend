@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Home, TrendingUp, Award, Calendar } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import { BADGE_DEFINITIONS, SPECIAL_BADGES } from '../constants/badges';
 
 function ClientStats() {
   const navigate = useNavigate();
@@ -11,7 +12,6 @@ function ClientStats() {
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
-  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -26,10 +26,10 @@ function ClientStats() {
       return;
     }
 
-    const clientData = JSON.parse(savedClient);
-    setClient(clientData);
-
     try {
+      const clientData = JSON.parse(savedClient);
+      setClient(clientData);
+
       const response = await fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -38,10 +38,14 @@ function ClientStats() {
         const data = await response.json();
         setRatings(data);
         calculateStats(data);
-        calculateBadges(data);
       }
     } catch (error) {
-      console.error('Error loading ratings:', error);
+      console.error('Error loading data:', error);
+      // Si hay error crítico con el localStorage, limpiar y redirigir
+      if (error instanceof SyntaxError) {
+        localStorage.removeItem('client');
+        navigate('/client-login');
+      }
     } finally {
       setLoading(false);
     }
@@ -84,53 +88,47 @@ function ClientStats() {
 
     setStats({
       total,
-      average: average.toFixed(1),
+      average: average,
       monthlyActivity: monthlyData,
       categoriesCount: categories.size,
       withCommentPercentage: Math.round(withCommentPercentage)
     });
   };
 
-  const calculateBadges = (ratingsData) => {
+  // Memoizar badges para no recalcular en cada render
+  const badges = useMemo(() => {
+    if (!stats) return [];
+    
     const earnedBadges = [];
-    const total = ratingsData.length;
 
-    // Medallas por cantidad
-    if (total >= 1) earnedBadges.push({ icon: '🥉', name: 'Primera calificación', description: 'Has dado tu primera calificación', unlocked: true });
-    if (total >= 5) earnedBadges.push({ icon: '🥈', name: 'Calificador activo', description: '5 calificaciones otorgadas', unlocked: true });
-    if (total >= 10) earnedBadges.push({ icon: '🥇', name: 'Calificador experimentado', description: '10 calificaciones otorgadas', unlocked: true });
-    if (total >= 25) earnedBadges.push({ icon: '💎', name: 'Calificador Experto', description: '25 calificaciones otorgadas', unlocked: true });
-    if (total >= 50) earnedBadges.push({ icon: '👑', name: 'Calificador Maestro', description: '50 calificaciones otorgadas', unlocked: true });
-    if (total >= 100) earnedBadges.push({ icon: '⭐', name: 'Calificador Legendario', description: '100 calificaciones otorgadas', unlocked: true });
+    // Medallas por cantidad (sin duplicados)
+    BADGE_DEFINITIONS.forEach(badge => {
+      if (stats.total >= badge.threshold) {
+        earnedBadges.push({ ...badge, unlocked: true });
+      } else {
+        // Solo mostrar la siguiente medalla bloqueada
+        const isNextToUnlock = !earnedBadges.some(b => 
+          b.type === 'quantity' && !b.unlocked
+        );
+        if (isNextToUnlock) {
+          earnedBadges.push({ 
+            ...badge, 
+            unlocked: false,
+            description: `${badge.threshold - stats.total} calificaciones más`
+          });
+        }
+      }
+    });
 
     // Medallas especiales
-    const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
-    const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
-    
-    if (commentPercentage >= 80) {
-      earnedBadges.push({ icon: '💬', name: 'Comunicador', description: '80% de tus calificaciones incluyen comentario', unlocked: true, special: true });
-    }
+    SPECIAL_BADGES.forEach(badge => {
+      if (badge.check(stats)) {
+        earnedBadges.push({ ...badge, unlocked: true, special: true });
+      }
+    });
 
-    const average = total > 0 ? ratingsData.reduce((sum, r) => sum + r.score, 0) / total : 0;
-    if (average >= 4.5) {
-      earnedBadges.push({ icon: '🌟', name: 'Generoso', description: 'Promedio mayor a 4.5 estrellas', unlocked: true, special: true });
-    }
-    if (average >= 3.5 && average <= 4.5) {
-      earnedBadges.push({ icon: '🎯', name: 'Preciso', description: 'Calificaciones equilibradas', unlocked: true, special: true });
-    }
-
-    const categories = new Set(ratingsData.map(r => r.professionalType || 'general'));
-    if (categories.size >= 5) {
-      earnedBadges.push({ icon: '🔍', name: 'Explorador', description: 'Has calificado 5+ categorías diferentes', unlocked: true, special: true });
-    }
-
-    // Medallas bloqueadas
-    if (total < 5) earnedBadges.push({ icon: '🥈', name: 'Calificador Activo', description: `${5 - total} calificaciones más`, unlocked: false });
-    if (total < 10 && total >= 5) earnedBadges.push({ icon: '🥇', name: 'Calificador Experimentado', description: `${10 - total} calificaciones más`, unlocked: false });
-    if (total < 25 && total >= 10) earnedBadges.push({ icon: '💎', name: 'Calificador Experto', description: `${25 - total} calificaciones más`, unlocked: false });
-
-    setBadges(earnedBadges);
-  };
+    return earnedBadges;
+  }, [stats]);
 
   const renderStars = (score) => {
     return [...Array(5)].map((_, i) => (
@@ -144,6 +142,9 @@ function ClientStats() {
   if (loading) {
     return <LoadingScreen gradient="from-green-500 to-teal-600" />;
   }
+
+  const hasNoRatings = ratings.length === 0;
+  const hasActivityData = stats && stats.monthlyActivity.length > 0 && stats.total > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
@@ -167,19 +168,19 @@ function ClientStats() {
             <p className="text-sm opacity-90">Calificaciones</p>
           </div>
           <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp delay-50">
-            <p className="text-3xl font-bold mb-1">{stats?.average || 0}</p>
+            <p className="text-3xl font-bold mb-1">{stats?.average?.toFixed(1) || 0}</p>
             <p className="text-sm opacity-90">Tu Promedio</p>
           </div>
         </div>
 
-        {/* Gráfico de Actividad */}
-        {stats && stats.monthlyActivity.length > 0 && stats.total > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
-            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
-              Actividad (últimos 6 meses)
-            </h3>
-            
+        {/* Gráfico de Actividad o Mensaje de Bienvenida */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+            Actividad (últimos 6 meses)
+          </h3>
+          
+          {hasActivityData ? (
             <div className="relative h-48 mt-4">
               {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
@@ -192,7 +193,13 @@ function ClientStats() {
 
               {/* Gráfico */}
               <div className="absolute left-10 top-0 right-2 bottom-10">
-                <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
+                <svg 
+                  className="w-full h-full" 
+                  viewBox="0 0 500 160" 
+                  preserveAspectRatio="none"
+                  role="img"
+                  aria-label="Gráfico de actividad mensual mostrando el número de calificaciones por mes"
+                >
                   {/* Líneas horizontales de fondo */}
                   {[...Array(6)].map((_, i) => (
                     <line key={i} x1="0" y1={i * 32} x2="500" y2={i * 32} stroke="#e5e7eb" strokeWidth="1" />
@@ -213,21 +220,23 @@ function ClientStats() {
                     strokeLinejoin="round"
                   />
 
-                  {/* Puntos en cada mes */}
+                  {/* Puntos en cada mes con tooltip */}
                   {stats.monthlyActivity.map((m, i) => {
                     const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                     const x = (i * 500) / (stats.monthlyActivity.length - 1);
                     const y = 10 + ((maxCount - m.count) / maxCount) * 140;
                     return (
-                      <circle 
-                        key={i} 
-                        cx={x} 
-                        cy={y} 
-                        r="6" 
-                        fill="#10b981" 
-                        stroke="white" 
-                        strokeWidth="2"
-                      />
+                      <g key={i}>
+                        <title>{`${m.month}: ${m.count} calificaciones`}</title>
+                        <circle 
+                          cx={x} 
+                          cy={y} 
+                          r="6" 
+                          fill="#10b981" 
+                          stroke="white" 
+                          strokeWidth="2"
+                        />
+                      </g>
                     );
                   })}
 
@@ -248,8 +257,18 @@ function ClientStats() {
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📈</div>
+              <p className="text-gray-600 font-medium mb-2">
+                ¡Empezá a calificar para ver tu actividad!
+              </p>
+              <p className="text-sm text-gray-500">
+                Tu gráfico de actividad aparecerá aquí cuando des tu primera calificación.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Medallas */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
@@ -258,36 +277,61 @@ function ClientStats() {
             Medallas ({badges.filter(b => b.unlocked).length}/{badges.length})
           </h3>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {badges.map((badge, index) => (
-              <div
-                key={index}
-                className={`border-2 rounded-xl p-4 text-center transition-all ${
-                  badge.unlocked 
-                    ? badge.special ? 'border-purple-300 bg-purple-50' : 'border-green-300 bg-green-50'
-                    : 'border-gray-200 bg-gray-50 opacity-50'
-                }`}
-              >
-                <div className="text-4xl mb-2">{badge.icon}</div>
-                <p className="font-bold text-gray-800 text-sm mb-1">{badge.name}</p>
-                <p className="text-xs text-gray-600">{badge.description}</p>
-              </div>
-            ))}
-          </div>
+          {badges.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {badges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className={`border-2 rounded-xl p-4 text-center transition-all ${
+                    badge.unlocked 
+                      ? badge.special ? 'border-purple-300 bg-purple-50' : 'border-green-300 bg-green-50'
+                      : 'border-gray-200 bg-gray-50 opacity-50'
+                  }`}
+                >
+                  <div className="text-4xl mb-2">{badge.icon}</div>
+                  <p className="font-bold text-gray-800 text-sm mb-1">{badge.name}</p>
+                  <p className="text-xs text-gray-600">{badge.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-5xl mb-3">🏆</div>
+              <p className="text-gray-600 font-medium mb-1">
+                ¡Desbloqueá tus primeras medallas!
+              </p>
+              <p className="text-sm text-gray-500">
+                Calificá profesionales para ganar insignias y reconocimientos.
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Historial Completo - BOTÓN PARA VER MÁS */}
+        {/* Historial Completo */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-teal-600" />
             Historial de Calificaciones
           </h3>
           
-          {ratings.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">Aún no has dado calificaciones</p>
+          {hasNoRatings ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">⭐</div>
+              <p className="text-gray-600 font-medium mb-2">
+                Aún no has dado calificaciones
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Escaneá un código QR o buscá profesionales para empezar a calificar.
+              </p>
+              <button
+                onClick={() => navigate('/client-dashboard')}
+                className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-lg"
+              >
+                Ir al Inicio
+              </button>
+            </div>
           ) : (
             <>
-              {/* Mostrar solo las últimas 3 */}
               <div className="space-y-3 mb-4">
                 {ratings.slice(0, 3).map((rating) => (
                   <div key={rating.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all">
@@ -307,7 +351,6 @@ function ClientStats() {
                 ))}
               </div>
 
-              {/* Botón Ver Todas */}
               {ratings.length > 3 && (
                 <button
                   onClick={() => navigate('/client-ratings-history')}
