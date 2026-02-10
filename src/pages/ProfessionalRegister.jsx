@@ -3,18 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-
-// Función para capitalizar y limpiar el nombre
-const formatName = (input) => {
-  // Eliminar todo lo que no sea letra o espacio
-  const cleaned = input.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-  
-  // Capitalizar primera letra de cada palabra
-  return cleaned
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
+import { decodeToken, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
 
 function ProfessionalRegister() {
   const navigate = useNavigate();
@@ -44,7 +33,6 @@ function ProfessionalRegister() {
 
   // Detectar errores de OAuth y capturar token
   useEffect(() => {
-    // Detectar errores de OAuth
     const errorParam = searchParams.get('error');
     
     if (errorParam === 'email_already_registered_as_client') {
@@ -55,24 +43,44 @@ function ProfessionalRegister() {
       return;
     }
 
-    // Capturar token de OAuth
     const token = searchParams.get('token');
     
     if (token) {
       console.log('✅ Token recibido de OAuth en register:', token);
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('userType', 'PROFESSIONAL');
       
-      // Siempre redirigir a edit-cv después de registro OAuth para que complete su perfil
+      // ✅ MEJORA 2: Decodificación segura con Unicode
+      const payload = decodeToken(token);
+      
+      if (!payload) {
+        setToast({ type: 'error', message: 'Error al procesar autenticación' });
+        return;
+      }
+      
+      // Guardar datos
+      saveAuthData('PROFESSIONAL', token, {
+        id: payload.sub || payload.id,
+        email: payload.email,
+        name: payload.name
+      });
+      
+      // ✅ MEJORA 3: Siempre redirigir a edit-cv para que complete su perfil (incluyendo profesión)
       setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
       setTimeout(() => {
         navigate('/edit-cv', { replace: true });
-      }, 1000);
+      }, 300);
     }
   }, [searchParams, navigate]);
 
+  // ✅ MEJORA 1: Aplicar formatName solo al salir del campo
+  const handleNameBlur = () => {
+    setName(formatName(name));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Formatear nombre antes de enviar
+    const formattedName = formatName(name);
 
     // Validaciones
     if (!professionType) {
@@ -98,7 +106,7 @@ function ProfessionalRegister() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          name, 
+          name: formattedName, 
           email, 
           password,
           professionType,
@@ -113,21 +121,21 @@ function ProfessionalRegister() {
 
       const data = await response.json();
       
-      // Guardar token en localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userType', 'PROFESSIONAL');
-      // Guardar datos del usuario
-      localStorage.setItem('professional', JSON.stringify({
+      // Guardar con función centralizada
+      saveAuthData('PROFESSIONAL', data.token, {
         id: data.id,
         email: data.email,
-        name: data.name
-      }));
+        name: data.name,
+        professionType: data.professionType,
+        totalRatings: data.totalRatings || 0,
+        reputationScore: data.reputationScore || 0
+      });
 
       setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
       
       setTimeout(() => {
         navigate('/edit-cv');
-      }, 1000);
+      }, 300);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -142,31 +150,33 @@ function ProfessionalRegister() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
         <button
+          type="button"
           onClick={() => navigate('/professional-login')}
-          className="text-gray-600 mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
+          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver al login
         </button>
 
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-scaleIn">
-            <UserPlus className="w-10 h-10 text-white" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
+            <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-3xl roboto-light text-gray-800 mb-2">
+          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">
             Registro Profesionales
           </h1>
-          <p className="text-gray-600 text-base">
+          <p className="text-sm sm:text-base text-gray-600">
             Creá tu perfil profesional
           </p>
         </div>
 
         {/* Botón de Google */}
         <button
+          type="button"
           onClick={handleGoogleLogin}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-2xl mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-base"
+          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base"
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -177,32 +187,35 @@ function ProfessionalRegister() {
           Continuar con Google
         </button>
 
-        <div className="relative mb-6">
+        <div className="relative mb-4 sm:mb-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
-          <div className="relative flex justify-center text-sm">
+          <div className="relative flex justify-center text-xs sm:text-sm">
             <span className="px-4 bg-white text-gray-500">O registrate con email</span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 text-base">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Nombre Completo
             </label>
+            {/* ✅ MEJORA 1: onChange libre, formatName en onBlur */}
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(formatName(e.target.value))}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={handleNameBlur}
               placeholder="Juan Pérez"
+              autoComplete="name"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 text-base">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Email
             </label>
             <input
@@ -210,14 +223,15 @@ function ProfessionalRegister() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
+              autoComplete="email"
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
             />
           </div>
 
           {/* Tipo de profesión */}
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 flex items-center text-sm sm:text-base">
               <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
               Tipo de profesión *
             </label>
@@ -225,7 +239,7 @@ function ProfessionalRegister() {
               value={professionType}
               onChange={(e) => setProfessionType(e.target.value)}
               required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
             >
               <option value="">Seleccioná una opción</option>
               {professions.map((prof) => (
@@ -237,8 +251,8 @@ function ProfessionalRegister() {
           </div>
 
           {/* Título profesional (opcional) */}
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 text-base">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Título profesional (opcional)
             </label>
             <input
@@ -246,12 +260,12 @@ function ProfessionalRegister() {
               value={professionalTitle}
               onChange={(e) => setProfessionalTitle(e.target.value)}
               placeholder="Ej: Mozo Senior, Electricista Matriculado"
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2 text-base">
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Password
             </label>
             <div className="relative">
@@ -260,9 +274,10 @@ function ProfessionalRegister() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
+                autoComplete="new-password"
                 required
                 minLength={6}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-base"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
               />
               <button
                 type="button"
@@ -272,10 +287,12 @@ function ProfessionalRegister() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {/* ✅ MEJORA 4: Mensaje de ayuda */}
+            <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 6 caracteres</p>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2 text-base">
+          <div className="mb-4 sm:mb-6">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Confirmar Password
             </label>
             <div className="relative">
@@ -284,8 +301,9 @@ function ProfessionalRegister() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repetí tu password"
+                autoComplete="new-password"
                 required
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-base"
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
               />
               <button
                 type="button"
@@ -300,7 +318,7 @@ function ProfessionalRegister() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-lg"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-base sm:text-lg"
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -313,10 +331,11 @@ function ProfessionalRegister() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 text-base">
+        <div className="mt-4 sm:mt-6 text-center">
+          <p className="text-gray-600 text-sm sm:text-base">
             ¿Ya tenés cuenta?{' '}
             <button
+              type="button"
               onClick={() => navigate('/professional-login')}
               className="text-blue-600 font-semibold hover:text-blue-700"
             >
@@ -326,7 +345,6 @@ function ProfessionalRegister() {
         </div>
       </div>
 
-      {/* Toast notification */}
       {toast && (
         <Toast
           message={toast.message}
@@ -335,7 +353,6 @@ function ProfessionalRegister() {
         />
       )}
       
-      {/* Error modal */}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Home, ArrowLeft, Calendar, Edit2, Trash2, Clock } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
@@ -14,9 +14,17 @@ function ClientRatingsHistory() {
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now()); // ✅ MEJORA 2: Estado para actualizar cronómetros
 
   useEffect(() => {
     loadRatings();
+    
+    // ✅ MEJORA 2: Actualizar cada 60 segundos para refrescar tiempos
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Cada 1 minuto
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadRatings = async () => {
@@ -28,7 +36,16 @@ function ClientRatingsHistory() {
       return;
     }
 
-    const clientData = JSON.parse(savedClient);
+    // ✅ MEJORA 5: Manejo seguro de JSON.parse
+    let clientData;
+    try {
+      clientData = JSON.parse(savedClient);
+    } catch (error) {
+      console.error('Error parseando client data:', error);
+      localStorage.removeItem('client');
+      navigate('/client-login');
+      return;
+    }
 
     try {
       const response = await fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
@@ -52,30 +69,34 @@ function ClientRatingsHistory() {
     }
   };
 
-  const handleEditRating = (rating) => {
+  const handleEditRating = useCallback((rating) => {
     navigate(`/edit-rating/${rating.id}`);
-  };
+  }, [navigate]);
 
-  const handleDeleteClick = (rating) => {
+  const handleDeleteClick = useCallback((rating) => {
     setDeleteModal({
       ratingId: rating.id,
       professionalName: rating.professionalName
     });
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  // ✅ Eliminación optimista
+  const handleDeleteConfirm = useCallback(async () => {
     if (!deleteModal) return;
 
+    const ratingIdToDelete = deleteModal.ratingId;
+    
+    // Optimistic UI: eliminar inmediatamente
+    setRatings(prev => prev.filter(r => r.id !== ratingIdToDelete));
+    setDeleteModal(null);
+
     try {
-      await api.deleteRating(deleteModal.ratingId);
+      await api.deleteRating(ratingIdToDelete);
       
       setToast({ 
         type: 'success', 
         message: 'Calificación eliminada exitosamente' 
       });
-
-      // Recargar ratings
-      loadRatings();
       
     } catch (error) {
       console.error('Error al eliminar:', error);
@@ -83,62 +104,70 @@ function ClientRatingsHistory() {
         type: 'error', 
         message: error.response?.data?.message || 'Error al eliminar la calificación' 
       });
-    } finally {
-      setDeleteModal(null);
+      
+      // Rollback: recargar si falla
+      loadRatings();
     }
-  };
+  }, [deleteModal]);
 
-  const getTimeRemaining = (createdAt) => {
-  try {
-    // Obtener la hora actual
-    const now = Date.now();
-    
-    // Si la fecha no tiene zona horaria, agregarle 'Z' para forzar UTC
-    let dateString = createdAt;
-    if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
-      dateString = createdAt + 'Z'; // Forzar interpretación como UTC
-    }
-    
-    // Parsear la fecha de creación
-    const created = new Date(dateString).getTime();
-    
-    // Verificar que la fecha es válida
-    if (isNaN(created)) {
-      console.error('Fecha inválida:', createdAt);
+  const getTimeRemaining = useCallback((createdAt) => {
+    try {
+      const now = currentTime; // ✅ Usa el estado que se actualiza cada minuto
+      
+      let dateString = createdAt;
+      if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
+        dateString = createdAt + 'Z';
+      }
+      
+      const created = new Date(dateString).getTime();
+      
+      if (isNaN(created)) return null;
+      
+      const diffMinutes = Math.floor((now - created) / (1000 * 60));
+      
+      if (diffMinutes >= 30 || diffMinutes < 0) return null;
+      
+      const remainingMinutes = 30 - diffMinutes;
+      return `${remainingMinutes} min`;
+      
+    } catch (error) {
+      console.error('Error calculando tiempo:', error);
       return null;
     }
-    
-    // Calcular diferencia en minutos
-    const diffMinutes = Math.floor((now - created) / (1000 * 60));
-    
-    // Si han pasado más de 30 minutos, no es editable
-    if (diffMinutes >= 30) {
-      return null;
-    }
-    
-    // Si el tiempo es negativo (fecha en el futuro), return null
-    if (diffMinutes < 0) {
-      console.warn('Fecha aún en el futuro (diferencia de zona horaria?):', createdAt);
-      return null;
-    }
-    
-    const remainingMinutes = 30 - diffMinutes;
-    return `${remainingMinutes} min`;
-    
-  } catch (error) {
-    console.error('Error calculando tiempo:', error);
-    return null;
-  }
-};
+  }, [currentTime]);
 
-  const renderStars = (score) => {
+  const renderStars = useCallback((score) => {
     return [...Array(5)].map((_, i) => (
       <Star
         key={i}
         className={`w-4 h-4 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
       />
     ));
-  };
+  }, []);
+
+  // ✅ MEJORA 3: Agrupar por mes
+  const groupedRatings = useMemo(() => {
+    return ratings.reduce((groups, rating) => {
+      const date = new Date(rating.createdAt);
+      const month = date.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // Para ordenar correctamente
+      
+      if (!groups[monthKey]) {
+        groups[monthKey] = {
+          label: month.charAt(0).toUpperCase() + month.slice(1), // Capitalizar
+          ratings: []
+        };
+      }
+      groups[monthKey].ratings.push(rating);
+      return groups;
+    }, {});
+  }, [ratings]);
+
+  // Ordenar meses de más reciente a más antiguo
+  const sortedMonths = useMemo(() => 
+    Object.keys(groupedRatings).sort((a, b) => b.localeCompare(a)),
+    [groupedRatings]
+  );
 
   if (loading) {
     return <LoadingScreen gradient="from-green-500 to-teal-600" />;
@@ -186,76 +215,86 @@ function ClientRatingsHistory() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {ratings.map((rating) => {
-              const timeRemaining = getTimeRemaining(rating.createdAt);
-              const canEdit = rating.canEdit;
+          <>
+            {/* ✅ MEJORA 3: Renderizado agrupado por mes */}
+            {sortedMonths.map(monthKey => (
+              <div key={monthKey}>
+                <h3 className="text-gray-500 text-sm font-bold uppercase mb-3 ml-2 mt-6 first:mt-0">
+                  {groupedRatings[monthKey].label}
+                </h3>
+                <div className="space-y-3">
+                  {groupedRatings[monthKey].ratings.map((rating) => {
+                    const timeRemaining = getTimeRemaining(rating.createdAt);
+                    const canEdit = rating.canEdit;
 
-              return (
-                <div 
-                  key={rating.id} 
-                  className={`rounded-2xl p-4 hover:shadow-xl transition-all ${
-                    canEdit && timeRemaining 
-                      ? 'border-2 border-blue-400 bg-blue-50/30 shadow-lg editable-rating' 
-                      : 'bg-white shadow-lg'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-800 text-lg">
-                        {rating.professionalName}
-                      </h4>
-                      <p className="text-sm text-gray-500">{rating.businessName}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {renderStars(rating.score)}
-                    </div>
-                  </div>
-                  
-                  {rating.comment && (
-                    <p className="text-gray-600 text-sm mb-2 italic bg-gray-50 p-3 rounded-xl">
-                      "{rating.comment}"
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-xs text-gray-400">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(rating.createdAt).toLocaleDateString('es-AR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </div>
-
-                    {/* Botones de editar/eliminar */}
-                    {canEdit && timeRemaining && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg font-semibold">
-                          <Clock className="w-3 h-3" />
-                          <span>{timeRemaining}</span>
+                    return (
+                      <div 
+                        key={rating.id} 
+                        className={`rounded-2xl p-4 hover:shadow-xl transition-all ${
+                          canEdit && timeRemaining 
+                            ? 'border-2 border-blue-400 bg-blue-50/30 shadow-lg editable-rating' 
+                            : 'bg-white shadow-lg'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-800 text-lg break-words">
+                              {rating.professionalName}
+                            </h4>
+                            <p className="text-sm text-gray-500 break-words">{rating.businessName}</p>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {renderStars(rating.score)}
+                          </div>
                         </div>
-                        <button
-                          onClick={() => handleEditRating(rating)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="Editar calificación"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(rating)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="Eliminar calificación"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        
+                        {rating.comment && (
+                          <p className="text-gray-600 text-sm mb-2 italic bg-gray-50 p-3 rounded-xl break-words">
+                            "{rating.comment}"
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center text-xs text-gray-400">
+                            <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
+                            {new Date(rating.createdAt).toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </div>
+
+                          {/* Botones de editar/eliminar */}
+                          {canEdit && timeRemaining && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg font-semibold">
+                                <Clock className="w-3 h-3" />
+                                <span>{timeRemaining}</span>
+                              </div>
+                              <button
+                                onClick={() => handleEditRating(rating)}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                title="Editar calificación"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(rating)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                title="Eliminar calificación"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            ))}
+          </>
         )}
       </div>
 

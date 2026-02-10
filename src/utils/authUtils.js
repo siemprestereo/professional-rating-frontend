@@ -26,6 +26,22 @@ export const decodeToken = (token) => {
 };
 
 /**
+ * ✅ Formatea nombre: limpia caracteres y capitaliza
+ * @param {string} input - Nombre a formatear
+ * @returns {string} - Nombre formateado
+ */
+export const formatName = (input) => {
+  // Eliminar todo lo que no sea letra o espacio
+  const cleaned = input.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+  
+  // Capitalizar primera letra de cada palabra
+  return cleaned
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+/**
  * ✅ Maneja la redirección post-login
  * @param {string} defaultPath - Ruta por defecto si no hay redirect pendiente
  * @param {function} navigate - Función navigate de React Router

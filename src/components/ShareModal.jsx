@@ -5,8 +5,12 @@ import QRCode from 'qrcode';
 function ShareModal({ professionalId, professionalName, onClose }) {
   const [copied, setCopied] = useState(false);
   const [qrImage, setQrImage] = useState(null);
+  const [downloadToast, setDownloadToast] = useState(false);
   
-  const publicUrl = `${window.location.origin}/public-cv/${professionalId}`;
+  // ✅ MEJORA 1: Usar dominio de producción fijo
+  // Esto asegura que el link siempre apunte a la URL pública correcta
+  const baseUrl = 'https://www.calificalo.com.ar';
+  const publicUrl = `${baseUrl}/public-cv/${professionalId}`;
 
   useEffect(() => {
     generateQR();
@@ -14,9 +18,11 @@ function ShareModal({ professionalId, professionalName, onClose }) {
 
   const generateQR = async () => {
     try {
+      // ✅ MEJORA 2: Error correction nivel M para mejor escaneabilidad
       const qrDataUrl = await QRCode.toDataURL(publicUrl, {
         width: 300,
         margin: 2,
+        errorCorrectionLevel: 'M', // ← Nivel medio de corrección de errores
         color: {
           dark: '#5B21B6',
           light: '#FFFFFF'
@@ -38,12 +44,25 @@ function ShareModal({ professionalId, professionalName, onClose }) {
     }
   };
 
+  // ✅ MEJORA 3: Feedback de descarga + sanitización de nombre de archivo
   const handleDownloadQR = () => {
     if (!qrImage) return;
+    
+    // Sanitizar nombre: quitar espacios, tildes y caracteres especiales
+    const sanitizedName = professionalName
+      .normalize("NFD")                    // Separar tildes
+      .replace(/[\u0300-\u036f]/g, "")     // Quitar tildes
+      .replace(/\s+/g, '_')                 // Espacios → guiones bajos
+      .replace(/[^a-zA-Z0-9_]/g, '');      // Quitar caracteres especiales
+    
     const link = document.createElement('a');
     link.href = qrImage;
-    link.download = `CV_${professionalName.replace(/\s+/g, '_')}_QR.png`;
+    link.download = `CV_${sanitizedName}_QR.png`;
     link.click();
+    
+    // ✅ MEJORA 3: Feedback visual de descarga
+    setDownloadToast(true);
+    setTimeout(() => setDownloadToast(false), 2000);
   };
 
   return (
@@ -52,7 +71,11 @@ function ShareModal({ professionalId, professionalName, onClose }) {
         {/* Header - sticky en mobile */}
         <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 rounded-t-3xl z-10">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Compartir CV</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button 
+            type="button"
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
@@ -68,14 +91,22 @@ function ShareModal({ professionalId, professionalName, onClose }) {
                 />
               </div>
               <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 text-center">
-                Escaneá este código para ver el CV
+                Escaneá este código para ver el CV público
               </p>
               <button 
+                type="button"
                 onClick={handleDownloadQR} 
-                className="mt-2 sm:mt-3 text-purple-600 hover:text-purple-700 text-xs sm:text-sm font-semibold"
+                className="mt-2 sm:mt-3 text-purple-600 hover:text-purple-700 text-xs sm:text-sm font-semibold transition-colors"
               >
                 Descargar QR
               </button>
+              
+              {/* ✅ MEJORA 3: Toast de descarga */}
+              {downloadToast && (
+                <div className="mt-2 text-xs sm:text-sm text-green-600 font-semibold animate-fadeIn">
+                  ✓ QR descargado
+                </div>
+              )}
             </div>
           )}
 
@@ -91,6 +122,7 @@ function ShareModal({ professionalId, professionalName, onClose }) {
                 className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm text-gray-600 bg-gray-50" 
               />
               <button 
+                type="button"
                 onClick={handleCopy} 
                 className={`px-3 py-2 sm:px-4 sm:py-3 rounded-xl font-semibold transition-all ${
                   copied ? 'bg-green-500 text-white' : 'bg-purple-600 text-white hover:bg-purple-700'
@@ -100,7 +132,7 @@ function ShareModal({ professionalId, professionalName, onClose }) {
               </button>
             </div>
             {copied && (
-              <p className="text-xs sm:text-sm text-green-600 mt-2 font-semibold">
+              <p className="text-xs sm:text-sm text-green-600 mt-2 font-semibold animate-fadeIn">
                 ✓ Link copiado al portapapeles
               </p>
             )}
@@ -124,7 +156,7 @@ function ShareModal({ professionalId, professionalName, onClose }) {
               </a>
 
               <a 
-                href={`mailto:?subject=${encodeURIComponent('Mi CV Profesional')}&body=${encodeURIComponent(`Te comparto mi CV: ${publicUrl}`)}`} 
+                href={`mailto:?subject=${encodeURIComponent('Mi CV Profesional - Calificalo')}&body=${encodeURIComponent(`Te comparto mi CV profesional: ${publicUrl}`)}`} 
                 className="flex flex-col items-center justify-center p-3 sm:p-4 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all"
               >
                 <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,6 +165,13 @@ function ShareModal({ professionalId, professionalName, onClose }) {
                 <span className="text-xs sm:text-sm mt-2 text-gray-600 font-semibold">Email</span>
               </a>
             </div>
+          </div>
+
+          {/* ✅ Nota informativa */}
+          <div className="mt-4 bg-purple-50 border border-purple-200 rounded-xl p-3">
+            <p className="text-xs text-purple-800">
+              <strong>💡 Nota:</strong> Este link es público y puede ser compartido libremente. Solo mostrará información profesional visible en tu CV.
+            </p>
           </div>
         </div>
       </div>
