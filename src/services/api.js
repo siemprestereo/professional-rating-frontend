@@ -25,6 +25,26 @@ apiClient.interceptors.request.use(
   }
 );
 
+// ✅ NUEVO: Interceptor para manejar errores 401 (token expirado)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expirado o inválido
+      console.warn('⚠️ Token expirado o inválido, redirigiendo al login...');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('client');
+      localStorage.removeItem('professional');
+      localStorage.removeItem('userType');
+      
+      // Redirigir según el tipo de usuario que estaba activo
+      const userType = localStorage.getItem('userType');
+      window.location.href = userType === 'PROFESSIONAL' ? '/professional-login' : '/client-login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ========== AUTH ==========
 export const getCurrentUser = async () => {
   const response = await apiClient.get('/');
@@ -48,19 +68,16 @@ export const getProfessionalRatings = async (professionalId) => {
   return response.data;
 };
 
-// ✅ NUEVO: Actualizar rating
 export const updateRating = async (ratingId, ratingData) => {
   const response = await apiClient.put(`/ratings/${ratingId}`, ratingData);
   return response.data;
 };
 
-// ✅ NUEVO: Eliminar rating
 export const deleteRating = async (ratingId) => {
   const response = await apiClient.delete(`/ratings/${ratingId}`);
   return response.data;
 };
 
-// ✅ NUEVO: Obtener un rating específico por ID
 export const getRatingById = async (ratingId) => {
   const response = await apiClient.get(`/ratings/${ratingId}`);
   return response.data;
@@ -73,9 +90,10 @@ export const resolveQR = async (code) => {
 };
 
 // ========== ROLE SWITCHING ==========
-export const switchRole = async (newRole, professionType = null, professionalTitle = null) => {
+// ✅ CORREGIDO: Cambiar newRole → targetRole para que coincida con el backend
+export const switchRole = async (targetRole, professionType = null, professionalTitle = null) => {
   const response = await apiClient.post('/role/switch', {
-    newRole,
+    targetRole,  // ← Cambio crítico aquí
     professionType,
     professionalTitle
   });
