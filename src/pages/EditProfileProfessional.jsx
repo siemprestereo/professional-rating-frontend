@@ -5,6 +5,8 @@ import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
 import LoadingScreen from '../components/LoadingScreen';
+import { clearAllAppData, validatePhone } from '../utils/storage';
+import { PROFESSIONS } from '../constants/professions';
 
 function EditProfileProfessional() {
   const navigate = useNavigate();
@@ -31,85 +33,22 @@ function EditProfileProfessional() {
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
-  const professions = [
-    { value: 'WAITER', label: 'Mozo/Camarero' },
-    { value: 'ELECTRICIAN', label: 'Electricista' },
-    { value: 'PAINTER', label: 'Pintor' },
-    { value: 'HAIRDRESSER', label: 'Peluquero' },
-    { value: 'PLUMBER', label: 'Plomero' },
-    { value: 'CARPENTER', label: 'Carpintero' },
-    { value: 'MECHANIC', label: 'Mecánico' },
-    { value: 'CHEF', label: 'Chef' },
-    { value: 'BARISTA', label: 'Barista' },
-    { value: 'BARTENDER', label: 'Bartender' },
-    { value: 'CLEANER', label: 'Personal de limpieza' },
-    { value: 'GARDENER', label: 'Jardinero' },
-    { value: 'DRIVER', label: 'Conductor' },
-    { value: 'SECURITY', label: 'Seguridad' },
-    { value: 'RECEPTIONIST', label: 'Recepcionista' },
-    { value: 'OTHER', label: 'Otro' }
-  ];
-
   useEffect(() => {
     loadProfile();
   }, []);
 
-  // ✅ OPTIMIZACIÓN: Carga paralela de profile y rol
   const loadProfile = async () => {
-    const savedData = localStorage.getItem('professional');
-    const token = localStorage.getItem('authToken');
-    
-    if (!savedData || !token) {
-      navigate('/professional-login');
-      return;
-    }
-
-    const localData = JSON.parse(savedData);
-    
     try {
-      // ✅ Cargar profile y verificar rol EN PARALELO
-      const [profileResponse, roleResponse] = await Promise.all([
-        fetch(`${backendUrl}/api/professionals/${localData.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${backendUrl}/api/role/current`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
-
-      // Procesar respuesta del perfil
-      if (profileResponse.ok) {
-        const data = await profileResponse.json();
-        console.log('Backend data:', data);
-        
-        setProfessional(data);
-        setName(data.name || '');
-        setEmail(data.email || '');
-        setPhone(data.phone || '');
-        setLocation(data.location || '');
-        setProfessionalTitle(data.professionalTitle || '');
-        setProfessionType(data.professionType || '');
-        
-        localStorage.setItem('professional', JSON.stringify(data));
-      } else {
-        setProfessional(localData);
-        setName(localData.name || '');
-        setEmail(localData.email || '');
-        setPhone(localData.phone || '');
-        setLocation(localData.location || '');
-        setProfessionalTitle(localData.professionalTitle || '');
-        setProfessionType(localData.professionType || '');
+      const savedData = localStorage.getItem('professional');
+      const token = localStorage.getItem('authToken');
+      
+      if (!savedData || !token) {
+        navigate('/professional-login');
+        return;
       }
 
-      // Procesar respuesta del rol
-      if (roleResponse.ok) {
-        const roleData = await roleResponse.json();
-        console.log('Role check:', roleData);
-        setIsAlreadyClient(roleData.activeRole === 'CLIENT');
-      }
-
-    } catch (error) {
-      console.error('Error loading profile:', error);
+      const localData = JSON.parse(savedData);
+      
       setProfessional(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -117,6 +56,61 @@ function EditProfileProfessional() {
       setLocation(localData.location || '');
       setProfessionalTitle(localData.professionalTitle || '');
       setProfessionType(localData.professionType || '');
+
+      try {
+        const [profileResponse, roleResponse] = await Promise.all([
+          fetch(`${backendUrl}/api/professionals/${localData.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`${backendUrl}/api/role/current`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
+
+        if (profileResponse.ok) {
+          const serverData = await profileResponse.json();
+          console.log('✅ Datos del servidor:', serverData);
+          
+          setProfessional(serverData);
+          setName(serverData.name || '');
+          setEmail(serverData.email || '');
+          setPhone(serverData.phone || '');
+          setLocation(serverData.location || '');
+          setProfessionalTitle(serverData.professionalTitle || '');
+          setProfessionType(serverData.professionType || '');
+          
+          localStorage.setItem('professional', JSON.stringify(serverData));
+        }
+
+        if (roleResponse.ok) {
+          const roleData = await roleResponse.json();
+          console.log('✅ Verificación de rol:', roleData);
+          setIsAlreadyClient(roleData.activeRole === 'CLIENT');
+        }
+
+      } catch (fetchError) {
+        console.warn('No se pudo actualizar desde el servidor, usando datos locales:', fetchError);
+      }
+
+    } catch (error) {
+      console.error('Error al cargar perfil:', error);
+      
+      if (error instanceof SyntaxError) {
+        clearAllAppData();
+        navigate('/professional-login');
+        return;
+      }
+      
+      setErrorModal({
+        title: 'Error al cargar perfil',
+        message: 'No se pudieron cargar tus datos. Por favor, iniciá sesión nuevamente.'
+      });
+      
+      setTimeout(() => {
+        clearAllAppData();
+        navigate('/professional-login');
+      }, 2000);
+      
     } finally {
       setLoading(false);
     }
@@ -124,6 +118,23 @@ function EditProfileProfessional() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    if (phone && !validatePhone(phone)) {
+      setToast({ 
+        type: 'error', 
+        message: 'El formato del teléfono no es válido. Ej: +54 11 1234-5678' 
+      });
+      return;
+    }
+
+    if (!professionType) {
+      setToast({ 
+        type: 'error', 
+        message: 'Por favor seleccioná tu tipo de profesión' 
+      });
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -147,20 +158,23 @@ function EditProfileProfessional() {
         throw new Error(data.error || 'Error al actualizar perfil');
       }
 
-      const data = await response.json();
+      const updatedData = await response.json();
+      console.log('✅ Perfil actualizado desde servidor:', updatedData);
       
-      const updatedProfessional = {
-        ...professional,
-        phone: data.phone || phone,
-        location: data.location || location,
-        professionalTitle: data.professionalTitle || professionalTitle,
-        professionType: data.professionType || professionType
-      };
-      localStorage.setItem('professional', JSON.stringify(updatedProfessional));
-      setProfessional(updatedProfessional);
+      setProfessional(updatedData);
+      setName(updatedData.name || '');
+      setEmail(updatedData.email || '');
+      setPhone(updatedData.phone || '');
+      setLocation(updatedData.location || '');
+      setProfessionalTitle(updatedData.professionalTitle || '');
+      setProfessionType(updatedData.professionType || '');
+      
+      localStorage.setItem('professional', JSON.stringify(updatedData));
 
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
+      
     } catch (err) {
+      console.error('❌ Error al guardar:', err);
       setToast({ type: 'error', message: err.message });
     } finally {
       setSaving(false);
@@ -173,23 +187,21 @@ function EditProfileProfessional() {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${backendUrl}/api/auth/delete-account/${professional.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!response.ok) {
         throw new Error('Error al eliminar cuenta');
       }
 
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('professional');
+      clearAllAppData();
       
       setToast({ type: 'success', message: 'Cuenta eliminada exitosamente' });
       
       setTimeout(() => {
         navigate('/');
       }, 2000);
+      
     } catch (error) {
       console.error('Error deleting account:', error);
       setErrorModal({
@@ -220,13 +232,13 @@ function EditProfileProfessional() {
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-            {name.charAt(0)}
+            {name.charAt(0).toUpperCase()}
           </div>
           <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             Editar Perfil
           </h1>
           <p className="text-white/90 text-lg animate-slideUp delay-100">
-            Actualizá tus datos personales
+            Actualizá tus datos profesionales
           </p>
         </div>
       </div>
@@ -265,21 +277,22 @@ function EditProfileProfessional() {
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
-                Tipo de profesión
+                Tipo de profesión *
               </label>
               <select
                 value={professionType}
                 onChange={(e) => setProfessionType(e.target.value)}
+                required
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base"
               >
                 <option value="">Seleccioná una opción</option>
-                {professions.map((prof) => (
+                {PROFESSIONS.map((prof) => (
                   <option key={prof.value} value={prof.value}>
                     {prof.label}
                   </option>
                 ))}
               </select>
-              <p className="text-sm text-gray-500 mt-1">Tu área de especialización</p>
+              <p className="text-sm text-gray-500 mt-1">Tu área de especialización (requerido)</p>
             </div>
 
             <div className="mb-4">
@@ -310,6 +323,7 @@ function EditProfileProfessional() {
                 placeholder="+54 11 1234-5678"
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base"
               />
+              <p className="text-sm text-gray-500 mt-1">Formato: +54 11 1234-5678</p>
             </div>
 
             <div className="mb-6">
@@ -349,7 +363,7 @@ function EditProfileProfessional() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-green-200 animate-slideUp delay-50">
           <h3 className="text-xl roboto-light text-gray-800 mb-2 flex items-center">
             <UserCheck className="w-6 h-6 mr-2 text-green-600" />
-            {isAlreadyClient ? '¿Querés convertirte en Cliente?' : '¿Ya no ejercés tu profesión?'}
+            {isAlreadyClient ? '¿Querés usar tu perfil de Cliente?' : '¿Ya no ejercés tu profesión?'}
           </h3>
           <p className="text-gray-600 mb-4 text-base">
             {isAlreadyClient 
@@ -362,17 +376,17 @@ function EditProfileProfessional() {
             onClick={handleSwitchToClient}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all text-base"
           >
-            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Convertite en Cliente'}
+            {isAlreadyClient ? 'Ir a mi perfil de Cliente' : 'Convertirme en Cliente'}
           </button>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center">
             <Trash2 className="w-6 h-6 mr-2" />
-            Atención
+            Zona de Peligro
           </h3>
           <p className="text-gray-600 mb-4 text-base">
-            Una vez eliminada tu cuenta, no podrás recuperar tus datos.
+            Una vez eliminada tu cuenta, no podrás recuperar tus datos, incluyendo tu CV, calificaciones y perfil.
           </p>
           <button
             onClick={() => setShowDeleteModal(true)}

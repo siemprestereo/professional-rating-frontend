@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff, Briefcase } from 'lucide-rea
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import { decodeToken, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
+import { PROFESSIONS } from '../constants/professions';
 
 function ProfessionalRegister() {
   const navigate = useNavigate();
@@ -20,16 +21,6 @@ function ProfessionalRegister() {
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
-  const professions = [
-    { value: 'WAITER', label: 'Mozo/Camarero' },
-    { value: 'ELECTRICIAN', label: 'Electricista' },
-    { value: 'PAINTER', label: 'Pintor' },
-    { value: 'PLUMBER', label: 'Plomero' },
-    { value: 'CARPENTER', label: 'Carpintero' },
-    { value: 'MECHANIC', label: 'Mecánico' },
-    { value: 'CLEANER', label: 'Personal de limpieza' },
-    { value: 'OTHER', label: 'Otro' }
-  ];
 
   // Detectar errores de OAuth y capturar token
   useEffect(() => {
@@ -242,7 +233,7 @@ function ProfessionalRegister() {
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
             >
               <option value="">Seleccioná una opción</option>
-              {professions.map((prof) => (
+              {PROFESSIONS.map((prof) => (
                 <option key={prof.value} value={prof.value}>
                   {prof.label}
                 </option>

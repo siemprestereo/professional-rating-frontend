@@ -5,6 +5,7 @@ import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
 import LoadingScreen from '../components/LoadingScreen';
+import { clearAllAppData, validatePhone } from '../utils/storage';
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -14,20 +15,15 @@ function EditProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  // Campos del formulario
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   
-  // Modal eliminar cuenta
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
-  // Modal upgrade to professional
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
-  // Toast y ErrorModal
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -35,23 +31,85 @@ function EditProfile() {
     loadProfile();
   }, []);
 
-  const loadProfile = () => {
-    const savedData = localStorage.getItem('client');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      setClient(data);
-      setName(data.name || '');
-      setEmail(data.email || '');
-      setPhone(data.phone || '');
-      setLocation(data.location || '');
+  const loadProfile = async () => {
+    try {
+      const savedData = localStorage.getItem('client');
+      const token = localStorage.getItem('authToken');
+      
+      if (!savedData || !token) {
+        navigate('/client-login');
+        return;
+      }
+
+      const localData = JSON.parse(savedData);
+      
+      // Mostrar datos locales inmediatamente (UX rápida)
+      setClient(localData);
+      setName(localData.name || '');
+      setEmail(localData.email || '');
+      setPhone(localData.phone || '');
+      setLocation(localData.location || '');
+
+      // Intentar actualizar desde el servidor
+      try {
+        const response = await fetch(`${backendUrl}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const serverData = await response.json();
+          
+          // Actualizar con datos frescos del servidor
+          setClient(serverData);
+          setName(serverData.name || '');
+          setEmail(serverData.email || '');
+          setPhone(serverData.phone || '');
+          setLocation(serverData.location || '');
+          
+          localStorage.setItem('client', JSON.stringify(serverData));
+        }
+      } catch (fetchError) {
+        console.warn('No se pudo actualizar desde el servidor, usando datos locales:', fetchError);
+        // Continuar con datos locales
+      }
+      
+    } catch (error) {
+      console.error('Error al cargar perfil:', error);
+      
+      if (error instanceof SyntaxError) {
+        // LocalStorage corrupto
+        clearAllAppData();
+        navigate('/client-login');
+        return;
+      }
+      
+      setErrorModal({
+        title: 'Error al cargar perfil',
+        message: 'No se pudieron cargar tus datos. Por favor, iniciá sesión nuevamente.'
+      });
+      
+      setTimeout(() => {
+        clearAllAppData();
+        navigate('/client-login');
+      }, 2000);
+      
+    } finally {
       setLoading(false);
-    } else {
-      navigate('/client-login');
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    // Validar teléfono
+    if (phone && !validatePhone(phone)) {
+      setToast({ 
+        type: 'error', 
+        message: 'El formato del teléfono no es válido. Ej: +54 11 1234-5678' 
+      });
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -70,26 +128,21 @@ function EditProfile() {
         throw new Error(data.error || 'Error al actualizar perfil');
       }
 
+      // ✅ CONFIAR 100% EN LA RESPUESTA DEL SERVIDOR
       const updatedData = await response.json();
-      console.log('✅ Respuesta del servidor:', updatedData);
+      console.log('✅ Datos actualizados desde servidor:', updatedData);
       
-      // Actualizar localStorage con los datos devueltos por el servidor
-      const updatedClient = {
-        id: updatedData.id || client.id,
-        name: updatedData.name || client.name,
-        email: updatedData.email || client.email,
-        phone: updatedData.phone || '',
-        location: updatedData.location || ''
-      };
+      // Actualizar estado y localStorage con los datos del servidor
+      setClient(updatedData);
+      setName(updatedData.name || '');
+      setEmail(updatedData.email || '');
+      setPhone(updatedData.phone || '');
+      setLocation(updatedData.location || '');
       
-      localStorage.setItem('client', JSON.stringify(updatedClient));
-      setClient(updatedClient);
-      
-      // Actualizar los estados del formulario
-      setPhone(updatedClient.phone);
-      setLocation(updatedClient.location);
+      localStorage.setItem('client', JSON.stringify(updatedData));
 
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
+      
     } catch (err) {
       console.error('❌ Error al guardar:', err);
       setToast({ type: 'error', message: err.message });
@@ -104,23 +157,22 @@ function EditProfile() {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${backendUrl}/api/auth/delete-account/${client.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!response.ok) {
         throw new Error('Error al eliminar cuenta');
       }
 
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('client');
+      // ✅ LIMPIAR TODO EL LOCALSTORAGE
+      clearAllAppData();
       
       setToast({ type: 'success', message: 'Cuenta eliminada exitosamente' });
       
       setTimeout(() => {
         navigate('/');
       }, 2000);
+      
     } catch (error) {
       console.error('Error deleting account:', error);
       setErrorModal({
@@ -143,7 +195,7 @@ function EditProfile() {
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-teal-600 animate-scaleIn">
-            {name.charAt(0)}
+            {name.charAt(0).toUpperCase()}
           </div>
           <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             Editar Perfil
@@ -202,6 +254,7 @@ function EditProfile() {
                 placeholder="+54 11 1234-5678"
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all text-base"
               />
+              <p className="text-sm text-gray-500 mt-1">Formato: +54 11 1234-5678</p>
             </div>
 
             {/* Ubicación */}
@@ -262,7 +315,7 @@ function EditProfile() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-red-200 animate-slideUp delay-100">
           <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center">
             <Trash2 className="w-6 h-6 mr-2" />
-            Atención
+            Zona de Peligro
           </h3>
           <p className="text-gray-600 mb-4 text-base">
             Una vez eliminada tu cuenta, no podrás recuperar tus datos.
@@ -276,7 +329,7 @@ function EditProfile() {
         </div>
       </div>
 
-      {/* Botón Home flotante fijo abajo centrado */}
+      {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
         <button 
           onClick={() => navigate('/client-dashboard')}
@@ -330,11 +383,8 @@ function EditProfile() {
         <UpgradeToProfessionalModal
           onClose={() => setShowUpgradeModal(false)}
           onSuccess={(newToken) => {
-            // Actualizar token
             localStorage.setItem('authToken', newToken);
-            // Limpiar datos de cliente
             localStorage.removeItem('client');
-            // Redirigir al dashboard profesional
             navigate('/professional-dashboard');
           }}
         />
