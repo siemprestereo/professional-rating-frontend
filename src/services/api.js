@@ -25,20 +25,23 @@ apiClient.interceptors.request.use(
   }
 );
 
-// ✅ NUEVO: Interceptor para manejar errores 401 (token expirado)
+// ✅ INTERCEPTOR: Manejar errores 401 (token expirado)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       console.warn('⚠️ Token expirado o inválido, redirigiendo al login...');
+      
+      const userType = localStorage.getItem('userType');
+      
+      // Limpiar todo el localStorage
       localStorage.removeItem('authToken');
       localStorage.removeItem('client');
       localStorage.removeItem('professional');
       localStorage.removeItem('userType');
+      localStorage.removeItem('redirectAfterLogin');
       
-      // Redirigir según el tipo de usuario que estaba activo
-      const userType = localStorage.getItem('userType');
+      // Redirigir según el tipo de usuario
       window.location.href = userType === 'PROFESSIONAL' ? '/professional-login' : '/client-login';
     }
     return Promise.reject(error);
@@ -90,10 +93,10 @@ export const resolveQR = async (code) => {
 };
 
 // ========== ROLE SWITCHING ==========
-// ✅ CORREGIDO: Cambiar newRole → targetRole para que coincida con el backend
-export const switchRole = async (targetRole, professionType = null, professionalTitle = null) => {
+// ✅ CORREGIDO: newRole coincide con el DTO del backend
+export const switchRole = async (newRole, professionType = null, professionalTitle = null) => {
   const response = await apiClient.post('/role/switch', {
-    targetRole,  // ← Cambio crítico aquí
+    newRole,  // ← CRÍTICO: debe ser "newRole", no "targetRole"
     professionType,
     professionalTitle
   });
