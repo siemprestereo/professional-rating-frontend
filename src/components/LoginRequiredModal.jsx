@@ -1,7 +1,7 @@
 import { X, LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function LoginRequiredModal({ onClose }) {
+function LoginRequiredModal({ onClose, message }) {
   const navigate = useNavigate();
 
   const handleProfessionalLogin = () => {
@@ -13,7 +13,7 @@ function LoginRequiredModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 animate-fadeIn p-4">
       <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn relative">
         <button
           onClick={onClose}
@@ -30,7 +30,7 @@ function LoginRequiredModal({ onClose }) {
             Iniciá sesión para continuar
           </h2>
           <p className="text-gray-600 text-base">
-            Necesitás iniciar sesión para buscar profesionales
+            {message || 'Necesitás iniciar sesión para continuar'}
           </p>
         </div>
 
