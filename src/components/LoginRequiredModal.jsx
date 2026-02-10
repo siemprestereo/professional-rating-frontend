@@ -30,7 +30,7 @@ function LoginRequiredModal({ onClose, message }) {
             Iniciá sesión para continuar
           </h2>
           <p className="text-gray-600 text-base">
-            {message || 'Necesitás iniciar sesión para continuar'}
+            {message || 'Tenés que iniciar sesión para continuar'}
           </p>
         </div>
 
