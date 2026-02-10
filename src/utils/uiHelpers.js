@@ -1,4 +1,3 @@
-// src/utils/uiHelpers.js
 import { Star } from 'lucide-react';
 
 export const renderStars = (score, size = 'md') => {
