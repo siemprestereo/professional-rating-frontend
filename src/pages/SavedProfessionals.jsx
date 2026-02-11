@@ -5,6 +5,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { translateProfession, RenderStars } from '../utils/professionalUtils';
+import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react';
 
 function SavedProfessionals() {
     const navigate = useNavigate();
