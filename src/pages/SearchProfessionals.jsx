@@ -39,7 +39,7 @@ function SearchProfessionals() {
     { name: 'Pintor', emoji: '🖌️', color: 'from-yellow-400 to-orange-500', icon: Paintbrush }
   ];
 
-  // ✅ EFECTO TYPEWRITER CONSERVADO
+  // EFECTO TYPEWRITER CONSERVADO
   useEffect(() => {
     let wordIndex = 0;
     let charIndex = 0;
@@ -111,7 +111,7 @@ function SearchProfessionals() {
     }
   };
 
-  // ✅ FUNCIÓN DE TRADUCCIÓN CORREGIDA (Soporta Enums en Mayúsculas)
+  // FUNCIÓN DE TRADUCCIÓN (Normaliza a mayúsculas para buscar pero devuelve el formato del mapa)
   const translateProfession = (type) => {
     if (!type) return '';
     const translations = {
@@ -146,7 +146,6 @@ function SearchProfessionals() {
 
   const renderProfessionalCard = (professional, index = 0) => {
     const badge = getProfessionalBadge(professional.totalRatings);
-    // ✅ Se aplica la traducción aquí
     const professionDisplay = translateProfession(professional.professionType || professional.profession);
     
     return (
@@ -172,7 +171,8 @@ function SearchProfessionals() {
             <h3 className="text-base font-bold text-gray-800 truncate">
               {professional.name}
             </h3>
-            <p className="text-xs text-purple-600 font-semibold uppercase mb-1">
+            {/* ✅ SE QUITÓ LA CLASE 'uppercase' PARA RESPETAR EL FORMATO Carpintero */}
+            <p className="text-xs text-purple-600 font-semibold mb-1">
               {professionDisplay}
             </p>
             
