@@ -167,95 +167,95 @@ function SavedProfessionals() {
         ) : (
           <div className="space-y-3">
             {professionals.map((prof) => {
-              const badge = getProfessionalBadge(prof.totalRatings);
-              const isSelected = selectedIds.includes(prof.professionalId);
-              
-              return (
-                <div
-                  key={prof.professionalId}
-                  onClick={(e) => handleCardClick(e, prof.professionalId)}
-                  className={`bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all overflow-hidden border-2 ${
-                    isSelected 
-                      ? 'border-green-500 bg-green-50' 
-                      : 'border-transparent hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Checkbox visual */}
-                    <div className="flex-shrink-0 pt-1">
-                      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                        isSelected 
-                          ? 'bg-green-500 border-green-500' 
-                          : 'border-gray-300 bg-white'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
+  const badge = getProfessionalBadge(prof.totalRatings);
+  const isSelected = selectedIds.includes(prof.professionalId);
+  
+  return (
+    <div
+      key={prof.professionalId}
+      onClick={(e) => handleCardClick(e, prof.professionalId)}
+      className={`bg-white rounded-2xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all overflow-hidden border-2 ${
+        isSelected 
+          ? 'border-green-500 bg-green-50' 
+          : 'border-transparent hover:border-gray-200'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Checkbox visual */}
+        <div className="flex-shrink-0 pt-1">
+          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+            isSelected 
+              ? 'bg-green-500 border-green-500' 
+              : 'border-gray-300 bg-white'
+          }`}>
+            {isSelected && (
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        </div>
 
-                    {/* Avatar */}
-                    <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
-                      {prof.professionalName.charAt(0)}
-                    </div>
+        {/* Avatar */}
+        <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
+          {prof.professionalName.charAt(0)}
+        </div>
 
-                    {/* Info central */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-bold text-gray-800 break-words">
-                        {prof.professionalName}
-                      </h3>
-                      <p className="text-sm text-purple-600 mb-1 break-words">
-                        {translateProfession(prof.professionType)}
-                      </p>
-                      
-                      {/* Medalla */}
-                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-1 ${badge.bgColor} ${badge.borderColor} border`}>
-                        <span className="text-sm">{badge.emoji}</span>
-                        <span className={badge.color}>{badge.name}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex flex-shrink-0">
-                          <RenderStars score={prof.reputationScore || 0} />
-                        </div>
-                        <span className="text-xs text-gray-600">
-                          {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
-                        </span>
-                      </div>
+        {/* Info central */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold text-gray-800 break-words">
+            {prof.professionalName}
+          </h3>
+          <p className="text-sm text-purple-600 mb-2 break-words">
+            {translateProfession(prof.professionType)}
+          </p>
+          
+          {/* Medalla con más espacio abajo */}
+          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border`}>
+            <span className="text-sm">{badge.emoji}</span>
+            <span className={badge.color}>{badge.name}</span>
+          </div>
+          
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-shrink-0">
+              <RenderStars score={prof.reputationScore || 0} />
+            </div>
+            <span className="text-xs text-gray-600">
+              {(prof.reputationScore || 0).toFixed(1)} ({prof.totalRatings || 0})
+            </span>
+          </div>
 
-                      {/* Notas (si existen) */}
-                      {prof.notes && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-500 italic break-words">
-                            📝 {prof.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+          {/* Notas (si existen) */}
+          {prof.notes && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 italic break-words">
+                📝 {prof.notes}
+              </p>
+            </div>
+          )}
+        </div>
 
-                    {/* Botones de acción - AL LADO DERECHO con texto */}
-                    <div className="flex flex-col gap-2 flex-shrink-0">
-                      <button
-                        onClick={(e) => handleViewCV(e, prof.professionalId)}
-                        className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver CV
-                      </button>
-                      <button
-                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                        className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Botones de acción - separados del badge */}
+        <div className="flex flex-col gap-2 flex-shrink-0 self-center">
+          <button
+            onClick={(e) => handleViewCV(e, prof.professionalId)}
+            className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+          >
+            <Eye className="w-4 h-4" />
+            Ver CV
+          </button>
+          <button
+            onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
+            className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+          >
+            <Trash2 className="w-4 h-4" />
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+})}
           </div>
         )}
       </div>
