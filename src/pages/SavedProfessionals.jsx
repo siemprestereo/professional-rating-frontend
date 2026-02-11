@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, ArrowLeft, Trash2, Eye } from 'lucide-react';
+// ✅ UNA SOLA LÍNEA DE IMPORT con todos los iconos necesarios
+import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react'; 
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { translateProfession, RenderStars } from '../utils/professionalUtils';
-import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react';
 
 function SavedProfessionals() {
     const navigate = useNavigate();
@@ -40,7 +40,6 @@ function SavedProfessionals() {
             }
         } catch (error) {
             console.error('Error loading favorites:', error);
-            setToast({ type: 'error', message: 'Error al cargar profesionales guardados' });
         } finally {
             setLoading(false);
         }
@@ -86,8 +85,6 @@ function SavedProfessionals() {
                 setToast({ type: 'success', message: 'Profesional eliminado' });
                 setProfessionals(prev => prev.filter(p => p.professionalId !== professionalId));
                 setSelectedIds(prev => prev.filter(id => id !== professionalId));
-            } else {
-                throw new Error('Error al eliminar');
             }
         } catch (error) {
             setToast({ type: 'error', message: 'Error al eliminar profesional' });
@@ -108,7 +105,6 @@ function SavedProfessionals() {
                         Volver
                     </button>
                     <h1 className="text-3xl roboto-light text-white mb-3">Profesionales guardados</h1>
-                    <p className="text-white/90 text-sm mb-4">Seleccioná a los Profesionales para comparar su desempeño</p>
                     <button
                         onClick={handleCompare}
                         disabled={!canCompare}
@@ -128,7 +124,6 @@ function SavedProfessionals() {
                 {professionals.length === 0 ? (
                     <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
                         <h2 className="text-xl roboto-light text-gray-800 mb-2">No hay profesionales guardados</h2>
-                        <button onClick={() => navigate('/search')} className="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 mt-4">Buscar profesionales</button>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -158,34 +153,27 @@ function SavedProfessionals() {
                                             <div className="flex justify-between items-start">
                                                 <div className="min-w-0 flex-1">
                                                     <h3 className="text-lg font-bold text-gray-800 truncate">{prof.professionalName}</h3>
-                                                    <p className="text-sm text-purple-600 font-medium mb-2">{translateProfession(prof.professionType)}</p>
+                                                    <p className="text-sm text-purple-600 font-medium mb-1">{translateProfession(prof.professionType)}</p>
                                                     
-                                                    {/* Medalla ajustada */}
+                                                    {/* Medalla con espacio */}
                                                     <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold mb-3 ${badge.bgColor} ${badge.borderColor} border`}>
                                                         <span>{badge.emoji}</span>
                                                         <span className={badge.color}>{badge.name}</span>
                                                     </div>
                                                 </div>
 
-                                                {/* Botones movidos a una columna fija a la derecha con margen */}
+                                                {/* Botones de acción alineados a la derecha */}
                                                 <div className="flex flex-col gap-2 ml-4">
-                                                    <button
-                                                        onClick={(e) => handleViewCV(e, prof.professionalId)}
-                                                        className="bg-purple-50 text-purple-600 px-4 py-2 rounded-xl hover:bg-purple-100 transition-all text-xs font-bold flex items-center gap-2 border border-purple-100"
-                                                    >
+                                                    <button onClick={(e) => handleViewCV(e, prof.professionalId)} className="bg-purple-50 text-purple-600 px-4 py-2 rounded-xl hover:bg-purple-100 transition-all text-xs font-bold flex items-center gap-2 border border-purple-100">
                                                         <Eye className="w-4 h-4" /> Ver CV
                                                     </button>
-                                                    <button
-                                                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
-                                                        className="bg-red-50 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-all text-xs font-bold flex items-center gap-2 border border-red-100"
-                                                    >
+                                                    <button onClick={(e) => handleRemoveFavorite(e, prof.professionalId)} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-all text-xs font-bold flex items-center gap-2 border border-red-100">
                                                         <Trash2 className="w-4 h-4" /> Eliminar
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            {/* Rating y Notas abajo */}
-                                            <div className="flex items-center gap-3 mt-1">
+                                            <div className="flex items-center gap-3">
                                                 <RenderStars score={prof.reputationScore || 0} />
                                                 <span className="text-sm font-bold text-gray-600">
                                                     {(prof.reputationScore || 0).toFixed(1)} <span className="font-normal text-gray-400">({prof.totalRatings})</span>
@@ -202,7 +190,7 @@ function SavedProfessionals() {
 
             {/* Home flotante */}
             <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50">
-                <button onClick={() => navigate(-1)} className="w-14 h-14 bg-white text-gray-800 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all">
+                <button onClick={() => navigate('/client-dashboard')} className="w-14 h-14 bg-white text-gray-800 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all">
                     <Home className="w-7 h-7" />
                 </button>
             </div>
