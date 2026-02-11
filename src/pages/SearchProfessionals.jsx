@@ -15,9 +15,21 @@ function SearchProfessionals() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const inputRef = useRef(null);
 
-  const placeholderWords = ['Electricista', 'Peluquero', 'Plomero', 'Carpintero', 'Mozo', 'Chef', 'Mecánico', 'Pintor'];
+  // Palabras para el placeholder animado
+  const placeholderWords = [
+    'Electricista',
+    'Personal trainer',
+    'Peluquero',
+    'Plomero',
+    'Carpintero',
+    'Mozo',
+    'Chef',
+    'Mecánico',
+    'Pintor',
+    'Jardinero'
+  ];
 
-  // Categorías con los colores de tu sistema de diseño
+  // Categorías populares con diseño de gradientes
   const popularCategories = [
     { name: 'Electricista', emoji: '⚡', color: 'from-blue-500 to-blue-600', icon: Zap },
     { name: 'Plomero', emoji: '🔧', color: 'from-orange-500 to-orange-600', icon: Wrench },
@@ -27,7 +39,7 @@ function SearchProfessionals() {
     { name: 'Pintor', emoji: '🖌️', color: 'from-yellow-400 to-orange-500', icon: Paintbrush }
   ];
 
-  // ✅ CONSERVAMOS TU FUNCIÓN TYPEWRITER
+  // ✅ EFECTO TYPEWRITER CONSERVADO
   useEffect(() => {
     let wordIndex = 0;
     let charIndex = 0;
@@ -39,7 +51,9 @@ function SearchProfessionals() {
         setPlaceholder('');
         return;
       }
+
       const currentWord = placeholderWords[wordIndex];
+      
       if (isDeleting) {
         setPlaceholder(currentWord.substring(0, charIndex - 1));
         charIndex--;
@@ -47,7 +61,9 @@ function SearchProfessionals() {
         setPlaceholder(currentWord.substring(0, charIndex + 1));
         charIndex++;
       }
+
       let typeSpeed = isDeleting ? 50 : 100;
+
       if (!isDeleting && charIndex === currentWord.length) {
         typeSpeed = 2000;
         isDeleting = true;
@@ -56,12 +72,16 @@ function SearchProfessionals() {
         wordIndex = (wordIndex + 1) % placeholderWords.length;
         typeSpeed = 500;
       }
+
       timeoutId = setTimeout(type, typeSpeed);
     };
+
     type();
+
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Búsqueda automática
   useEffect(() => {
     if (searchTerm.trim()) {
       const delayDebounceFn = setTimeout(() => {
@@ -76,40 +96,94 @@ function SearchProfessionals() {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${backendUrl}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(
+        `${backendUrl}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`
+      );
+      
       if (response.ok) {
         const data = await response.json();
         setProfessionals(data);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error searching:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderProfessionalCard = (professional, index) => {
+  // ✅ FUNCIÓN DE TRADUCCIÓN CORREGIDA (Soporta Enums en Mayúsculas)
+  const translateProfession = (type) => {
+    if (!type) return '';
+    const translations = {
+      'WAITER': 'Mozo',
+      'ELECTRICIAN': 'Electricista',
+      'PAINTER': 'Pintor',
+      'HAIRDRESSER': 'Peluquero',
+      'PLUMBER': 'Plomero',
+      'CARPENTER': 'Carpintero',
+      'MECHANIC': 'Mecánico',
+      'CHEF': 'Chef',
+      'BARISTA': 'Barista',
+      'BARTENDER': 'Bartender',
+      'CLEANER': 'Personal de limpieza',
+      'GARDENER': 'Jardinero',
+      'DRIVER': 'Conductor',
+      'SECURITY': 'Seguridad',
+      'RECEPTIONIST': 'Recepcionista',
+      'OTHER': 'Otro'
+    };
+    return translations[type.toUpperCase()] || type;
+  };
+
+  const renderStars = (score) => {
+    return [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`w-4 h-4 ${i < Math.round(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+      />
+    ));
+  };
+
+  const renderProfessionalCard = (professional, index = 0) => {
     const badge = getProfessionalBadge(professional.totalRatings);
+    // ✅ Se aplica la traducción aquí
+    const professionDisplay = translateProfession(professional.professionType || professional.profession);
+    
     return (
       <div
         key={professional.id}
-        onClick={() => navigate(`/public-cv/${professional.id}`)}
-        className="bg-white rounded-2xl shadow-md p-4 mb-3 border border-gray-100 hover-lift animate-slideUp"
+        onClick={() => {
+          const token = localStorage.getItem('authToken');
+          if (!token) {
+            setShowLoginModal(true);
+            return;
+          }
+          navigate(`/public-cv/${professional.id}`);
+        }}
+        className="bg-white rounded-2xl shadow-md p-4 mb-3 cursor-pointer hover:shadow-xl transition-all animate-slideUp border border-gray-100"
         style={{ animationDelay: `${index * 50}ms` }}
       >
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold text-white flex-shrink-0">
             {professional.name.charAt(0)}
           </div>
+          
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-800 truncate">{professional.name}</h3>
-            <p className="text-xs text-purple-600 font-semibold uppercase">{professional.professionType}</p>
-            <div className="flex items-center gap-2 mt-1">
-                <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                <span className="text-xs font-bold text-gray-700">{(professional.reputationScore || 0).toFixed(1)}</span>
-                <span className="text-xs text-gray-400">({professional.totalRatings})</span>
+            <h3 className="text-base font-bold text-gray-800 truncate">
+              {professional.name}
+            </h3>
+            <p className="text-xs text-purple-600 font-semibold uppercase mb-1">
+              {professionDisplay}
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <div className="flex">{renderStars(professional.reputationScore || 0)}</div>
+              <span className="text-xs font-bold text-gray-700">
+                {(professional.reputationScore || 0).toFixed(1)}
+              </span>
             </div>
           </div>
+
           <div className={`${badge.bgColor} p-2 rounded-lg border ${badge.borderColor} flex-shrink-0`}>
             <span className="text-lg">{badge.emoji}</span>
           </div>
@@ -119,12 +193,12 @@ function SearchProfessionals() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Header con gradiente consistente */}
+    <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
+      {/* Header con Buscador y Typewriter */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-10 pb-16 shadow-lg">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl roboto-light text-white mb-6">¿Qué profesional buscás hoy?</h1>
-          <div className="relative group">
+          <div className="relative">
             <input
               ref={inputRef}
               type="text"
@@ -142,7 +216,7 @@ function SearchProfessionals() {
 
       <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10">
         {searchTerm.trim() ? (
-          /* RESULTADOS */
+          /* RESULTADOS DE BÚSQUEDA */
           <div className="animate-fadeIn">
             {professionals.length > 0 ? (
               professionals.map((p, i) => renderProfessionalCard(p, i))
@@ -163,8 +237,8 @@ function SearchProfessionals() {
                   onClick={() => setSearchTerm(cat.name)}
                   className={`bg-gradient-to-br ${cat.color} p-6 rounded-3xl shadow-md hover:scale-[1.03] active:scale-95 transition-all text-left relative overflow-hidden group h-32`}
                 >
-                  <div className="absolute -right-2 -bottom-2 opacity-20 group-hover:scale-110 transition-transform">
-                    <cat.icon size={80} className="text-white" />
+                  <div className="absolute -right-2 -bottom-2 opacity-20 group-hover:scale-110 transition-transform text-white">
+                    <cat.icon size={80} />
                   </div>
                   <span className="text-3xl mb-2 block">{cat.emoji}</span>
                   <span className="text-white font-bold text-lg leading-tight">{cat.name}</span>
@@ -174,14 +248,14 @@ function SearchProfessionals() {
             
             <div className="mt-8 p-6 bg-white rounded-3xl border-2 border-dashed border-gray-200 text-center">
               <p className="text-gray-400 text-sm italic">
-                Buscá por nombre, profesión o rubro para ver calificaciones reales.
+                Buscá por nombre, profesión o rubro para ver calificaciones reales de la comunidad.
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Home Flotante */}
+      {/* Botón Home Flotante */}
       <div className="fixed bottom-6 left-0 right-0 flex justify-center z-30">
         <button 
           onClick={() => navigate('/client-dashboard')}
