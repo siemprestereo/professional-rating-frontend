@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-// ✅ UNA SOLA LÍNEA DE IMPORT con todos los iconos necesarios
 import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react'; 
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
@@ -137,46 +136,61 @@ function SavedProfessionals() {
                                     onClick={(e) => handleCardClick(e, prof.professionalId)}
                                     className={`bg-white rounded-2xl shadow-md p-4 cursor-pointer border-2 transition-all ${isSelected ? 'border-green-500 bg-green-50' : 'border-transparent'}`}
                                 >
-                                    <div className="flex gap-4">
+                                    <div className="flex gap-3 sm:gap-4">
                                         {/* Checkbox */}
                                         <div className={`w-6 h-6 rounded-md border-2 flex-shrink-0 mt-1 flex items-center justify-center ${isSelected ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
                                             {isSelected && <Check className="w-4 h-4 text-white" strokeWidth={4} />}
                                         </div>
 
                                         {/* Avatar */}
-                                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-2xl font-bold text-purple-600 flex-shrink-0">
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">
                                             {prof.professionalName.charAt(0)}
                                         </div>
 
                                         {/* Info Principal */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start">
+                                            {/* Fila Superior: Nombre y Botones */}
+                                            <div className="flex justify-between items-start gap-2">
                                                 <div className="min-w-0 flex-1">
-                                                    <h3 className="text-lg font-bold text-gray-800 truncate">{prof.professionalName}</h3>
-                                                    <p className="text-sm text-purple-600 font-medium mb-1">{translateProfession(prof.professionType)}</p>
-                                                    
-                                                    {/* Medalla con espacio */}
-                                                    <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold mb-3 ${badge.bgColor} ${badge.borderColor} border`}>
-                                                        <span>{badge.emoji}</span>
-                                                        <span className={badge.color}>{badge.name}</span>
-                                                    </div>
+                                                    <h3 className="text-base sm:text-lg font-bold text-gray-800 truncate">
+                                                        {prof.professionalName}
+                                                    </h3>
+                                                    <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">
+                                                        {translateProfession(prof.professionType)}
+                                                    </p>
                                                 </div>
 
-                                                {/* Botones de acción alineados a la derecha */}
-                                                <div className="flex flex-col gap-2 ml-4">
-                                                    <button onClick={(e) => handleViewCV(e, prof.professionalId)} className="bg-purple-50 text-purple-600 px-4 py-2 rounded-xl hover:bg-purple-100 transition-all text-xs font-bold flex items-center gap-2 border border-purple-100">
-                                                        <Eye className="w-4 h-4" /> Ver CV
+                                                {/* Botones de acción compactos */}
+                                                <div className="flex flex-col gap-1.5 flex-shrink-0">
+                                                    <button 
+                                                        onClick={(e) => handleViewCV(e, prof.professionalId)} 
+                                                        className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-purple-100"
+                                                    >
+                                                        <Eye className="w-3 h-3" /> CV
                                                     </button>
-                                                    <button onClick={(e) => handleRemoveFavorite(e, prof.professionalId)} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-all text-xs font-bold flex items-center gap-2 border border-red-100">
-                                                        <Trash2 className="w-4 h-4" /> Eliminar
+                                                    <button 
+                                                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)} 
+                                                        className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-red-100"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" /> Borrar
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3">
+                                            {/* Fila Media: Medalla (Separada para evitar solapamiento) */}
+                                            <div className="mt-2 mb-2">
+                                                <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.bgColor} ${badge.borderColor} border`}>
+                                                    <span>{badge.emoji}</span>
+                                                    <span className={badge.color}>{badge.name}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Fila Inferior: Estrellas y Puntaje */}
+                                            <div className="flex items-center gap-2">
                                                 <RenderStars score={prof.reputationScore || 0} />
-                                                <span className="text-sm font-bold text-gray-600">
-                                                    {(prof.reputationScore || 0).toFixed(1)} <span className="font-normal text-gray-400">({prof.totalRatings})</span>
+                                                <span className="text-xs font-bold text-gray-600">
+                                                    {(prof.reputationScore || 0).toFixed(1)} 
+                                                    <span className="font-normal text-gray-400 ml-1">({prof.totalRatings})</span>
                                                 </span>
                                             </div>
                                         </div>
