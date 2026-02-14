@@ -16,7 +16,6 @@ function SearchProfessionals() {
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
   const inputRef = useRef(null);
 
-  // Lógica de protección con mensajes personalizados
   const checkAuthAndExecute = (action, type) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -42,7 +41,6 @@ function SearchProfessionals() {
     action();
   };
 
-  // Palabras para el placeholder animado
   const placeholderWords = ['Electricista', 'Personal trainer', 'Peluquero', 'Plomero', 'Carpintero', 'Mozo', 'Chef', 'Mecánico', 'Pintor', 'Jardinero'];
 
   const popularCategories = [
@@ -132,68 +130,76 @@ function SearchProfessionals() {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 pb-24 animate-fadeIn transition-all duration-300 ${showLoginModal ? 'blur-sm grayscale-[0.2]' : ''}`}>
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-10 pb-16 shadow-lg">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl roboto-light text-white mb-6">¿Qué profesional buscás hoy?</h1>
-          <div className="relative">
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={placeholder}
-              className="w-full bg-white/95 backdrop-blur-sm px-6 py-4 rounded-2xl focus:outline-none shadow-xl transition-all text-gray-800 text-lg"
-            />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              {loading ? <Loader2 className="w-6 h-6 text-purple-600 animate-spin" /> : <Search className="w-6 h-6 text-gray-300" />}
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* CONTENEDOR DE FONDO: 
+          Aquí es donde aplicamos el blur. El modal queda afuera de este div.
+      */}
+      <div className={`transition-all duration-300 ${showLoginModal ? 'blur-md grayscale-[0.2] pointer-events-none' : ''}`}>
+        <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-10 pb-16 shadow-lg">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl roboto-light text-white mb-6">¿Qué profesional buscás hoy?</h1>
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={placeholder}
+                className="w-full bg-white/95 backdrop-blur-sm px-6 py-4 rounded-2xl focus:outline-none shadow-xl transition-all text-gray-800 text-lg"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                {loading ? <Loader2 className="w-6 h-6 text-purple-600 animate-spin" /> : <Search className="w-6 h-6 text-gray-300" />}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10">
-        {searchTerm.trim() ? (
-          <div className="animate-fadeIn">
-            {professionals.length > 0 ? (
-              professionals.map((p, i) => renderProfessionalCard(p, i))
-            ) : !loading && (
-              <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
-                <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                <p className="text-gray-500">No encontramos resultados para "{searchTerm}"</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="animate-fadeIn">
-            <div className="grid grid-cols-2 gap-4">
-              {popularCategories.map((cat, i) => (
-                <button
-                  key={i}
-                  onClick={() => checkAuthAndExecute(() => setSearchTerm(cat.name), 'category')}
-                  className={`bg-gradient-to-br ${cat.color} p-6 rounded-3xl shadow-md hover:scale-[1.03] active:scale-95 transition-all text-left relative overflow-hidden group h-32`}
-                >
-                  <div className="absolute -right-2 -bottom-2 opacity-20 group-hover:scale-110 transition-transform text-white">
-                    <cat.icon size={80} />
-                  </div>
-                  <span className="text-3xl mb-2 block">{cat.emoji}</span>
-                  <span className="text-white font-bold text-lg leading-tight">{cat.name}</span>
-                </button>
-              ))}
+        <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10 pb-24">
+          {searchTerm.trim() ? (
+            <div className="animate-fadeIn">
+              {professionals.length > 0 ? (
+                professionals.map((p, i) => renderProfessionalCard(p, i))
+              ) : !loading && (
+                <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
+                  <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                  <p className="text-gray-500">No encontramos resultados para "{searchTerm}"</p>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="animate-fadeIn">
+              <div className="grid grid-cols-2 gap-4">
+                {popularCategories.map((cat, i) => (
+                  <button
+                    key={i}
+                    onClick={() => checkAuthAndExecute(() => setSearchTerm(cat.name), 'category')}
+                    className={`bg-gradient-to-br ${cat.color} p-6 rounded-3xl shadow-md hover:scale-[1.03] active:scale-95 transition-all text-left relative overflow-hidden group h-32`}
+                  >
+                    <div className="absolute -right-2 -bottom-2 opacity-20 group-hover:scale-110 transition-transform text-white">
+                      <cat.icon size={80} />
+                    </div>
+                    <span className="text-3xl mb-2 block">{cat.emoji}</span>
+                    <span className="text-white font-bold text-lg leading-tight">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="fixed bottom-6 left-0 right-0 flex justify-center z-30">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all"
+          >
+            <Home className="w-7 h-7 text-white" />
+          </button>
+        </div>
       </div>
 
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center z-30">
-        <button 
-          onClick={() => navigate(-1)}
-          className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all"
-        >
-          <Home className="w-7 h-7 text-white" />
-        </button>
-      </div>
-
+      {/* MODAL: 
+          Al estar fuera del div anterior, no recibe el blur. 
+      */}
       {showLoginModal && (
         <LoginRequiredModal 
           title={modalContent.title}
