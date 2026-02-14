@@ -1,7 +1,7 @@
 import { X, LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function LoginRequiredModal({ onClose, message }) {
+function LoginRequiredModal({ onClose, title, message }) {
   const navigate = useNavigate();
 
   const handleProfessionalLogin = () => {
@@ -27,10 +27,10 @@ function LoginRequiredModal({ onClose, message }) {
             <LogIn className="w-8 h-8 text-purple-600" />
           </div>
           <h2 className="text-2xl roboto-light text-gray-800 mb-2">
-            Iniciá sesión para continuar
+            {title || 'Iniciá sesión para continuar'}
           </h2>
           <p className="text-gray-600 text-base">
-            {message || 'Tenés que iniciar sesión para continuar'}
+            {message || 'Unite a la comunidad para disfrutar de todas las funciones.'}
           </p>
         </div>
 
