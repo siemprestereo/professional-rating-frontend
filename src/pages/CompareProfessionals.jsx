@@ -18,10 +18,11 @@ function CompareProfessionals() {
   // Filtros
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState('rating-desc'); // Default corregido
+  const [sortBy, setSortBy] = useState('top-seniority'); // Default: Trayectoria + Promedio
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [quickFilter, setQuickFilter] = useState('');
   
+  // Estado para el trabajo seleccionado de cada profesional
   const [selectedWorks, setSelectedWorks] = useState({});
 
   useEffect(() => {
@@ -30,6 +31,8 @@ function CompareProfessionals() {
       return;
     }
     setProfessionals(location.state.professionals);
+    
+    // Inicializar selectedWorks con "all" para cada profesional
     const initialWorks = {};
     location.state.professionals.forEach(prof => {
       initialWorks[prof.professionalId] = 'all';
@@ -37,7 +40,18 @@ function CompareProfessionals() {
     setSelectedWorks(initialWorks);
   }, [location.state, navigate]);
 
-  // Función para aplicar filtros inmediatamente al hacer clic
+  // Manejar el cambio de ordenamiento con Toast
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    setSortBy(newSort);
+    
+    // Toast de comunicación al usuario
+    setToast({
+      type: 'success',
+      message: `Lista ordenada por ${e.target.options[e.target.selectedIndex].text}`
+    });
+  };
+
   const handleQuickFilterChange = async (filterType) => {
     let sDate = '';
     let eDate = '';
@@ -46,7 +60,6 @@ function CompareProfessionals() {
       setQuickFilter('');
       setStartDate('');
       setEndDate('');
-      // Si se deselecciona, recargar originales
       await clearFilters();
       return;
     }
@@ -77,7 +90,6 @@ function CompareProfessionals() {
 
     setStartDate(sDate);
     setEndDate(eDate);
-    // Aplicar directamente
     applyQuickFilters(sDate, eDate);
   };
 
@@ -94,6 +106,7 @@ function CompareProfessionals() {
         const selectedIds = professionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
         setProfessionals(filtered);
+        setToast({ type: 'success', message: 'Filtro temporal aplicado' });
       }
     } catch (error) {
       setToast({ type: 'error', message: 'Error al aplicar filtros' });
@@ -112,6 +125,7 @@ function CompareProfessionals() {
         const selectedIds = professionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
         setProfessionals(filtered);
+        setToast({ type: 'success', message: 'Filtros de tiempo eliminados' });
       }
     } catch (error) { console.error(error); }
   };
@@ -124,7 +138,7 @@ function CompareProfessionals() {
     const updated = professionals.filter(p => p.professionalId !== professionalId);
     if (updated.length === 0) { navigate('/saved-professionals'); return; }
     setProfessionals(updated);
-    setToast({ type: 'success', message: 'Profesional eliminado de la comparación' });
+    setToast({ type: 'success', message: 'Profesional quitado de la lista' });
   };
 
   const getDisplayedStats = (prof) => {
@@ -146,10 +160,8 @@ function CompareProfessionals() {
       case 'total-ratings':
         return sorted.sort((a, b) => getDisplayedStats(b).totalRatings - getDisplayedStats(a).totalRatings);
       case 'seniority':
-        // Antigüedad en plataforma (createdAt)
         return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
       case 'top-seniority':
-        // Combinado: Año de antigüedad + Mejor Promedio
         return sorted.sort((a, b) => {
           const yearA = new Date(a.createdAt).getFullYear();
           const yearB = new Date(b.createdAt).getFullYear();
@@ -162,7 +174,7 @@ function CompareProfessionals() {
     }
   };
 
-  if (loading) return <LoadingScreen message="Filtrando..." />;
+  if (loading) return <LoadingScreen message="Actualizando datos..." />;
 
   const sortedProfessionals = getSortedProfessionals();
 
@@ -187,7 +199,7 @@ function CompareProfessionals() {
           <label className="block text-sm font-medium text-gray-600 mb-2">Ordenar por</label>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleSortChange}
             className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none"
           >
             <option value="top-seniority">Trayectoria y Mejor Promedio ⭐</option>
@@ -221,7 +233,7 @@ function CompareProfessionals() {
                     key={f.id}
                     onClick={() => handleQuickFilterChange(f.id)}
                     className={`px-6 py-2 rounded-xl font-semibold text-sm transition-all ${
-                      quickFilter === f.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      quickFilter === f.id ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     {f.label}
@@ -237,7 +249,7 @@ function CompareProfessionals() {
           )}
         </div>
 
-        {/* Lista de profesionales (Estructura Original) */}
+        {/* Lista de profesionales */}
         <div className="space-y-3">
           {sortedProfessionals.map((prof) => {
             const stats = getDisplayedStats(prof);
@@ -245,12 +257,14 @@ function CompareProfessionals() {
             const badge = getProfessionalBadge(stats.totalRatings);
 
             return (
-              <div key={prof.professionalId} className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all overflow-hidden">
+              <div key={prof.professionalId} className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all overflow-hidden border border-transparent">
                 <div className="flex items-start gap-3">
+                  {/* Avatar */}
                   <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
                     {prof.professionalName.charAt(0)}
                   </div>
 
+                  {/* Info central */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold text-gray-800 break-words">{prof.professionalName}</h3>
                     <p className="text-sm text-purple-600 mb-1 break-words">{translateProfession(prof.professionType)}</p>
@@ -260,6 +274,7 @@ function CompareProfessionals() {
                       <span className={badge.color}>{badge.name}</span>
                     </div>
 
+                    {/* Dropdown de trabajos */}
                     {hasMultipleWorks && (
                       <div className="mb-2">
                         <div className="relative">
@@ -270,7 +285,9 @@ function CompareProfessionals() {
                           >
                             <option value="all">📍 Todos los trabajos</option>
                             {prof.workHistory.map((work) => (
-                              <option key={work.id} value={work.id}>{work.businessName} - {work.position}</option>
+                              <option key={work.id} value={work.id}>
+                                {work.businessName} - {work.position}
+                              </option>
                             ))}
                           </select>
                           <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
@@ -278,17 +295,32 @@ function CompareProfessionals() {
                       </div>
                     )}
 
+                    {/* Estrellas y estadísticas */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <RenderStars score={stats.avgScore || 0} size="w-4 h-4" />
                       <span className="text-xs text-gray-600">{(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})</span>
                     </div>
+
+                    {/* Notas */}
+                    {prof.notes && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 italic break-words">📝 {prof.notes}</p>
+                      </div>
+                    )}
                   </div>
 
+                  {/* Botones de acción */}
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button onClick={() => navigate(`/public-cv/${prof.professionalId}`)} className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                    <button 
+                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)} 
+                      className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+                    >
                       <Eye className="w-4 h-4" /> Ver CV
                     </button>
-                    <button onClick={() => removeProfessional(prof.professionalId)} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                    <button 
+                      onClick={() => removeProfessional(prof.professionalId)} 
+                      className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+                    >
                       <Trash2 className="w-4 h-4" /> Quitar
                     </button>
                   </div>
@@ -299,13 +331,24 @@ function CompareProfessionals() {
         </div>
       </div>
 
+      {/* Botón Home */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
-        <button onClick={() => navigate('/client-dashboard')} className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white text-white">
+        <button 
+          onClick={() => navigate('/client-dashboard')} 
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white text-white"
+        >
           <Home className="w-7 h-7" />
         </button>
       </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {/* Toast del sistema */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
