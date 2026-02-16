@@ -385,7 +385,7 @@ function EditProfile() {
           onSuccess={(newToken) => {
             localStorage.setItem('authToken', newToken);
             localStorage.removeItem('client');
-            navigate('/edit-cv');
+            navigate('/professional-dashboard');
           }}
         />
       )}

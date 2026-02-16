@@ -176,7 +176,7 @@ function ClientRegister() {
         <form onSubmit={handleSubmit}>
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Nombre Completo
+              Nombre y apellido
             </label>
             {/* ✅ MEJORA 1: onChange libre, formatName en onBlur */}
             <input

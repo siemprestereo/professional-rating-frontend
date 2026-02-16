@@ -216,7 +216,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
               </li>
               <li className="flex items-start">
                 <span className="text-blue-500 mr-2">ℹ</span>
-                <span>Podrás volver a ser Cliente cuando quieras</span>
+                <span>Podrás volver a ser Cliente cuando se cumpla el plazo de espera</span>
               </li>
             </ul>
 
