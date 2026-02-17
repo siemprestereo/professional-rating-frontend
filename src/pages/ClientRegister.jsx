@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-import { decodeToken, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
+import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
 
 function ClientRegister() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ function ClientRegister() {
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
-  // Detectar errores de OAuth y capturar token
+  // Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
     
@@ -30,39 +30,38 @@ function ClientRegister() {
       return;
     }
 
-    const token = searchParams.get('token');
-    if (token) {
-      console.log('✅ Token recibido de OAuth en register:', token);
-      
-      // ✅ MEJORA 2: Decodificación segura con Unicode
-      const payload = decodeToken(token);
-      
-      if (!payload) {
-        setToast({ type: 'error', message: 'Error al procesar autenticación' });
-        return;
-      }
-      
-      console.log('📦 Payload del token:', payload);
-      
-      // Guardar datos con función centralizada
-      saveAuthData('CLIENT', token, {
-        id: payload.sub || payload.id,
-        email: payload.email,
-        name: payload.name
+    const code = searchParams.get('code');
+    if (code) {
+      // Limpiar la URL inmediatamente
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Intercambiar código por JWT
+      exchangeOAuthCode(code).then((data) => {
+        if (!data) {
+          setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
+          return;
+        }
+
+        // Guardar datos con función centralizada
+        saveAuthData('CLIENT', data.token, {
+          id: data.id,
+          email: data.email,
+          name: data.name
+        });
+
+        if (data.userType === 'CLIENT') {
+          setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
+          setTimeout(() => {
+            handlePostLoginRedirect('/client-dashboard', navigate, true);
+          }, 300);
+        } else {
+          handlePostLoginRedirect('/professional-dashboard', navigate, true);
+        }
       });
-      
-      if (payload.userType === 'CLIENT') {
-        setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
-        setTimeout(() => {
-          handlePostLoginRedirect('/client-dashboard', navigate, true);
-        }, 300);
-      } else {
-        handlePostLoginRedirect('/professional-dashboard', navigate, true);
-      }
     }
   }, [searchParams, navigate]);
 
-  // ✅ MEJORA 1: Aplicar formatName solo al salir del campo
+  // Aplicar formatName solo al salir del campo
   const handleNameBlur = () => {
     setName(formatName(name));
   };
@@ -70,7 +69,7 @@ function ClientRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Formatear nombre antes de enviar
+    // Formatear nombre antes de enviar
     const formattedName = formatName(name);
 
     // Validaciones
@@ -79,7 +78,7 @@ function ClientRegister() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setToast({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres' });
       return;
     }
@@ -178,7 +177,6 @@ function ClientRegister() {
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Nombre y apellido
             </label>
-            {/* ✅ MEJORA 1: onChange libre, formatName en onBlur */}
             <input
               type="text"
               value={name}
@@ -229,7 +227,6 @@ function ClientRegister() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {/* ✅ MEJORA 4: Mensaje de ayuda */}
             <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 6 caracteres</p>
           </div>
 

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-import { decodeToken, handlePostLoginRedirect, saveAuthData, getLoginErrorMessage } from '../utils/authUtils';
+import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, getLoginErrorMessage } from '../utils/authUtils';
 
 function ClientLogin() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ function ClientLogin() {
   const [loginError, setLoginError] = useState('');
   const [shake, setShake] = useState(false);
 
-  // ✅ Detectar errores de OAuth y capturar token
+  // ✅ Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
     
@@ -29,37 +29,33 @@ function ClientLogin() {
       return;
     }
 
-    const token = searchParams.get('token');
-    if (token) {
-      console.log('✅ Token recibido de OAuth:', token);
-      
-      // ✅ MEJORA 1: Usar función centralizada con soporte Unicode
-      const payload = decodeToken(token);
-      
-      if (!payload) {
-        setToast({ type: 'error', message: 'Error al procesar autenticación' });
-        return;
-      }
-      
-      console.log('📦 Payload del token:', payload);
-      
-      // ✅ MEJORA 2: Usar función centralizada para guardar datos
-      saveAuthData('CLIENT', token, {
-        id: payload.sub || payload.id,
-        email: payload.email,
-        name: payload.name
+    const code = searchParams.get('code');
+    if (code) {
+      // Limpiar la URL inmediatamente
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Intercambiar código por JWT
+      exchangeOAuthCode(code).then((data) => {
+        if (!data) {
+          setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
+          return;
+        }
+
+        saveAuthData('CLIENT', data.token, {
+          id: data.id,
+          email: data.email,
+          name: data.name
+        });
+
+        if (data.userType === 'CLIENT') {
+          setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
+          setTimeout(() => {
+            handlePostLoginRedirect('/client-dashboard', navigate, true);
+          }, 300);
+        } else {
+          handlePostLoginRedirect('/professional-dashboard', navigate, true);
+        }
       });
-      
-      if (payload.userType === 'CLIENT') {
-        setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
-        
-        // ✅ MEJORA 4: Reducir delay de 1000ms a 300ms
-        setTimeout(() => {
-          handlePostLoginRedirect('/client-dashboard', navigate, true);
-        }, 300);
-      } else {
-        handlePostLoginRedirect('/professional-dashboard', navigate, true);
-      }
     }
   }, [searchParams, navigate]);
 
@@ -78,12 +74,11 @@ function ClientLogin() {
       });
 
       if (!response.ok) {
-        // ✅ MEJORA 6: Mensajes de error específicos
         const errorMessage = await getLoginErrorMessage(response);
         
         setLoginError(errorMessage);
         setShake(true);
-        setPassword(''); // Limpiar password
+        setPassword('');
         
         setTimeout(() => setShake(false), 500);
         setLoading(false);
@@ -92,7 +87,6 @@ function ClientLogin() {
 
       const data = await response.json();
       
-      // ✅ MEJORA 2 y 5: Guardar datos correctamente estructurados
       saveAuthData('CLIENT', data.token, {
         id: data.id,
         email: data.email,
@@ -101,7 +95,6 @@ function ClientLogin() {
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
       
-      // ✅ MEJORA 3 y 4: Redirect rápido con replace: true
       setTimeout(() => {
         handlePostLoginRedirect('/client-dashboard', navigate, true);
       }, 300);

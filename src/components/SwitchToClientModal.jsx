@@ -120,7 +120,7 @@ function SwitchToClientModal({ onClose, onSuccess }) {
               </li>
               <li className="flex items-start">
                 <span className="text-blue-500 mr-2">ℹ</span>
-                <span>Podrás volver a ser Profesional cuando quieras</span>
+                <span>Podrás volver a ser Profesional cuando cumplas el plazo de espera</span>
               </li>
             </ul>
 

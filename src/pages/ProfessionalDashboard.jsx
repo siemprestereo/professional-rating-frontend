@@ -7,6 +7,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import QRCodeCard from '../components/QRCodeCard';
 import { capitalizeName, getFirstName } from '../utils/formatName';
 import { getProfessionalBadge } from '../utils/professionalBadge';
+import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 
 function ProfessionalDashboard() {
   const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
@@ -26,15 +27,24 @@ function ProfessionalDashboard() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+    const codeFromUrl = urlParams.get('code');
     
-    if (tokenFromUrl) {
-      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-      localStorage.setItem('authToken', tokenFromUrl);
+    if (codeFromUrl) {
       window.history.replaceState({}, document.title, window.location.pathname);
+      
+      exchangeOAuthCode(codeFromUrl).then((data) => {
+        if (data) {
+          saveAuthData('PROFESSIONAL', data.token, {
+            id: data.id,
+            email: data.email,
+            name: data.name
+          });
+        }
+        loadDashboardData();
+      });
+    } else {
+      loadDashboardData();
     }
-    
-    loadDashboardData();
     
     const refreshInterval = setInterval(() => {
       console.log('🔄 Auto-refresh: actualizando datos...');

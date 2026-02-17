@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
-import { decodeToken, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
+import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
 import { PROFESSIONS } from '../constants/professions';
 
 function ProfessionalRegister() {
@@ -22,7 +22,7 @@ function ProfessionalRegister() {
   const [errorModal, setErrorModal] = useState(null);
 
 
-  // Detectar errores de OAuth y capturar token
+  // Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
     
@@ -34,35 +34,36 @@ function ProfessionalRegister() {
       return;
     }
 
-    const token = searchParams.get('token');
+    const code = searchParams.get('code');
     
-    if (token) {
-      console.log('✅ Token recibido de OAuth en register:', token);
-      
-      // ✅ MEJORA 2: Decodificación segura con Unicode
-      const payload = decodeToken(token);
-      
-      if (!payload) {
-        setToast({ type: 'error', message: 'Error al procesar autenticación' });
-        return;
-      }
-      
-      // Guardar datos
-      saveAuthData('PROFESSIONAL', token, {
-        id: payload.sub || payload.id,
-        email: payload.email,
-        name: payload.name
+    if (code) {
+      // Limpiar la URL inmediatamente
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Intercambiar código por JWT
+      exchangeOAuthCode(code).then((data) => {
+        if (!data) {
+          setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
+          return;
+        }
+
+        // Guardar datos
+        saveAuthData('PROFESSIONAL', data.token, {
+          id: data.id,
+          email: data.email,
+          name: data.name
+        });
+
+        // Siempre redirigir a edit-cv para que complete su perfil (incluyendo profesión)
+        setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
+        setTimeout(() => {
+          navigate('/edit-cv', { replace: true });
+        }, 300);
       });
-      
-      // ✅ MEJORA 3: Siempre redirigir a edit-cv para que complete su perfil (incluyendo profesión)
-      setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
-      setTimeout(() => {
-        navigate('/edit-cv', { replace: true });
-      }, 300);
     }
   }, [searchParams, navigate]);
 
-  // ✅ MEJORA 1: Aplicar formatName solo al salir del campo
+  // Aplicar formatName solo al salir del campo
   const handleNameBlur = () => {
     setName(formatName(name));
   };
@@ -70,7 +71,7 @@ function ProfessionalRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Formatear nombre antes de enviar
+    // Formatear nombre antes de enviar
     const formattedName = formatName(name);
 
     // Validaciones
@@ -84,7 +85,7 @@ function ProfessionalRegister() {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       setToast({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres' });
       return;
     }
@@ -192,7 +193,6 @@ function ProfessionalRegister() {
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Nombre y apellido
             </label>
-            {/* ✅ MEJORA 1: onChange libre, formatName en onBlur */}
             <input
               type="text"
               value={name}
@@ -278,7 +278,6 @@ function ProfessionalRegister() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {/* ✅ MEJORA 4: Mensaje de ayuda */}
             <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 6 caracteres</p>
           </div>
 

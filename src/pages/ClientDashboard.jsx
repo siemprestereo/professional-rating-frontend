@@ -5,6 +5,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Toast from '../components/Toast';
 import api from '../services/api';
+import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -22,15 +23,24 @@ function ClientDashboard() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
+    const codeFromUrl = urlParams.get('code');
 
-    if (tokenFromUrl) {
-      console.log('✅ Token recibido de OAuth en dashboard:', tokenFromUrl);
-      localStorage.setItem('authToken', tokenFromUrl);
+    if (codeFromUrl) {
       window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
-    loadClientData();
+      exchangeOAuthCode(codeFromUrl).then((data) => {
+        if (data) {
+          saveAuthData('CLIENT', data.token, {
+            id: data.id,
+            email: data.email,
+            name: data.name
+          });
+        }
+        loadClientData();
+      });
+    } else {
+      loadClientData();
+    }
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
