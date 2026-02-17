@@ -1,15 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react'; 
+import { Home, ArrowLeft, Trash2, Eye, TrendingUp, Check } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { translateProfession, RenderStars } from '../utils/professionalUtils';
+import { BACKEND_URL } from '../config';
 
 function SavedProfessionals() {
     const navigate = useNavigate();
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-
     const [professionals, setProfessionals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedIds, setSelectedIds] = useState([]);
@@ -27,7 +26,7 @@ function SavedProfessionals() {
                 return;
             }
 
-            const response = await fetch(`${backendUrl}/api/clients/me/favorites`, {
+            const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -73,7 +72,7 @@ function SavedProfessionals() {
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch(
-                `${backendUrl}/api/clients/me/favorites/${professionalId}`,
+                `${BACKEND_URL}/api/clients/me/favorites/${professionalId}`,
                 {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -88,7 +87,7 @@ function SavedProfessionals() {
         } catch (error) {
             setToast({ type: 'error', message: 'Error al eliminar profesional' });
         }
-    }, [backendUrl]);
+    }, [BACKEND_URL]);
 
     const canCompare = useMemo(() => selectedIds.length >= 2, [selectedIds.length]);
 
@@ -162,14 +161,14 @@ function SavedProfessionals() {
 
                                                 {/* Botones de acción compactos */}
                                                 <div className="flex flex-col gap-1.5 flex-shrink-0">
-                                                    <button 
-                                                        onClick={(e) => handleViewCV(e, prof.professionalId)} 
+                                                    <button
+                                                        onClick={(e) => handleViewCV(e, prof.professionalId)}
                                                         className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-purple-100"
                                                     >
                                                         <Eye className="w-3 h-3" /> CV
                                                     </button>
-                                                    <button 
-                                                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)} 
+                                                    <button
+                                                        onClick={(e) => handleRemoveFavorite(e, prof.professionalId)}
                                                         className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-red-100"
                                                     >
                                                         <Trash2 className="w-3 h-3" /> Borrar
@@ -189,7 +188,7 @@ function SavedProfessionals() {
                                             <div className="flex items-center gap-2">
                                                 <RenderStars score={prof.reputationScore || 0} />
                                                 <span className="text-xs font-bold text-gray-600">
-                                                    {(prof.reputationScore || 0).toFixed(1)} 
+                                                    {(prof.reputationScore || 0).toFixed(1)}
                                                     <span className="font-normal text-gray-400 ml-1">({prof.totalRatings})</span>
                                                 </span>
                                             </div>

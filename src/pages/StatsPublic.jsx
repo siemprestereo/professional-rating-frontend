@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TrendingUp, Building2, Home, Loader2, ChevronRight } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
-
+import { BACKEND_URL } from '../config';
 function StatsPublic() {
   const { professionalId } = useParams();
   const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-
   const [loading, setLoading] = useState(true);
   const [monthlyData, setMonthlyData] = useState([]);
   const [businessData, setBusinessData] = useState([]);
@@ -41,35 +39,35 @@ function StatsPublic() {
   const fillLast6Months = (data) => {
     const now = new Date();
     const monthlyMap = new Map();
-    
+
     // Crear mapa con los datos existentes
     data.forEach(item => {
       monthlyMap.set(item.month, item.average);
     });
-    
+
     // Generar últimos 6 meses
     const result = [];
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthKey = month.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit' }); // Formato YYYY-MM
       const monthName = month.toLocaleDateString('es-AR', { month: 'short' });
-      
+
       result.push({
         month: monthName,
         average: monthlyMap.get(monthKey) || 0,
         count: monthlyMap.get(monthKey) ? 1 : 0
       });
     }
-    
+
     return result;
   };
 
   const loadAllStats = async () => {
     try {
       const [monthlyRes, businessRes, professionRes] = await Promise.all([
-        fetch(`${backendUrl}/api/stats/professional/${professionalId}/by-month`),
-        fetch(`${backendUrl}/api/stats/professional/${professionalId}/by-business`),
-        fetch(`${backendUrl}/api/stats/professional/${professionalId}/by-profession-type`)
+        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-month`),
+        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-business`),
+        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-profession-type`)
       ]);
 
       if (monthlyRes.ok) {
@@ -78,7 +76,7 @@ function StatsPublic() {
           month: item.month,
           average: parseFloat(item.average.toFixed(2))
         }));
-        
+
         // Rellenar con los últimos 6 meses
         const filledData = fillLast6Months(mappedData);
         setMonthlyData(filledData);
@@ -181,7 +179,7 @@ function StatsPublic() {
               <TrendingUp className="w-6 h-6 mr-2 text-purple-600" />
               Evolución Mensual (últimos 6 meses)
             </h2>
-            
+
             <div className="relative h-48 mt-4">
               {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
@@ -263,7 +261,7 @@ function StatsPublic() {
 
       {/* Botón Home flotante fijo abajo centrado */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button 
+        <button
           onClick={() => navigate('/client-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
           aria-label="Volver"

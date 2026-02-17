@@ -8,13 +8,12 @@ import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { renderStars, formatCvDate } from '../utils/uiHelpers';
 import { getProfessionLabel } from '../constants/professions';
+import { BACKEND_URL } from '../config';
 
 function PublicCvView() {
   const { professionalId } = useParams();
   const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-
-  const [cvData, setCvData] = useState(null);
+   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -38,7 +37,7 @@ function PublicCvView() {
   const loadData = async () => {
     try {
       // ✅ SIEMPRE cargar el CV (es público)
-      const cvResponse = await fetch(`${backendUrl}/api/cv/professional/${professionalId}`);
+      const cvResponse = await fetch(`${BACKEND_URL}/api/cv/professional/${professionalId}`);
       if (!cvResponse.ok) throw new Error('CV no encontrado');
       const data = await cvResponse.json();
       setCvData(data);
@@ -48,7 +47,7 @@ function PublicCvView() {
         setCheckingFavorite(true);
         try {
           const favoriteResponse = await fetch(
-            `${backendUrl}/api/clients/me/favorites/${professionalId}/check`,
+            `${BACKEND_URL}/api/clients/me/favorites/${professionalId}/check`,
             { headers: { 'Authorization': `Bearer ${token}` } }
           );
           if (favoriteResponse.ok) {
@@ -82,7 +81,7 @@ function PublicCvView() {
 
     try {
       const response = await fetch(
-        `${backendUrl}/api/clients/me/favorites/${professionalId}`,
+        `${BACKEND_URL}/api/clients/me/favorites/${professionalId}`,
         {
           method: isFavorite ? 'DELETE' : 'POST',
           headers: {

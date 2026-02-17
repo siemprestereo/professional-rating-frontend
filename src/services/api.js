@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { BACKEND_URL } from '../config';
 
-const API_URL = 'https://professional-rating-backend-production.up.railway.app/api';
+const API_URL = `${BACKEND_URL}/api`;
 
 // Configurar axios
 const apiClient = axios.create({

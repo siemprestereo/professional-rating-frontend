@@ -2,11 +2,10 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Briefcase, Award, Edit, Home, ChevronDown, User, FileText, LogOut, Mail, Phone, MapPin, Info } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
 
 function MyProfile() {
-  const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const navigate = useNavigate(); 
   const [professional, setProfessional] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -47,7 +46,7 @@ function MyProfile() {
 
     try {
       // ✅ Cargar desde el endpoint correcto que tiene TODOS los datos
-      const response = await fetch(`${backendUrl}/api/professionals/${localData.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/professionals/${localData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

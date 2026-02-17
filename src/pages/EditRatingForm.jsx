@@ -4,6 +4,7 @@ import { Star, ArrowLeft, CheckCircle, Loader2, Clock } from 'lucide-react';
 import Toast from '../components/Toast';
 import api from '../services/api.js';
 import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
 
 function EditRatingForm() {
     const { ratingId } = useParams();
@@ -24,10 +25,9 @@ function EditRatingForm() {
 
     const loadRating = async () => {
         try {
-            const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
             const token = localStorage.getItem('authToken');
 
-            const response = await fetch(`${backendUrl}/api/ratings/client/${JSON.parse(localStorage.getItem('client')).id}`, {
+            const response = await fetch(`${BACKEND_URL}/api/ratings/client/${JSON.parse(localStorage.getItem('client')).id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -224,8 +224,8 @@ function EditRatingForm() {
                                     >
                                         <Star
                                             className={`w-12 h-12 transition-all duration-200 ${star <= (hoverScore || score)
-                                                    ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg'
-                                                    : 'text-gray-300'
+                                                ? 'text-yellow-400 fill-yellow-400 drop-shadow-lg'
+                                                : 'text-gray-300'
                                                 }`}
                                         />
                                     </button>

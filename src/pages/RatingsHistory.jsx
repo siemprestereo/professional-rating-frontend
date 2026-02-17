@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Star, Home, Loader2, X } from 'lucide-react';
 import RatingDetailModal from '../components/RatingDetailModal';
+import { BACKEND_URL } from '../config';
 
 function RatingsHistory() {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const workHistoryIdFilter = searchParams.get('workHistoryId');
-  
+
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRating, setSelectedRating] = useState(null);
@@ -31,12 +31,12 @@ function RatingsHistory() {
 
   const loadRatings = async () => {
     const token = localStorage.getItem('authToken');
-    
+
     // ✅ Modo público: ratings por workHistoryId
     if (workHistoryIdFilter) {
       try {
         const response = await fetch(
-          `${backendUrl}/api/ratings/work-history/${workHistoryIdFilter}`,
+          `${BACKEND_URL}/api/ratings/work-history/${workHistoryIdFilter}`,
           {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           }
@@ -45,7 +45,7 @@ function RatingsHistory() {
         if (response.ok) {
           const data = await response.json();
           setRatings(data);
-          
+
           // Guardar professionalId para navegación
           if (data.length > 0) {
             setProfessionalId(data[0].professionalId);
@@ -76,9 +76,9 @@ function RatingsHistory() {
       }
 
       const professional = JSON.parse(professionalData);
-      
+
       const response = await fetch(
-        `${backendUrl}/api/ratings/professional/${professional.id}`,
+        `${BACKEND_URL}/api/ratings/professional/${professional.id}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -170,10 +170,10 @@ function RatingsHistory() {
               </>
             )}
           </div>
-          
+
           {/* ✅ MEJORA 4: Botón X solo en modo público */}
           {workHistoryIdFilter && (
-            <button 
+            <button
               onClick={handleBack}
               className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
               aria-label="Volver a estadísticas"
@@ -231,7 +231,7 @@ function RatingsHistory() {
                     {new Date(rating.createdAt).toLocaleDateString('es-AR')}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 break-words">
@@ -243,7 +243,7 @@ function RatingsHistory() {
                       </p>
                     )}
                   </div>
-                  
+
                   {rating.comment && (
                     <span className="text-xs text-purple-600 font-semibold ml-2 flex-shrink-0">
                       Ver más →
@@ -258,7 +258,7 @@ function RatingsHistory() {
 
       {/* ✅ Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button 
+        <button
           onClick={handleBack}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
           aria-label="Volver"

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, TrendingUp, Users, Calendar, Loader2, Home, ChevronDown, User, FileText, LogOut } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
 
 function Stats() {
   const navigate = useNavigate();
@@ -36,10 +37,9 @@ function Stats() {
 
       setProfessional(professionalData);
 
-      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-      
+       
       // Cargar ratings
-      const ratingsResponse = await fetch(`${backendUrl}/api/ratings/professional/${professionalData.id}`);
+      const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/professional/${professionalData.id}`);
       if (ratingsResponse.ok) {
         const ratingsData = await ratingsResponse.json();
         setRatings(ratingsData);

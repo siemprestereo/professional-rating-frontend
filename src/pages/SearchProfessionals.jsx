@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getProfessionalBadge } from '../utils/professionalBadge';
+import { BACKEND_URL } from '../config';
 
 function SearchProfessionals() {
   const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -78,7 +77,7 @@ function SearchProfessionals() {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${backendUrl}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`${BACKEND_URL}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`);
       if (response.ok) {
         const data = await response.json();
         setProfessionals(data);
@@ -101,7 +100,7 @@ function SearchProfessionals() {
   const renderProfessionalCard = (professional, index = 0) => {
     const badge = getProfessionalBadge(professional.totalRatings);
     const professionDisplay = translateProfession(professional.professionType || professional.profession);
-    
+
     return (
       <div
         key={professional.id}
@@ -188,7 +187,7 @@ function SearchProfessionals() {
         </div>
 
         <div className="fixed bottom-6 left-0 right-0 flex justify-center z-30">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-110 transition-all"
           >
@@ -201,10 +200,10 @@ function SearchProfessionals() {
           Al estar fuera del div anterior, no recibe el blur. 
       */}
       {showLoginModal && (
-        <LoginRequiredModal 
+        <LoginRequiredModal
           title={modalContent.title}
           message={modalContent.message}
-          onClose={() => setShowLoginModal(false)} 
+          onClose={() => setShowLoginModal(false)}
         />
       )}
     </div>

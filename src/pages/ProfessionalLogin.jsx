@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, User, AlertCircle, Eye, EyeOff } from 'lucide-react
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, getLoginErrorMessage } from '../utils/authUtils';
+import { BACKEND_URL } from '../config';
 
 function ProfessionalLogin() {
   const navigate = useNavigate();
@@ -66,8 +67,7 @@ function ProfessionalLogin() {
     setShake(false);
 
     try {
-      const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-      const response = await fetch(`${backendUrl}/api/auth/login`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -113,8 +113,7 @@ function ProfessionalLogin() {
   };
 
   const handleGoogleLogin = () => {
-    const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-    window.location.href = `${backendUrl}/oauth2/authorization/google-professional`;
+    window.location.href = `${BACKEND_URL}/oauth2/authorization/google-professional`;
   };
 
   return (
