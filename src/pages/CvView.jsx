@@ -3,12 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Star, Briefcase, GraduationCap, Home, ChevronRight, Search, AlertTriangle } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
 
 function CvView() {
   const navigate = useNavigate();
-  const { professionalId } = useParams();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const { professionalId } = useParams();  
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -32,7 +31,7 @@ function CvView() {
 
       const idToLoad = professionalId || professional?.id;
       
-      const response = await fetch(`${backendUrl}/api/cv/professional/${idToLoad}`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/professional/${idToLoad}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
@@ -57,7 +56,7 @@ function CvView() {
       if (!token) return;
 
       const response = await fetch(
-        `${backendUrl}/api/professionals/me/searchable-status`,
+        `${BACKEND_URL}/api/professionals/me/searchable-status`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -80,7 +79,7 @@ function CvView() {
       if (!token) return;
 
       const response = await fetch(
-        `${backendUrl}/api/professionals/me/searchable`,
+        `${BACKEND_URL}/api/professionals/me/searchable`,
         {
           method: 'PUT',
           headers: {
@@ -269,7 +268,7 @@ function CvView() {
           </button>
 
           <button
-            onClick={() => window.open(`${backendUrl}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
+            onClick={() => window.open(`${BACKEND_URL}/api/cv/${cv.professionalId}/download-pdf`, '_blank')}
             className="bg-white rounded-2xl shadow-lg p-4 text-center hover-lift cursor-pointer"
           >
             <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

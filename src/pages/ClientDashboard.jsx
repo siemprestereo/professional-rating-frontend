@@ -6,10 +6,10 @@ import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Toast from '../components/Toast';
 import api from '../services/api';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
+import { BACKEND_URL } from '../config';
 
 function ClientDashboard() {
-  const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
+  const navigate = useNavigate();  
   const [client, setClient] = useState(null);
   const [myRatings, setMyRatings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,10 +73,10 @@ function ClientDashboard() {
         setLoading(false); // ✅ UI visible inmediatamente
         
         const [profileResponse, ratingsResponse] = await Promise.all([
-          fetch(`${backendUrl}/api/auth/me/client`, {
+          fetch(`${BACKEND_URL}/api/auth/me/client`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+          fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
@@ -101,7 +101,7 @@ function ClientDashboard() {
         
       } else {
         // Sin caché: carga secuencial
-        const clientResponse = await fetch(`${backendUrl}/api/auth/me/client`, {
+        const clientResponse = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -121,7 +121,7 @@ function ClientDashboard() {
         setLoading(false); // ✅ UI visible
         
         // Cargar ratings
-        const ratingsResponse = await fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+        const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -143,7 +143,7 @@ function ClientDashboard() {
       setLoading(false);
       setLoadingRatings(false);
     }
-  }, [backendUrl, navigate]);
+  }, [BACKEND_URL, navigate]);
 
   // ✅ Función auxiliar para procesar ratings una sola vez
   const processRatings = useCallback((allRatings) => {

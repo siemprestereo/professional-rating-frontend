@@ -16,7 +16,6 @@ import ClientRegister from './pages/ClientRegister';
 import EditProfile from './pages/EditProfile';
 import EditProfileProfessional from './pages/EditProfileProfessional';
 import ProtectedRoute from './components/ProtectedRoute';
-import FontWeightTest from './pages/FontWeightTest';
 import CvView from './pages/CvView';
 import PublicCvView from './pages/PublicCvView';
 import RatingsHistory from './pages/RatingsHistory';
@@ -32,7 +31,7 @@ function App() {
   return (
     <>
       <NetworkStatus />
-      
+
       <Router>
         <Routes>
           {/* Rutas públicas */}
@@ -48,7 +47,6 @@ function App() {
           <Route path="/professional-register" element={<ProfessionalRegister />} />
           <Route path="/client-login" element={<ClientLogin />} />
           <Route path="/client-register" element={<ClientRegister />} />
-          <Route path="/font-test" element={<FontWeightTest />} />
           <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
 
           {/* CV PÚBLICO - Para compartir (sin login) - RUTA ALTERNATIVA */}

@@ -7,11 +7,10 @@ import SwitchToClientModal from '../components/SwitchToClientModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { clearAllAppData, validatePhone } from '../utils/storage';
 import { PROFESSIONS } from '../constants/professions';
+import { BACKEND_URL } from '../config';
 
 function EditProfileProfessional() {
-  const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const navigate = useNavigate(); 
   const [professional, setProfessional] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,10 +58,10 @@ function EditProfileProfessional() {
 
       try {
         const [profileResponse, roleResponse] = await Promise.all([
-          fetch(`${backendUrl}/api/professionals/${localData.id}`, {
+          fetch(`${BACKEND_URL}/api/professionals/${localData.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           }),
-          fetch(`${backendUrl}/api/role/current`, {
+          fetch(`${BACKEND_URL}/api/role/current`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
         ]);
@@ -139,7 +138,7 @@ function EditProfileProfessional() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

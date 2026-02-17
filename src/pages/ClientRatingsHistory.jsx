@@ -5,11 +5,10 @@ import LoadingScreen from '../components/LoadingScreen';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Toast from '../components/Toast';
 import api from '../services/api';
+import { BACKEND_URL } from '../config';
 
 function ClientRatingsHistory() {
   const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(null);
@@ -48,7 +47,7 @@ function ClientRatingsHistory() {
     }
 
     try {
-      const response = await fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

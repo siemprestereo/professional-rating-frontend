@@ -6,11 +6,10 @@ import ErrorModal from '../components/ErrorModal';
 import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { clearAllAppData, validatePhone } from '../utils/storage';
+import { BACKEND_URL } from '../config';
 
 function EditProfile() {
-  const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const navigate = useNavigate();  
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +49,7 @@ function EditProfile() {
       setLocation(localData.location || '');
 
       try {
-        const response = await fetch(`${backendUrl}/api/auth/me`, {
+        const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -92,7 +91,7 @@ function EditProfile() {
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/auth/update-profile`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -116,7 +115,7 @@ function EditProfile() {
     setDeleting(true);
     try {
       const token = localStorage.getItem('authToken');
-      await fetch(`${backendUrl}/api/auth/delete-account/${client.id}`, {
+      await fetch(`${BACKEND_URL}/api/auth/delete-account/${client.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

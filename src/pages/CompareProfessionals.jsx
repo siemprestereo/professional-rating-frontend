@@ -5,12 +5,11 @@ import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { translateProfession, RenderStars } from '../utils/professionalUtils';
+import { BACKEND_URL } from '../config';
 
 function CompareProfessionals() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const location = useLocation();  
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -98,7 +97,7 @@ function CompareProfessionals() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${backendUrl}/api/clients/me/favorites?startDate=${sDate}&endDate=${eDate}`,
+        `${BACKEND_URL}/api/clients/me/favorites?startDate=${sDate}&endDate=${eDate}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -117,7 +116,7 @@ function CompareProfessionals() {
     setStartDate(''); setEndDate(''); setQuickFilter('');
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/clients/me/favorites`, {
+      const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites`, {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {

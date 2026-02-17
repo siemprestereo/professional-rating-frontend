@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Star, Home, TrendingUp, Award, Calendar } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import { BADGE_DEFINITIONS, SPECIAL_BADGES } from '../constants/badges';
+import { BACKEND_URL } from '../config';
+
 
 function ClientStats() {
-  const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-  
+  const navigate = useNavigate(); 
   const [client, setClient] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ function ClientStats() {
       const clientData = JSON.parse(savedClient);
       setClient(clientData);
 
-      const response = await fetch(`${backendUrl}/api/ratings/client/${clientData.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

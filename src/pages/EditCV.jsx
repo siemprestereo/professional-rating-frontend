@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Save, Briefcase, GraduationCap, Home, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
 
 function EditCV() {
   const navigate = useNavigate();
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
-
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,7 +55,7 @@ function EditCV() {
 
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch(`${backendUrl}/api/cv/me/full`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/me/full`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -150,7 +149,7 @@ function EditCV() {
 
       console.log('💾 Guardando experiencia:', payload);
 
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/work-experience`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,7 +231,7 @@ function EditCV() {
 
       console.log('💾 Guardando ítem:', payload);
 
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}/education`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/education`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -281,7 +280,7 @@ function EditCV() {
       const token = localStorage.getItem('authToken');
 
       const response = await fetch(
-        `${backendUrl}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
+        `${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
         {
           method: 'DELETE',
           headers: {
@@ -321,7 +320,7 @@ function EditCV() {
       const token = localStorage.getItem('authToken');
 
       const response = await fetch(
-        `${backendUrl}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
+        `${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`,
         {
           method: 'DELETE',
           headers: {
@@ -361,7 +360,7 @@ function EditCV() {
       const token = localStorage.getItem('authToken');
 
       const response = await fetch(
-        `${backendUrl}/api/cv/${cv.id}/education/${edu.id}`,
+        `${BACKEND_URL}/api/cv/${cv.id}/education/${edu.id}`,
         {
           method: 'DELETE',
           headers: {
@@ -402,7 +401,7 @@ function EditCV() {
 
       console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2));
 
-      const response = await fetch(`${backendUrl}/api/cv/${cv.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Loader2 } from 'lucide-react';
+import { BACKEND_URL } from '../config';
 
 function SearchableToggle() {
-  const backendUrl = 'https://professional-rating-backend-production.up.railway.app';
   const [searchable, setSearchable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
@@ -14,7 +14,7 @@ function SearchableToggle() {
   const loadSearchableStatus = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/professionals/searchable-status`, {
+      const response = await fetch(`${BACKEND_URL}/api/professionals/searchable-status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -35,7 +35,7 @@ function SearchableToggle() {
     setToggling(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/professionals/toggle-searchable`, {
+      const response = await fetch(`${BACKEND_URL}/api/professionals/toggle-searchable`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`
