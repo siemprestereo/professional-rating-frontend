@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import ProfessionalProfile from './pages/ProfessionalProfile';
 import RatingForm from './pages/RatingForm';
@@ -26,7 +26,6 @@ import CompareProfessionals from './pages/CompareProfessionals';
 import ClientRatingsHistory from './pages/ClientRatingsHistory';
 import EditRatingForm from './pages/EditRatingForm';
 import NetworkStatus from './components/NetworkStatus';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   return (
