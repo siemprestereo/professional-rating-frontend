@@ -5,22 +5,16 @@ function ProtectedRoute({ children, userType }) {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // PRIMERO: Capturar token de la URL si existe
+  // Si hay un code OAuth en la URL, dejar pasar para que el dashboard lo procese
   const urlParams = new URLSearchParams(location.search);
-  const tokenFromUrl = urlParams.get('token');
+  const hasOAuthCode = urlParams.get('code') !== null;
   
-  if (tokenFromUrl) {
-    console.log('✅ Token detectado en URL, guardando en localStorage');
-    localStorage.setItem('authToken', tokenFromUrl);
-    
-    // Limpiar la URL sin recargar
-    window.history.replaceState({}, document.title, location.pathname);
-  }
-  
-  // LUEGO: Verificar token en localStorage
   const token = localStorage.getItem('authToken');
 
   useEffect(() => {
+    // Si hay código OAuth pendiente, no redirigir — el dashboard lo va a intercambiar
+    if (hasOAuthCode) return;
+
     // Si no hay token, redirigir al login correspondiente
     if (!token) {
       if (userType === 'CLIENT') {
@@ -35,12 +29,8 @@ function ProtectedRoute({ children, userType }) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       
-      console.log('🔍 Token userType:', payload.userType, '- Required:', userType);
       // Verificar tipo de usuario
       if (payload.userType !== userType) {
-
-        console.log('❌ userType mismatch, redirecting...');
-        // Token de tipo incorrecto, redirigir al login correcto
         if (userType === 'CLIENT') {
           navigate('/client-login', { replace: true });
         } else {
@@ -52,7 +42,6 @@ function ProtectedRoute({ children, userType }) {
       // Verificar si el token expiró
       const now = Date.now();
       if (payload.exp && payload.exp * 1000 < now) {
-        // Token expirado
         localStorage.removeItem('authToken');
         localStorage.removeItem('client');
         localStorage.removeItem('professional');
@@ -65,7 +54,6 @@ function ProtectedRoute({ children, userType }) {
         return;
       }
     } catch (e) {
-      // Token inválido
       console.error('Token inválido:', e);
       localStorage.removeItem('authToken');
       
@@ -75,10 +63,10 @@ function ProtectedRoute({ children, userType }) {
         navigate('/professional-login', { replace: true });
       }
     }
-  }, [token, navigate, userType]);
+  }, [token, navigate, userType, hasOAuthCode]);
 
-  // Solo renderizar si hay token válido
-  return token ? children : null;
+  // Renderizar si hay token válido O si hay código OAuth pendiente
+  return (token || hasOAuthCode) ? children : null;
 }
 
 export default ProtectedRoute;
