@@ -26,6 +26,7 @@ import CompareProfessionals from './pages/CompareProfessionals';
 import ClientRatingsHistory from './pages/ClientRatingsHistory';
 import EditRatingForm from './pages/EditRatingForm';
 import NetworkStatus from './components/NetworkStatus';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   return (
@@ -147,6 +148,7 @@ function App() {
           <Route path="/saved-professionals" element={<SavedProfessionals />} />
           <Route path="/compare-professionals" element={<CompareProfessionals />} />
           <Route path="/client-ratings-history" element={<ClientRatingsHistory />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </>

@@ -1,0 +1,21 @@
+{
+  "name": "Calificalo",
+  "short_name": "Calificalo",
+  "description": "Calificá y encontrá profesionales de todos los rubros",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#5B21B6",
+  "theme_color": "#5B21B6",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
