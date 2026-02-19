@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, Download } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getFirstName } from '../utils/formatName';
 
@@ -8,22 +8,17 @@ function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
     // Obtener información del usuario del token
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        // Decodificar el JWT para obtener el nombre
         const payload = JSON.parse(atob(token.split('.')[1]));
-
-        // Obtener el nombre y limpiar espacios
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
         fullName = fullName.trim();
-
-        // Extraer y capitalizar solo el primer nombre
         const firstName = getFirstName(fullName.split('@')[0]);
-
         setUserInfo({
           name: firstName,
           role: payload.userType || payload.role
@@ -32,7 +27,24 @@ function LandingPage() {
         console.error('Error al decodificar token:', error);
       }
     }
+
+    // PWA: capturar evento de instalación
+    const handleInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
   }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const result = await installPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
 
   const handleSearchClick = () => {
     navigate('/search');
@@ -79,6 +91,16 @@ function LandingPage() {
             Ingresar
             <ArrowRight className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
+
+          {installPrompt && (
+            <button
+              onClick={handleInstall}
+              className="mt-4 bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-semibold text-base shadow-lg hover:bg-white/30 hover:scale-105 transition-all flex items-center gap-2"
+            >
+              <Download className="w-5 h-5" />
+              Instalar App
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -129,6 +151,16 @@ function LandingPage() {
                 <Search className="w-6 h-6 sm:w-7 sm:h-7" />
                 Buscar profesional
               </button>
+
+              {installPrompt && (
+                <button
+                  onClick={handleInstall}
+                  className="w-full sm:w-auto bg-white/20 backdrop-blur-md text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl shadow-lg hover:bg-white/30 hover:scale-105 transition-all flex items-center justify-center gap-2"
+                >
+                  <Download className="w-6 h-6 sm:w-7 sm:h-7" />
+                  Instalar App
+                </button>
+              )}
             </div>
           </div>
 
