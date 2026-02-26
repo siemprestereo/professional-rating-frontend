@@ -10,25 +10,25 @@ import { PROFESSIONS } from '../constants/professions';
 import { BACKEND_URL } from '../config';
 
 function EditProfileProfessional() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [professional, setProfessional] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [professionType, setProfessionType] = useState('');
-  
+
   const [isAlreadyClient, setIsAlreadyClient] = useState(false);
-  
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
+
   const [showSwitchModal, setShowSwitchModal] = useState(false);
-  
+
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -40,14 +40,14 @@ function EditProfileProfessional() {
     try {
       const savedData = localStorage.getItem('professional');
       const token = localStorage.getItem('authToken');
-      
+
       if (!savedData || !token) {
         navigate('/professional-login');
         return;
       }
 
       const localData = JSON.parse(savedData);
-      
+
       setProfessional(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -69,7 +69,7 @@ function EditProfileProfessional() {
         if (profileResponse.ok) {
           const serverData = await profileResponse.json();
           console.log('✅ Datos del servidor:', serverData);
-          
+
           setProfessional(serverData);
           setName(serverData.name || '');
           setEmail(serverData.email || '');
@@ -77,7 +77,7 @@ function EditProfileProfessional() {
           setLocation(serverData.location || '');
           setProfessionalTitle(serverData.professionalTitle || '');
           setProfessionType(serverData.professionType || '');
-          
+
           localStorage.setItem('professional', JSON.stringify(serverData));
         }
 
@@ -93,23 +93,23 @@ function EditProfileProfessional() {
 
     } catch (error) {
       console.error('Error al cargar perfil:', error);
-      
+
       if (error instanceof SyntaxError) {
         clearAllAppData();
         navigate('/professional-login');
         return;
       }
-      
+
       setErrorModal({
         title: 'Error al cargar perfil',
         message: 'No se pudieron cargar tus datos. Por favor, iniciá sesión nuevamente.'
       });
-      
+
       setTimeout(() => {
         clearAllAppData();
         navigate('/professional-login');
       }, 2000);
-      
+
     } finally {
       setLoading(false);
     }
@@ -117,36 +117,36 @@ function EditProfileProfessional() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
+
     if (phone && !validatePhone(phone)) {
-      setToast({ 
-        type: 'error', 
-        message: 'El formato del teléfono no es válido. Ej: +54 11 1234-5678' 
+      setToast({
+        type: 'error',
+        message: 'El formato del teléfono no es válido. Ej: +54 11 1234-5678'
       });
       return;
     }
 
     if (!professionType) {
-      setToast({ 
-        type: 'error', 
-        message: 'Por favor seleccioná tu tipo de profesión' 
+      setToast({
+        type: 'error',
+        message: 'Por favor seleccioná tu tipo de profesión'
       });
       return;
     }
-    
+
     setSaving(true);
 
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          phone, 
-          location, 
+        body: JSON.stringify({
+          phone,
+          location,
           professionalTitle,
           professionType
         })
@@ -159,7 +159,7 @@ function EditProfileProfessional() {
 
       const updatedData = await response.json();
       console.log('✅ Perfil actualizado desde servidor:', updatedData);
-      
+
       setProfessional(updatedData);
       setName(updatedData.name || '');
       setEmail(updatedData.email || '');
@@ -167,11 +167,11 @@ function EditProfileProfessional() {
       setLocation(updatedData.location || '');
       setProfessionalTitle(updatedData.professionalTitle || '');
       setProfessionType(updatedData.professionType || '');
-      
+
       localStorage.setItem('professional', JSON.stringify(updatedData));
 
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
-      
+
     } catch (err) {
       console.error('❌ Error al guardar:', err);
       setToast({ type: 'error', message: err.message });
@@ -194,13 +194,13 @@ function EditProfileProfessional() {
       }
 
       clearAllAppData();
-      
+
       setToast({ type: 'success', message: 'Cuenta eliminada exitosamente' });
-      
+
       setTimeout(() => {
         navigate('/');
       }, 2000);
-      
+
     } catch (error) {
       console.error('Error deleting account:', error);
       setErrorModal({
@@ -326,16 +326,10 @@ function EditProfileProfessional() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
-                <MapPin className="w-5 h-5 mr-2 text-purple-600" />
-                Ubicación
-              </label>
-              <input
-                type="text"
+              <LocationSelector
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Buenos Aires, Argentina"
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base"
+                onChange={setLocation}
+                focusColor="purple"
               />
             </div>
 
@@ -365,7 +359,7 @@ function EditProfileProfessional() {
             {isAlreadyClient ? '¿Querés usar tu perfil de Cliente?' : '¿Ya no ejercés tu profesión?'}
           </h3>
           <p className="text-gray-600 mb-4 text-base">
-            {isAlreadyClient 
+            {isAlreadyClient
               ? 'Ya tenés un perfil de Cliente activo. Podés cambiar cuando quieras.'
               : 'Si ya no prestás servicios profesionales, podés cambiar tu perfil y convertirte en Cliente para seguir calificando a otros profesionales.'
             }
@@ -397,7 +391,7 @@ function EditProfileProfessional() {
       </div>
 
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
-        <button 
+        <button
           onClick={() => navigate('/professional-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white pointer-events-auto"
           aria-label="Volver al inicio"
@@ -405,7 +399,7 @@ function EditProfileProfessional() {
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
-      
+
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -413,10 +407,10 @@ function EditProfileProfessional() {
               ¿Eliminar cuenta?
             </h2>
             <p className="text-gray-600 mb-6 text-base">
-              Esta acción es permanente y eliminará todos tus datos, incluyendo tu CV, calificaciones y perfil. 
+              Esta acción es permanente y eliminará todos tus datos, incluyendo tu CV, calificaciones y perfil.
               <strong> No se puede deshacer.</strong>
             </p>
-            
+
             <div className="flex gap-4">
               <button
                 onClick={() => setShowDeleteModal(false)}
@@ -462,7 +456,7 @@ function EditProfileProfessional() {
           onClose={() => setToast(null)}
         />
       )}
-      
+
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

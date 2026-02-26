@@ -3,17 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getProfessionalBadge } from '../utils/professionalBadge';
+import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 
 function SearchProfessionals() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProvincia, setSelectedProvincia] = useState('');
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
   const inputRef = useRef(null);
+
+  const { provincias, loadingProvincias } = useGeoref();
 
   const checkAuthAndExecute = (action, type) => {
     const token = localStorage.getItem('authToken');
@@ -68,21 +72,31 @@ function SearchProfessionals() {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
+    if (searchTerm.trim() || selectedProvincia) {
       const delayDebounceFn = setTimeout(() => { handleSearch(); }, 300);
       return () => clearTimeout(delayDebounceFn);
-    } else { setProfessionals([]); }
-  }, [searchTerm]);
+    } else {
+      setProfessionals([]);
+    }
+  }, [searchTerm, selectedProvincia]);
 
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/professionals/search?query=${encodeURIComponent(searchTerm)}`);
+      const params = new URLSearchParams();
+      params.append('query', searchTerm.trim() || ' ');
+      if (selectedProvincia) params.append('location', selectedProvincia);
+
+      const response = await fetch(`${BACKEND_URL}/api/professionals/search?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setProfessionals(data);
       }
-    } catch (error) { console.error('Error searching:', error); } finally { setLoading(false); }
+    } catch (error) {
+      console.error('Error searching:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const translateProfession = (type) => {
@@ -115,6 +129,12 @@ function SearchProfessionals() {
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-gray-800 truncate">{professional.name}</h3>
             <p className="text-xs text-purple-600 font-semibold mb-1">{professionDisplay}</p>
+            {professional.location && (
+              <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                <MapPin className="w-3 h-3" />
+                {professional.location}
+              </p>
+            )}
             <div className="flex items-center gap-2">
               <div className="flex">{renderStars(professional.reputationScore || 0)}</div>
               <span className="text-xs font-bold text-gray-700">{(professional.reputationScore || 0).toFixed(1)}</span>
@@ -128,16 +148,17 @@ function SearchProfessionals() {
     );
   };
 
+  const showResults = searchTerm.trim() || selectedProvincia;
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
-      {/* CONTENEDOR DE FONDO: 
-          Aquí es donde aplicamos el blur. El modal queda afuera de este div.
-      */}
       <div className={`transition-all duration-300 ${showLoginModal ? 'blur-md grayscale-[0.2] pointer-events-none' : ''}`}>
         <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-10 pb-16 shadow-lg">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl roboto-light text-white mb-6">¿Qué profesional buscás hoy?</h1>
-            <div className="relative">
+            <h1 className="text-2xl roboto-light text-white mb-4">¿Qué profesional buscás hoy?</h1>
+            
+            {/* Buscador de texto */}
+            <div className="relative mb-3">
               <input
                 ref={inputRef}
                 type="text"
@@ -150,18 +171,38 @@ function SearchProfessionals() {
                 {loading ? <Loader2 className="w-6 h-6 text-purple-600 animate-spin" /> : <Search className="w-6 h-6 text-gray-300" />}
               </div>
             </div>
+
+            {/* Filtro por provincia */}
+            <div className="relative">
+              <select
+                value={selectedProvincia}
+                onChange={(e) => setSelectedProvincia(e.target.value)}
+                disabled={loadingProvincias}
+                className="w-full bg-white/95 backdrop-blur-sm px-4 py-3 rounded-2xl focus:outline-none shadow-lg text-gray-700 appearance-none"
+              >
+                <option value="">Todas las provincias</option>
+                {provincias.map(p => (
+                  <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                ))}
+              </select>
+              <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            </div>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10 pb-24">
-          {searchTerm.trim() ? (
+          {showResults ? (
             <div className="animate-fadeIn">
               {professionals.length > 0 ? (
                 professionals.map((p, i) => renderProfessionalCard(p, i))
               ) : !loading && (
                 <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
                   <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                  <p className="text-gray-500">No encontramos resultados para "{searchTerm}"</p>
+                  <p className="text-gray-500">
+                    No encontramos resultados
+                    {searchTerm && ` para "${searchTerm}"`}
+                    {selectedProvincia && ` en ${selectedProvincia}`}
+                  </p>
                 </div>
               )}
             </div>
@@ -196,9 +237,6 @@ function SearchProfessionals() {
         </div>
       </div>
 
-      {/* MODAL: 
-          Al estar fuera del div anterior, no recibe el blur. 
-      */}
       {showLoginModal && (
         <LoginRequiredModal
           title={modalContent.title}

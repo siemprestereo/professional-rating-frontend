@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
+import LocationSelector from '../components/LocationSelector';
 import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
 
@@ -13,13 +14,13 @@ function ClientRegister() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [location, setLocation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
-  // Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
 
@@ -33,17 +34,14 @@ function ClientRegister() {
 
     const code = searchParams.get('code');
     if (code) {
-      // Limpiar la URL inmediatamente
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Intercambiar código por JWT
       exchangeOAuthCode(code).then((data) => {
         if (!data) {
           setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
           return;
         }
 
-        // Guardar datos con función centralizada
         saveAuthData('CLIENT', data.token, {
           id: data.id,
           email: data.email,
@@ -62,7 +60,6 @@ function ClientRegister() {
     }
   }, [searchParams, navigate]);
 
-  // Aplicar formatName solo al salir del campo
   const handleNameBlur = () => {
     setName(formatName(name));
   };
@@ -70,10 +67,8 @@ function ClientRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Formatear nombre antes de enviar
     const formattedName = formatName(name);
 
-    // Validaciones
     if (password !== confirmPassword) {
       setToast({ type: 'error', message: 'Las contraseñas no coinciden' });
       return;
@@ -90,7 +85,7 @@ function ClientRegister() {
       const response = await fetch(`${BACKEND_URL}/api/auth/register-client`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formattedName, email, password })
+        body: JSON.stringify({ name: formattedName, email, password, location: location || null })
       });
 
       if (!response.ok) {
@@ -100,7 +95,6 @@ function ClientRegister() {
 
       const data = await response.json();
 
-      // Guardar con función centralizada
       saveAuthData('CLIENT', data.token, {
         id: data.id,
         email: data.email,
@@ -147,7 +141,6 @@ function ClientRegister() {
           </p>
         </div>
 
-        {/* Botón de Google */}
         <button
           type="button"
           onClick={handleGoogleLogin}
@@ -200,6 +193,14 @@ function ClientRegister() {
               autoComplete="email"
               required
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
+            />
+          </div>
+
+          <div className="mb-3 sm:mb-4">
+            <LocationSelector
+              value={location}
+              onChange={setLocation}
+              focusColor="green"
             />
           </div>
 

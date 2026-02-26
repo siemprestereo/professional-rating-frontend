@@ -6,6 +6,7 @@ import ErrorModal from '../components/ErrorModal';
 import { exchangeOAuthCode, handlePostLoginRedirect, saveAuthData, formatName } from '../utils/authUtils';
 import { PROFESSIONS } from '../constants/professions';
 import { BACKEND_URL } from '../config';
+import LocationSelector from '../components/LocationSelector';
 
 function ProfessionalRegister() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ function ProfessionalRegister() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
+  const [location, setLocation] = useState('');
 
 
   // Detectar errores de OAuth e intercambiar código por token
@@ -102,7 +104,8 @@ function ProfessionalRegister() {
           email,
           password,
           professionType,
-          professionalTitle: professionalTitle || null
+          professionalTitle: professionalTitle || null,
+          location: location || null
         })
       });
 
@@ -219,7 +222,6 @@ function ProfessionalRegister() {
             />
           </div>
 
-          {/* Tipo de profesión */}
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 flex items-center text-sm sm:text-base">
               <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
@@ -240,7 +242,6 @@ function ProfessionalRegister() {
             </select>
           </div>
 
-          {/* Título profesional (opcional) */}
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
               Título profesional (opcional)
@@ -251,6 +252,15 @@ function ProfessionalRegister() {
               onChange={(e) => setProfessionalTitle(e.target.value)}
               placeholder="Ej: Mozo Senior, Electricista Matriculado"
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
+            />
+          </div>
+
+          {/* NUEVO: selector de ubicación */}
+          <div className="mb-3 sm:mb-4">
+            <LocationSelector
+              value={location}
+              onChange={setLocation}
+              focusColor="blue"
             />
           </div>
 
@@ -319,7 +329,6 @@ function ProfessionalRegister() {
             )}
           </button>
         </form>
-
         <div className="mt-4 sm:mt-6 text-center">
           <p className="text-gray-600 text-sm sm:text-base">
             ¿Ya tenés cuenta?{' '}
