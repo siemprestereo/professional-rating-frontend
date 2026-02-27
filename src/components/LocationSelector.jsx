@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { useGeoref } from '../hooks/useGeoref';
+import LocationSelector from '../components/LocationSelector';
 
 /**
  * Props:
