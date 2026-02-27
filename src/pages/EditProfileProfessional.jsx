@@ -8,6 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { clearAllAppData, validatePhone } from '../utils/storage';
 import { PROFESSIONS } from '../constants/professions';
 import { BACKEND_URL } from '../config';
+import LocationSelector from '../components/LocationSelector';
 
 function EditProfileProfessional() {
   const navigate = useNavigate();
