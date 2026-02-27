@@ -4,18 +4,25 @@ import { useGeoref } from '../hooks/useGeoref';
 
 /**
  * Props:
- * - value: string con el formato "Localidad, Provincia" (o "" si no hay)
+ * - value: string con formato "Localidad, Provincia" (o "" si no hay)
  * - onChange: función que recibe el nuevo string "Localidad, Provincia"
- * - className: clases adicionales para el wrapper
  * - required: boolean
- * - focusColor: "purple" | "blue" | "green" (default: "purple")
+ * - focusColor: "purple" | "blue" | "green"
  */
 function LocationSelector({ value = '', onChange, required = false, focusColor = 'purple' }) {
-  const { provincias, localidades, loadingProvincias, loadingLocalidades, fetchLocalidades } = useGeoref();
+  const {
+    provincias,
+    segundoNivel,
+    loadingProvincias,
+    loadingSegundoNivel,
+    fetchSegundoNivel,
+    getSegundoNivelLabel,
+    PROVINCIA_ID,
+  } = useGeoref();
 
   const [provinciaId, setProvinciaId] = useState('');
   const [provinciaNombre, setProvinciaNombre] = useState('');
-  const [localidadNombre, setLocalidadNombre] = useState('');
+  const [segundoNivelNombre, setSegundoNivelNombre] = useState('');
 
   const focusClass = {
     purple: 'focus:border-purple-500',
@@ -23,22 +30,21 @@ function LocationSelector({ value = '', onChange, required = false, focusColor =
     green: 'focus:border-green-500',
   }[focusColor] || 'focus:border-purple-500';
 
-  // Si hay un valor inicial (ej: al editar perfil), parsearlo
+  // Parsear value inicial al editar perfil
   useEffect(() => {
     if (value && provincias.length > 0 && !provinciaId) {
-      // Formato esperado: "Localidad, Provincia"
       const parts = value.split(', ');
       if (parts.length >= 2) {
         const provNombre = parts[parts.length - 1];
-        const locNombre = parts.slice(0, parts.length - 1).join(', ');
-        const found = provincias.find(p =>
-          p.nombre.toLowerCase() === provNombre.toLowerCase()
+        const segNombre = parts.slice(0, parts.length - 1).join(', ');
+        const found = provincias.find(
+          p => p.nombre.toLowerCase() === provNombre.toLowerCase()
         );
         if (found) {
           setProvinciaId(found.id);
           setProvinciaNombre(found.nombre);
-          setLocalidadNombre(locNombre);
-          fetchLocalidades(found.id);
+          setSegundoNivelNombre(segNombre);
+          fetchSegundoNivel(found.id);
         }
       }
     }
@@ -49,19 +55,27 @@ function LocationSelector({ value = '', onChange, required = false, focusColor =
     const selectedProv = provincias.find(p => p.id === selectedId);
     setProvinciaId(selectedId);
     setProvinciaNombre(selectedProv?.nombre || '');
-    setLocalidadNombre('');
+    setSegundoNivelNombre('');
     onChange('');
-    fetchLocalidades(selectedId);
+    fetchSegundoNivel(selectedId);
   };
 
-  const handleLocalidadChange = (e) => {
+  const handleSegundoNivelChange = (e) => {
     const nombre = e.target.value;
-    setLocalidadNombre(nombre);
+    setSegundoNivelNombre(nombre);
     if (nombre && provinciaNombre) {
       onChange(`${nombre}, ${provinciaNombre}`);
     } else {
       onChange('');
     }
+  };
+
+  const segundoNivelLabel = getSegundoNivelLabel(provinciaId);
+
+  const getPlaceholderSegundoNivel = () => {
+    if (!provinciaId) return 'Primero elegí una provincia';
+    if (loadingSegundoNivel) return `Cargando ${segundoNivelLabel.toLowerCase()}s...`;
+    return `Seleccioná un ${segundoNivelLabel.toLowerCase()}`;
   };
 
   return (
@@ -93,29 +107,25 @@ function LocationSelector({ value = '', onChange, required = false, focusColor =
         </div>
       </div>
 
-      {/* Localidad */}
+      {/* Partido / Barrio / Localidad */}
       <div>
-        <label className="block text-gray-700 font-semibold mb-2 text-base">Localidad {required && '*'}</label>
+        <label className="block text-gray-700 font-semibold mb-2 text-base">
+          {segundoNivelLabel} {required && '*'}
+        </label>
         <div className="relative">
           <select
-            value={localidadNombre}
-            onChange={handleLocalidadChange}
+            value={segundoNivelNombre}
+            onChange={handleSegundoNivelChange}
             required={required}
-            disabled={!provinciaId || loadingLocalidades}
+            disabled={!provinciaId || loadingSegundoNivel}
             className={`w-full border-2 border-gray-200 rounded-2xl px-4 py-3 ${focusClass} focus:outline-none transition-all text-base disabled:opacity-50`}
           >
-            <option value="">
-              {!provinciaId
-                ? 'Primero elegí una provincia'
-                : loadingLocalidades
-                  ? 'Cargando localidades...'
-                  : 'Seleccioná una localidad'}
-            </option>
-            {localidades.map(l => (
-              <option key={l.id} value={l.nombre}>{l.nombre}</option>
+            <option value="">{getPlaceholderSegundoNivel()}</option>
+            {segundoNivel.map(item => (
+              <option key={item.id} value={item.nombre}>{item.nombre}</option>
             ))}
           </select>
-          {loadingLocalidades && (
+          {loadingSegundoNivel && (
             <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
           )}
         </div>
