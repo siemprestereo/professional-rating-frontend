@@ -185,7 +185,7 @@ function EditProfileProfessional() {
     setDeleting(true);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${backendUrl}/api/auth/delete-account/${professional.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/delete-account/${professional.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
