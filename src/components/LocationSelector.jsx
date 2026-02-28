@@ -40,24 +40,28 @@ function LocationSelector({ value = '', onChange, required = false, focusColor =
   }[focusColor] || 'bg-purple-50';
 
   // Parsear value inicial al editar perfil
-  useEffect(() => {
-    if (value && provincias.length > 0 && !provinciaId) {
-      const parts = value.split(', ');
-      if (parts.length >= 2) {
-        const provNombre = parts[parts.length - 1];
-        const segNombre = parts.slice(0, parts.length - 1).join(', ');
-        const found = provincias.find(
-          p => p.nombre.toLowerCase() === provNombre.toLowerCase()
-        );
-        if (found) {
-          setProvinciaId(found.id);
-          setProvinciaNombre(found.nombre);
-          setSegundoNivelNombre(segNombre);
-          fetchSegundoNivel(found.id);
-        }
-      }
+  const initializedRef = useRef(false);
+
+useEffect(() => {
+  if (initializedRef.current) return;
+  if (!value || provincias.length === 0) return;
+
+  const parts = value.split(', ');
+  if (parts.length >= 2) {
+    const provNombre = parts[parts.length - 1];
+    const segNombre = parts.slice(0, parts.length - 1).join(', ');
+    const found = provincias.find(
+      p => p.nombre.toLowerCase() === provNombre.toLowerCase()
+    );
+    if (found) {
+      initializedRef.current = true;
+      setProvinciaId(found.id);
+      setProvinciaNombre(found.nombre);
+      setSegundoNivelNombre(segNombre);
+      fetchSegundoNivel(found.id);
     }
-  }, [value, provincias]);
+  }
+}, [value, provincias]);
 
   // Cerrar dropdown al hacer click afuera
   useEffect(() => {
