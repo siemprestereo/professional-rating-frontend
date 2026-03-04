@@ -89,7 +89,7 @@ function ProfessionalRegister() {
     }
 
     if (password.length < 8) {
-      setToast({ type: 'error', message: 'La contraseña debe tener al menos 6 caracteres' });
+      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)' });
       return;
     }
 
@@ -273,7 +273,7 @@ function ProfessionalRegister() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)"
                 autoComplete="new-password"
                 required
                 minLength={6}
@@ -287,7 +287,7 @@ function ProfessionalRegister() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 6 caracteres</p>
+            <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)</p>
           </div>
 
           <div className="mb-4 sm:mb-6">
