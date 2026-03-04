@@ -112,38 +112,39 @@ function EditCV() {
   };
 
   const handleAddZone = async () => {
-    if (!zonaProvinciaId || !zonaSeleccionada) {
-      setToast({ type: 'error', message: 'Seleccioná provincia y zona' });
-      return;
-    }
+  if (!zonaProvinciaId || !zonaSeleccionada) {
+    setToast({ type: 'error', message: 'Seleccioná provincia y zona' });
+    return;
+  }
 
-    setSavingZone(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ provincia: zonaProvincia, zona: zonaSeleccionada })
-      });
+  setSavingZone(true);
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ provincia: zonaProvincia, zona: zonaSeleccionada })
+    });
 
-      if (response.ok) {
-        const saved = await response.json();
-        setZones([...zones, saved]);
-        setZonaSeleccionada('');
-        setToast({ type: 'success', message: 'Zona agregada correctamente' });
-      } else {
-        const err = await response.json();
-        setToast({ type: 'error', message: err.error || 'Error al agregar zona' });
-      }
-    } catch (error) {
-      setToast({ type: 'error', message: 'Error de conexión' });
-    } finally {
-      setSavingZone(false);
+    const data = await response.json();
+
+    if (response.ok) {
+      setZones([...zones, data]);
+      setZonaSeleccionada('');
+      setToast({ type: 'success', message: 'Zona agregada correctamente' });
+    } else {
+      setToast({ type: 'error', message: data.error || 'Error al agregar zona' });
     }
-  };
+  } catch (error) {
+    console.error('Error:', error);
+    setToast({ type: 'error', message: 'Error de conexión' });
+  } finally {
+    setSavingZone(false);
+  }
+};
 
   const handleDeleteZone = async (zoneId) => {
     setDeletingZoneId(zoneId);
