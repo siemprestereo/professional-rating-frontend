@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Save, GraduationCap, Home, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
+import SearchableSelect from '../components/SearchableSelect';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 
@@ -65,15 +66,12 @@ function EditCV() {
       }
 
       const token = localStorage.getItem('authToken');
-
       const response = await fetch(`${BACKEND_URL}/api/cv/me/full`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ CV cargado:', data);
-
         setCv({ id: data.id });
         setDescription(data.description || '');
         setZones(data.zones || []);
@@ -112,39 +110,39 @@ function EditCV() {
   };
 
   const handleAddZone = async () => {
-  if (!zonaProvinciaId || !zonaSeleccionada) {
-    setToast({ type: 'error', message: 'Seleccioná provincia y zona' });
-    return;
-  }
-
-  setSavingZone(true);
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ provincia: zonaProvincia, zona: zonaSeleccionada })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setZones([...zones, data]);
-      setZonaSeleccionada('');
-      setToast({ type: 'success', message: 'Zona agregada correctamente' });
-    } else {
-      setToast({ type: 'error', message: data.error || 'Error al agregar zona' });
+    if (!zonaProvinciaId || !zonaSeleccionada) {
+      setToast({ type: 'error', message: 'Seleccioná provincia y zona' });
+      return;
     }
-  } catch (error) {
-    console.error('Error:', error);
-    setToast({ type: 'error', message: 'Error de conexión' });
-  } finally {
-    setSavingZone(false);
-  }
-};
+
+    setSavingZone(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ provincia: zonaProvincia, zona: zonaSeleccionada })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setZones([...zones, data]);
+        setZonaSeleccionada('');
+        setToast({ type: 'success', message: 'Zona agregada correctamente' });
+      } else {
+        setToast({ type: 'error', message: data.error || 'Error al agregar zona' });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setToast({ type: 'error', message: 'Error de conexión' });
+    } finally {
+      setSavingZone(false);
+    }
+  };
 
   const handleDeleteZone = async (zoneId) => {
     setDeletingZoneId(zoneId);
@@ -169,27 +167,15 @@ function EditCV() {
   };
 
   const handleSaveWorkExperience = async (job, isFreelance, index) => {
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado' });
-      return;
-    }
-
-    if (!job.position || job.position.trim() === '') {
-      setToast({ type: 'error', message: 'El puesto es obligatorio' });
-      return;
-    }
-
+    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
+    if (!job.position || job.position.trim() === '') { setToast({ type: 'error', message: 'El puesto es obligatorio' }); return; }
     if (job.startDate && job.endDate && !job.currentlyWorking) {
       const start = new Date(job.startDate);
       const end = new Date(job.endDate);
-      if (end < start) {
-        setToast({ type: 'error', message: 'La fecha de finalización no puede ser anterior a la de inicio' });
-        return;
-      }
+      if (end < start) { setToast({ type: 'error', message: 'La fecha de finalización no puede ser anterior a la de inicio' }); return; }
     }
 
     setSavingWorkId(job.workHistoryId || 'new');
-
     try {
       const token = localStorage.getItem('authToken');
       const payload = {
@@ -207,10 +193,7 @@ function EditCV() {
 
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -226,10 +209,7 @@ function EditCV() {
           setEmployeeJobs(updated);
         }
         setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
-        setTimeout(() => {
-          if (isFreelance) setExpandedFreelance(null);
-          else setExpandedEmployee(null);
-        }, 100);
+        setTimeout(() => { if (isFreelance) setExpandedFreelance(null); else setExpandedEmployee(null); }, 100);
       } else {
         const errorData = await response.json();
         setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
@@ -242,18 +222,12 @@ function EditCV() {
   };
 
   const handleSaveEducation = async (edu, index) => {
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado' });
-      return;
-    }
-
+    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
     if ((!edu.institution || edu.institution.trim() === '') && (!edu.degree || edu.degree.trim() === '')) {
-      setToast({ type: 'error', message: 'Debe ingresar al menos la institución o el título' });
-      return;
+      setToast({ type: 'error', message: 'Debe ingresar al menos la institución o el título' }); return;
     }
 
     setSavingEducationId(edu.id || 'new');
-
     try {
       const token = localStorage.getItem('authToken');
       const payload = {
@@ -268,10 +242,7 @@ function EditCV() {
 
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/education`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
@@ -297,22 +268,12 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) {
-        setToast({ type: 'success', message: 'Ítem eliminado correctamente' });
-        await loadCV();
-        setExpandedFreelance(null);
-      } else {
-        const errorData = await response.json();
-        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
-      }
-    } catch (error) {
-      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
-    } finally {
-      setDeletingWorkId(null);
-    }
+      if (response.ok) { setToast({ type: 'success', message: 'Ítem eliminado correctamente' }); await loadCV(); setExpandedFreelance(null); }
+      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
+    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
+    finally { setDeletingWorkId(null); }
   };
 
   const handleDeleteEmployeeJob = async (index) => {
@@ -322,22 +283,12 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) {
-        setToast({ type: 'success', message: 'Trabajo eliminado correctamente' });
-        await loadCV();
-        setExpandedEmployee(null);
-      } else {
-        const errorData = await response.json();
-        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
-      }
-    } catch (error) {
-      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
-    } finally {
-      setDeletingWorkId(null);
-    }
+      if (response.ok) { setToast({ type: 'success', message: 'Trabajo eliminado correctamente' }); await loadCV(); setExpandedEmployee(null); }
+      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
+    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
+    finally { setDeletingWorkId(null); }
   };
 
   const handleDeleteEducation = async (index) => {
@@ -347,117 +298,68 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/education/${edu.id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) {
-        setToast({ type: 'success', message: 'Ítem eliminado correctamente' });
-        await loadCV();
-        setExpandedEducation(null);
-      } else {
-        const errorData = await response.json();
-        setToast({ type: 'error', message: errorData.error || 'Error al eliminar' });
-      }
-    } catch (error) {
-      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
-    } finally {
-      setDeletingEducationId(null);
-    }
+      if (response.ok) { setToast({ type: 'success', message: 'Ítem eliminado correctamente' }); await loadCV(); setExpandedEducation(null); }
+      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
+    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
+    finally { setDeletingEducationId(null); }
   };
 
   const handleSave = async () => {
-    if (!cv || !cv.id) {
-      setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' });
-      return;
-    }
+    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' }); return; }
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ description })
       });
-      if (response.ok) {
-        setToast({ type: 'success', message: 'CV actualizado correctamente' });
-        setTimeout(() => navigate('/cv-view'), 1000);
-      } else {
-        const errorData = await response.json();
-        setToast({ type: 'error', message: errorData.error || errorData.message || 'Error al guardar CV' });
-      }
-    } catch (error) {
-      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
-    } finally {
-      setSaving(false);
-    }
+      if (response.ok) { setToast({ type: 'success', message: 'CV actualizado correctamente' }); setTimeout(() => navigate('/cv-view'), 1000); }
+      else { const e = await response.json(); setToast({ type: 'error', message: e.error || e.message || 'Error al guardar CV' }); }
+    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al guardar CV' }); }
+    finally { setSaving(false); }
   };
 
   const addFreelanceJob = () => {
-    const newJob = { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: true, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 };
-    setFreelanceJobs([...freelanceJobs, newJob]);
+    setFreelanceJobs([...freelanceJobs, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: true, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
     setExpandedFreelance(freelanceJobs.length);
   };
 
   const updateFreelanceJob = (index, field, value) => {
     const updated = [...freelanceJobs];
     if (field === 'currentlyWorking' && value === true) {
-      const currentActive = countActiveJobs();
-      if (currentActive >= 3 && !updated[index].currentlyWorking) {
-        setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' });
-        return;
-      }
+      if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) { setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' }); return; }
       updated[index].endDate = '';
     }
     updated[index][field] = value;
     setFreelanceJobs(updated);
   };
 
-  const confirmDeleteFreelanceJob = (index) => {
-    setDeleteModal({ type: 'freelance', index, title: '¿Eliminar trabajo autónomo?', message: 'Esta acción no se puede deshacer.' });
-  };
-
-  const removeFreelanceJob = (index) => {
-    setFreelanceJobs(freelanceJobs.filter((_, i) => i !== index));
-    setDeleteModal(null);
-    setExpandedFreelance(null);
-  };
+  const confirmDeleteFreelanceJob = (index) => setDeleteModal({ type: 'freelance', index, title: '¿Eliminar trabajo autónomo?', message: 'Esta acción no se puede deshacer.' });
+  const removeFreelanceJob = (index) => { setFreelanceJobs(freelanceJobs.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedFreelance(null); };
 
   const addEmployeeJob = () => {
-    const newJob = { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: false, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 };
-    setEmployeeJobs([...employeeJobs, newJob]);
+    setEmployeeJobs([...employeeJobs, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: false, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
     setExpandedEmployee(employeeJobs.length);
   };
 
   const updateEmployeeJob = (index, field, value) => {
     const updated = [...employeeJobs];
     if (field === 'currentlyWorking' && value === true) {
-      const currentActive = countActiveJobs();
-      if (currentActive >= 3 && !updated[index].currentlyWorking) {
-        setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' });
-        return;
-      }
+      if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) { setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' }); return; }
       updated[index].endDate = '';
     }
     updated[index][field] = value;
     setEmployeeJobs(updated);
   };
 
-  const confirmDeleteEmployeeJob = (index) => {
-    setDeleteModal({ type: 'employee', index, title: '¿Eliminar trabajo?', message: 'Esta acción no se puede deshacer.' });
-  };
-
-  const removeEmployeeJob = (index) => {
-    setEmployeeJobs(employeeJobs.filter((_, i) => i !== index));
-    setDeleteModal(null);
-    setExpandedEmployee(null);
-  };
+  const confirmDeleteEmployeeJob = (index) => setDeleteModal({ type: 'employee', index, title: '¿Eliminar trabajo?', message: 'Esta acción no se puede deshacer.' });
+  const removeEmployeeJob = (index) => { setEmployeeJobs(employeeJobs.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedEmployee(null); };
 
   const addEducation = () => {
-    const newEdu = { institution: '', degree: '', startDate: '', endDate: '', currentlyStudying: false, description: '' };
-    setEducation([...education, newEdu]);
+    setEducation([...education, { institution: '', degree: '', startDate: '', endDate: '', currentlyStudying: false, description: '' }]);
     setExpandedEducation(education.length);
   };
 
@@ -468,15 +370,8 @@ function EditCV() {
     setEducation(updated);
   };
 
-  const confirmDeleteEducation = (index) => {
-    setDeleteModal({ type: 'education', index, title: '¿Eliminar ítem?', message: 'Esta acción no se puede deshacer.' });
-  };
-
-  const removeEducation = (index) => {
-    setEducation(education.filter((_, i) => i !== index));
-    setDeleteModal(null);
-    setExpandedEducation(null);
-  };
+  const confirmDeleteEducation = (index) => setDeleteModal({ type: 'education', index, title: '¿Eliminar ítem?', message: 'Esta acción no se puede deshacer.' });
+  const removeEducation = (index) => { setEducation(education.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedEducation(null); };
 
   const handleConfirmDelete = () => {
     if (!deleteModal) return;
@@ -504,8 +399,7 @@ function EditCV() {
         {/* SOBRE MÍ */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h2 className="text-2xl roboto-light text-gray-800 mb-4 flex items-center">
-            <span className="text-2xl mr-2">👤</span>
-            Sobre mí
+            <span className="text-2xl mr-2">👤</span>Sobre mí
           </h2>
           <textarea
             placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
@@ -519,8 +413,7 @@ function EditCV() {
         {/* ZONAS DE TRABAJO */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <h2 className="text-2xl roboto-light text-gray-800 mb-2 flex items-center">
-            <span className="text-2xl mr-2">📍</span>
-            Zonas de trabajo
+            <span className="text-2xl mr-2">📍</span>Zonas de trabajo
           </h2>
           <p className="text-sm text-gray-500 mb-4">
             Indicá en qué zonas ofrecés tus servicios. Podés agregar varios partidos o localidades dentro de una misma provincia.
@@ -553,19 +446,15 @@ function EditCV() {
               <label className="block text-gray-700 font-semibold mb-2 text-sm">
                 {getSegundoNivelLabel(zonaProvinciaId)}
               </label>
-              <select
+              <SearchableSelect
+                options={segundoNivel}
                 value={zonaSeleccionada}
-                onChange={(e) => setZonaSeleccionada(e.target.value)}
-                disabled={loadingSegundoNivel}
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base disabled:opacity-50"
-              >
-                <option value="">
-                  {loadingSegundoNivel ? 'Cargando...' : `Seleccioná un ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}`}
-                </option>
-                {segundoNivel.map(item => (
-                  <option key={item.id} value={item.nombre}>{item.nombre}</option>
-                ))}
-              </select>
+                onChange={setZonaSeleccionada}
+                placeholder={`Seleccioná un ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}`}
+                searchPlaceholder={`Buscar ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}...`}
+                loading={loadingSegundoNivel}
+                focusColor="purple"
+              />
             </div>
           )}
 
@@ -575,11 +464,7 @@ function EditCV() {
             disabled={savingZone || !zonaProvinciaId || !zonaSeleccionada}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-base"
           >
-            {savingZone ? (
-              <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Agregando...</>
-            ) : (
-              <><Plus className="w-5 h-5 mr-2" />Agregar zona</>
-            )}
+            {savingZone ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Agregando...</> : <><Plus className="w-5 h-5 mr-2" />Agregar zona</>}
           </button>
 
           {zones.length === 0 ? (
@@ -587,10 +472,7 @@ function EditCV() {
           ) : (
             <div className="flex flex-wrap gap-2">
               {zones.map(zone => (
-                <div
-                  key={zone.id}
-                  className="flex items-center gap-2 bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full"
-                >
+                <div key={zone.id} className="flex items-center gap-2 bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
                   <span>{zone.zona}, {zone.provincia}</span>
                   <button
                     type="button"
@@ -598,10 +480,7 @@ function EditCV() {
                     disabled={deletingZoneId === zone.id}
                     className="text-purple-400 hover:text-red-500 transition-colors"
                   >
-                    {deletingZoneId === zone.id
-                      ? <Loader2 className="w-3 h-3 animate-spin" />
-                      : <span className="text-base leading-none">×</span>
-                    }
+                    {deletingZoneId === zone.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <span className="text-base leading-none">×</span>}
                   </button>
                 </div>
               ))}
@@ -618,9 +497,7 @@ function EditCV() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base roboto-light text-orange-900 mb-1">⚠️ No podés recibir calificaciones todavía</h3>
-                <p className="text-sm text-orange-800">
-                  Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.
-                </p>
+                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.</p>
               </div>
             </div>
           </div>
@@ -645,8 +522,7 @@ function EditCV() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
-              <span className="text-2xl mr-2">💼</span>
-              Trabajo Autónomo / Freelance
+              <span className="text-2xl mr-2">💼</span>Trabajo Autónomo / Freelance
             </h2>
             <button onClick={addFreelanceJob} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110">
               <Plus className="w-5 h-5" />
@@ -659,23 +535,12 @@ function EditCV() {
             <div className="space-y-2">
               {freelanceJobs.map((job, index) => (
                 <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div
-                    onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)}
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
+                  <div onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      {expandedFreelance === index
-                        ? <ChevronDown className="w-5 h-5 text-purple-600" />
-                        : <ChevronRight className="w-5 h-5 text-gray-400" />
-                      }
+                      {expandedFreelance === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                       <div>
-                        <p className="font-semibold text-gray-800 text-base">
-                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
-                          {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
-                        </p>
+                        <p className="font-semibold text-gray-800 text-base">{job.position || 'Sin título'} {job.company && `- ${job.company}`}</p>
+                        <p className="text-sm text-gray-500">{job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}{job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}</p>
                       </div>
                     </div>
                   </div>
@@ -691,9 +556,8 @@ function EditCV() {
                           </div>
                         </div>
                       )}
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input type="text" placeholder="Título profesional (Electricista, diseñador, peluquero, etc)" value={job.position} onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+                        <input type="text" placeholder="Título profesional" value={job.position} onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         <input type="text" placeholder="Autónomo" value={job.company} onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
@@ -704,16 +568,13 @@ function EditCV() {
                           <input type="date" value={job.endDate} onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         </div>
                       </div>
-
                       <div className="mb-3">
                         <label className="flex items-center cursor-pointer">
                           <input type="checkbox" checked={job.currentlyWorking} onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)} disabled={countActiveJobs() >= 3 && !job.currentlyWorking} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
                           <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
                       </div>
-
                       <textarea placeholder="Descripción del proyecto / responsabilidades" value={job.description} onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
-
                       <button onClick={() => handleSaveWorkExperience(job, true, index)} disabled={savingWorkId === (job.workHistoryId || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
                         {savingWorkId === (job.workHistoryId || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar trabajo</>}
                       </button>
@@ -732,8 +593,7 @@ function EditCV() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
-              <span className="text-2xl mr-2">🏢</span>
-              Trabajo en Relación de Dependencia
+              <span className="text-2xl mr-2">🏢</span>Trabajo en Relación de Dependencia
             </h2>
             <button onClick={addEmployeeJob} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110">
               <Plus className="w-5 h-5" />
@@ -746,23 +606,12 @@ function EditCV() {
             <div className="space-y-2">
               {employeeJobs.map((job, index) => (
                 <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div
-                    onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)}
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
+                  <div onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      {expandedEmployee === index
-                        ? <ChevronDown className="w-5 h-5 text-purple-600" />
-                        : <ChevronRight className="w-5 h-5 text-gray-400" />
-                      }
+                      {expandedEmployee === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                       <div>
-                        <p className="font-semibold text-gray-800 text-base">
-                          {job.position || 'Sin título'} {job.company && `- ${job.company}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
-                          {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
-                        </p>
+                        <p className="font-semibold text-gray-800 text-base">{job.position || 'Sin título'} {job.company && `- ${job.company}`}</p>
+                        <p className="text-sm text-gray-500">{job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}{job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}</p>
                       </div>
                     </div>
                   </div>
@@ -778,7 +627,6 @@ function EditCV() {
                           </div>
                         </div>
                       )}
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <input type="text" placeholder="Empresa" value={job.company} onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         <input type="text" placeholder="Puesto" value={job.position} onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
@@ -791,21 +639,17 @@ function EditCV() {
                           <input type="date" value={job.endDate} onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         </div>
                       </div>
-
                       <div className="mb-3">
                         <label className="flex items-center cursor-pointer">
                           <input type="checkbox" checked={job.currentlyWorking} onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)} disabled={countActiveJobs() >= 3 && !job.currentlyWorking} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
                           <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
                         </label>
                       </div>
-
                       <textarea placeholder="Descripción de responsabilidades" value={job.description} onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <input type="text" placeholder="Nombre de referencia (opcional)" value={job.referenceName} onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
                         <input type="tel" placeholder="Teléfono de referencia (opcional)" value={job.referencePhone} onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
                       </div>
-
                       <button onClick={() => handleSaveWorkExperience(job, false, index)} disabled={savingWorkId === (job.workHistoryId || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
                         {savingWorkId === (job.workHistoryId || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar trabajo</>}
                       </button>
@@ -824,8 +668,7 @@ function EditCV() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl roboto-light text-gray-800 flex items-center">
-              <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />
-              Educación y capacitaciones
+              <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />Educación y capacitaciones
             </h2>
             <button onClick={addEducation} className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-all hover:scale-110">
               <Plus className="w-5 h-5" />
@@ -838,22 +681,12 @@ function EditCV() {
             <div className="space-y-2">
               {education.map((edu, index) => (
                 <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div
-                    onClick={() => setExpandedEducation(expandedEducation === index ? null : index)}
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
+                  <div onClick={() => setExpandedEducation(expandedEducation === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      {expandedEducation === index
-                        ? <ChevronDown className="w-5 h-5 text-purple-600" />
-                        : <ChevronRight className="w-5 h-5 text-gray-400" />
-                      }
+                      {expandedEducation === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
                       <div>
-                        <p className="font-semibold text-gray-800 text-base">
-                          {edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}
-                        </p>
+                        <p className="font-semibold text-gray-800 text-base">{edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}</p>
+                        <p className="text-sm text-gray-500">{edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}</p>
                       </div>
                     </div>
                   </div>
@@ -872,16 +705,13 @@ function EditCV() {
                           <input type="date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} disabled={edu.currentlyStudying} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                         </div>
                       </div>
-
                       <div className="mb-3">
                         <label className="flex items-center cursor-pointer">
                           <input type="checkbox" checked={edu.currentlyStudying} onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" />
                           <span className="ml-2 text-base text-gray-700">Actualmente estudio aquí</span>
                         </label>
                       </div>
-
                       <textarea placeholder="Descripción" value={edu.description} onChange={(e) => updateEducation(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="2" />
-
                       <button onClick={() => handleSaveEducation(edu, index)} disabled={savingEducationId === (edu.id || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
                         {savingEducationId === (edu.id || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar ítem</>}
                       </button>
@@ -897,27 +727,17 @@ function EditCV() {
         </div>
 
         {/* GUARDAR TODO */}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-lg"
-        >
+        <button onClick={handleSave} disabled={saving} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-lg">
           {saving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Confirmar y guardar todo el CV</>}
         </button>
       </div>
 
-      {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button
-          onClick={() => navigate('/professional-dashboard')}
-          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-          aria-label="Volver al inicio"
-        >
+        <button onClick={() => navigate('/professional-dashboard')} className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white" aria-label="Volver al inicio">
           <Home className="w-7 h-7 text-white" />
         </button>
       </div>
 
-      {/* Modal de confirmación */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
@@ -931,9 +751,7 @@ function EditCV() {
         </div>
       )}
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
