@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed, Hammer, Scissors, Paintbrush } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
+import SearchableSelect from '../components/SearchableSelect';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
@@ -9,7 +10,9 @@ import { BACKEND_URL } from '../config';
 function SearchProfessionals() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProvincia, setSelectedProvincia] = useState('');
+  const [selectedProvinciaId, setSelectedProvinciaId] = useState('');
+  const [selectedProvinciaNombre, setSelectedProvinciaNombre] = useState('');
+  const [selectedLocalidad, setSelectedLocalidad] = useState('');
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [placeholder, setPlaceholder] = useState('');
@@ -17,26 +20,24 @@ function SearchProfessionals() {
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
   const inputRef = useRef(null);
 
-  const { provincias, loadingProvincias } = useGeoref();
+  const {
+    provincias,
+    segundoNivel,
+    loadingProvincias,
+    loadingSegundoNivel,
+    fetchSegundoNivel,
+    getSegundoNivelLabel
+  } = useGeoref();
 
   const checkAuthAndExecute = (action, type) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       if (type === 'profile') {
-        setModalContent({
-          title: "¡Conocé a tu profesional!",
-          message: "Iniciá sesión para ver su CV completo, calificaciones de otros clientes y contactarlo."
-        });
+        setModalContent({ title: "¡Conocé a tu profesional!", message: "Iniciá sesión para ver su CV completo, calificaciones de otros clientes y contactarlo." });
       } else if (type === 'category') {
-        setModalContent({
-          title: "Explorá todas las opciones",
-          message: "Registrate para filtrar por rubros y descubrir a los mejores expertos puntuados por la comunidad."
-        });
+        setModalContent({ title: "Explorá todas las opciones", message: "Registrate para filtrar por rubros y descubrir a los mejores expertos puntuados por la comunidad." });
       } else {
-        setModalContent({
-          title: "¡Hola!",
-          message: "Iniciá sesión para acceder a tu panel y gestionar tus búsquedas o calificaciones."
-        });
+        setModalContent({ title: "¡Hola!", message: "Iniciá sesión para acceder a tu panel y gestionar tus búsquedas o calificaciones." });
       }
       setShowLoginModal(true);
       return;
@@ -72,20 +73,25 @@ function SearchProfessionals() {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (searchTerm.trim() || selectedProvincia) {
+    if (searchTerm.trim() || selectedProvinciaId) {
       const delayDebounceFn = setTimeout(() => { handleSearch(); }, 300);
       return () => clearTimeout(delayDebounceFn);
     } else {
       setProfessionals([]);
     }
-  }, [searchTerm, selectedProvincia]);
+  }, [searchTerm, selectedProvinciaId, selectedLocalidad]);
 
   const handleSearch = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.append('query', searchTerm.trim() || ' ');
-      if (selectedProvincia) params.append('location', selectedProvincia);
+      // Si hay localidad específica la mandamos, sino la provincia
+      if (selectedLocalidad) {
+        params.append('location', selectedLocalidad);
+      } else if (selectedProvinciaNombre) {
+        params.append('location', selectedProvinciaNombre);
+      }
 
       const response = await fetch(`${BACKEND_URL}/api/professionals/search?${params.toString()}`);
       if (response.ok) {
@@ -97,6 +103,15 @@ function SearchProfessionals() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleProvinciaChange = (e) => {
+    const id = e.target.value;
+    const prov = provincias.find(p => p.id === id);
+    setSelectedProvinciaId(id);
+    setSelectedProvinciaNombre(prov?.nombre || '');
+    setSelectedLocalidad('');
+    if (id) fetchSegundoNivel(id);
   };
 
   const translateProfession = (type) => {
@@ -131,7 +146,6 @@ function SearchProfessionals() {
             <h3 className="text-base font-bold text-gray-800 truncate">{professional.name}</h3>
             <p className="text-xs text-purple-600 font-semibold mb-1">{professionDisplay}</p>
 
-            {/* Ubicación personal */}
             {professional.location && (
               <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
                 <MapPin className="w-3 h-3 flex-shrink-0" />
@@ -139,7 +153,6 @@ function SearchProfessionals() {
               </p>
             )}
 
-            {/* Zonas de trabajo */}
             {zones.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
                 {zones.slice(0, 3).map(zone => (
@@ -168,7 +181,8 @@ function SearchProfessionals() {
     );
   };
 
-  const showResults = searchTerm.trim() || selectedProvincia;
+  // Los íconos solo se ocultan cuando hay texto de búsqueda, no por el filtro de ubicación
+  const showResults = !!searchTerm.trim();
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -177,6 +191,7 @@ function SearchProfessionals() {
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl roboto-light text-white mb-4">¿Qué profesional buscás hoy?</h1>
 
+            {/* Buscador de texto */}
             <div className="relative mb-3">
               <input
                 ref={inputRef}
@@ -191,25 +206,40 @@ function SearchProfessionals() {
               </div>
             </div>
 
-            <div className="relative">
+            {/* Filtro por provincia */}
+            <div className="mb-3">
               <select
-                value={selectedProvincia}
-                onChange={(e) => setSelectedProvincia(e.target.value)}
+                value={selectedProvinciaId}
+                onChange={handleProvinciaChange}
                 disabled={loadingProvincias}
                 className="w-full bg-white/95 backdrop-blur-sm px-4 py-3 rounded-2xl focus:outline-none shadow-lg text-gray-700 appearance-none"
               >
-                <option value="">Todas las provincias</option>
+                <option value="">📍 Todas las provincias</option>
                 {provincias.map(p => (
-                  <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                  <option key={p.id} value={p.id}>{p.nombre}</option>
                 ))}
               </select>
-              <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
+
+            {/* Filtro por localidad — solo aparece si se eligió una provincia */}
+            {selectedProvinciaId && (
+              <div className="animate-fadeIn">
+                <SearchableSelect
+                  options={segundoNivel}
+                  value={selectedLocalidad}
+                  onChange={setSelectedLocalidad}
+                  placeholder={`Todas las ${getSegundoNivelLabel(selectedProvinciaId).toLowerCase()}s`}
+                  searchPlaceholder={`Buscar ${getSegundoNivelLabel(selectedProvinciaId).toLowerCase()}...`}
+                  loading={loadingSegundoNivel}
+                  focusColor="blue"
+                />
+              </div>
+            )}
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 -mt-8 relative z-10 pb-24">
-          {showResults ? (
+          {showResults || selectedProvinciaId ? (
             <div className="animate-fadeIn">
               {professionals.length > 0 ? (
                 professionals.map((p, i) => renderProfessionalCard(p, i))
@@ -219,7 +249,8 @@ function SearchProfessionals() {
                   <p className="text-gray-500">
                     No encontramos resultados
                     {searchTerm && ` para "${searchTerm}"`}
-                    {selectedProvincia && ` en ${selectedProvincia}`}
+                    {selectedLocalidad && ` en ${selectedLocalidad}`}
+                    {!selectedLocalidad && selectedProvinciaNombre && ` en ${selectedProvinciaNombre}`}
                   </p>
                 </div>
               )}
