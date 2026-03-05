@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye } from 'lucide-react';
+import { Home, ArrowLeft, Calendar, ChevronDown, ChevronUp, Trash2, Eye, MapPin } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import { getProfessionalBadge } from '../utils/professionalBadge';
@@ -9,19 +9,21 @@ import { BACKEND_URL } from '../config';
 
 function CompareProfessionals() {
   const navigate = useNavigate();
-  const location = useLocation();  
+  const location = useLocation();
   const [professionals, setProfessionals] = useState([]);
+  const [allProfessionals, setAllProfessionals] = useState([]); // copia sin filtrar
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  
-  // Filtros
+
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState('top-seniority'); // Default: Trayectoria + Promedio
+  const [sortBy, setSortBy] = useState('top-seniority');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [quickFilter, setQuickFilter] = useState('');
-  
-  // Estado para el trabajo seleccionado de cada profesional
+
+  // Filtro por zona
+  const [zonaFilter, setZonaFilter] = useState('');
+
   const [selectedWorks, setSelectedWorks] = useState({});
 
   useEffect(() => {
@@ -30,8 +32,8 @@ function CompareProfessionals() {
       return;
     }
     setProfessionals(location.state.professionals);
-    
-    // Inicializar selectedWorks con "all" para cada profesional
+    setAllProfessionals(location.state.professionals);
+
     const initialWorks = {};
     location.state.professionals.forEach(prof => {
       initialWorks[prof.professionalId] = 'all';
@@ -39,16 +41,31 @@ function CompareProfessionals() {
     setSelectedWorks(initialWorks);
   }, [location.state, navigate]);
 
-  // Manejar el cambio de ordenamiento con Toast
+  // Derivar todas las zonas únicas disponibles entre los profesionales
+  const allZones = [...new Map(
+    allProfessionals
+      .flatMap(p => p.zones || [])
+      .map(z => [`${z.zona}-${z.provincia}`, z])
+  ).values()];
+
+  // Aplicar filtro de zona sobre allProfessionals
+  useEffect(() => {
+    if (!zonaFilter) {
+      setProfessionals(allProfessionals);
+    } else {
+      const filtered = allProfessionals.filter(p =>
+        (p.zones || []).some(z =>
+          `${z.zona}, ${z.provincia}` === zonaFilter
+        )
+      );
+      setProfessionals(filtered);
+    }
+  }, [zonaFilter, allProfessionals]);
+
   const handleSortChange = (e) => {
     const newSort = e.target.value;
     setSortBy(newSort);
-    
-    // Toast de comunicación al usuario
-    setToast({
-      type: 'success',
-      message: `Lista ordenada por ${e.target.options[e.target.selectedIndex].text}`
-    });
+    setToast({ type: 'success', message: `Lista ordenada por ${e.target.options[e.target.selectedIndex].text}` });
   };
 
   const handleQuickFilterChange = async (filterType) => {
@@ -70,20 +87,16 @@ function CompareProfessionals() {
     switch (filterType) {
       case 'last30':
         const d30 = new Date(today); d30.setDate(d30.getDate() - 30);
-        sDate = d30.toISOString().split('T')[0];
-        break;
+        sDate = d30.toISOString().split('T')[0]; break;
       case 'last3m':
         const d3m = new Date(today); d3m.setMonth(d3m.getMonth() - 3);
-        sDate = d3m.toISOString().split('T')[0];
-        break;
+        sDate = d3m.toISOString().split('T')[0]; break;
       case 'last6m':
         const d6m = new Date(today); d6m.setMonth(d6m.getMonth() - 6);
-        sDate = d6m.toISOString().split('T')[0];
-        break;
+        sDate = d6m.toISOString().split('T')[0]; break;
       case 'last12m':
         const d12m = new Date(today); d12m.setFullYear(d12m.getFullYear() - 1);
-        sDate = d12m.toISOString().split('T')[0];
-        break;
+        sDate = d12m.toISOString().split('T')[0]; break;
       default: break;
     }
 
@@ -102,14 +115,16 @@ function CompareProfessionals() {
       );
       if (response.ok) {
         const allData = await response.json();
-        const selectedIds = professionals.map(p => p.professionalId);
+        const selectedIds = allProfessionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
-        setProfessionals(filtered);
+        setAllProfessionals(filtered);
         setToast({ type: 'success', message: 'Filtro temporal aplicado' });
       }
     } catch (error) {
       setToast({ type: 'error', message: 'Error al aplicar filtros' });
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearFilters = async () => {
@@ -117,16 +132,18 @@ function CompareProfessionals() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const allData = await response.json();
-        const selectedIds = professionals.map(p => p.professionalId);
+        const selectedIds = allProfessionals.map(p => p.professionalId);
         const filtered = allData.filter(p => selectedIds.includes(p.professionalId));
-        setProfessionals(filtered);
+        setAllProfessionals(filtered);
         setToast({ type: 'success', message: 'Filtros de tiempo eliminados' });
       }
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleWorkChange = (professionalId, workHistoryId) => {
@@ -134,9 +151,9 @@ function CompareProfessionals() {
   };
 
   const removeProfessional = (professionalId) => {
-    const updated = professionals.filter(p => p.professionalId !== professionalId);
-    if (updated.length === 0) { navigate('/saved-professionals'); return; }
-    setProfessionals(updated);
+    const updatedAll = allProfessionals.filter(p => p.professionalId !== professionalId);
+    if (updatedAll.length === 0) { navigate('/saved-professionals'); return; }
+    setAllProfessionals(updatedAll);
     setToast({ type: 'success', message: 'Profesional quitado de la lista' });
   };
 
@@ -152,23 +169,16 @@ function CompareProfessionals() {
   const getSortedProfessionals = () => {
     const sorted = [...professionals];
     switch (sortBy) {
-      case 'rating-desc':
-        return sorted.sort((a, b) => getDisplayedStats(b).avgScore - getDisplayedStats(a).avgScore);
-      case 'rating-asc':
-        return sorted.sort((a, b) => getDisplayedStats(a).avgScore - getDisplayedStats(b).avgScore);
-      case 'total-ratings':
-        return sorted.sort((a, b) => getDisplayedStats(b).totalRatings - getDisplayedStats(a).totalRatings);
-      case 'seniority':
-        return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      case 'top-seniority':
-        return sorted.sort((a, b) => {
-          const yearA = new Date(a.createdAt).getFullYear();
-          const yearB = new Date(b.createdAt).getFullYear();
-          if (yearA === yearB) {
-            return getDisplayedStats(b).avgScore - getDisplayedStats(a).avgScore;
-          }
-          return yearA - yearB;
-        });
+      case 'rating-desc': return sorted.sort((a, b) => getDisplayedStats(b).avgScore - getDisplayedStats(a).avgScore);
+      case 'rating-asc': return sorted.sort((a, b) => getDisplayedStats(a).avgScore - getDisplayedStats(b).avgScore);
+      case 'total-ratings': return sorted.sort((a, b) => getDisplayedStats(b).totalRatings - getDisplayedStats(a).totalRatings);
+      case 'seniority': return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      case 'top-seniority': return sorted.sort((a, b) => {
+        const yearA = new Date(a.createdAt).getFullYear();
+        const yearB = new Date(b.createdAt).getFullYear();
+        if (yearA === yearB) return getDisplayedStats(b).avgScore - getDisplayedStats(a).avgScore;
+        return yearA - yearB;
+      });
       default: return sorted;
     }
   };
@@ -187,12 +197,14 @@ function CompareProfessionals() {
           </button>
           <h1 className="text-3xl roboto-light text-white mb-2">Comparar Profesionales</h1>
           <p className="text-white/90">
-            {professionals.length} {professionals.length === 1 ? 'profesional seleccionado' : 'profesionales seleccionados'}
+            {sortedProfessionals.length} de {allProfessionals.length} {allProfessionals.length === 1 ? 'profesional' : 'profesionales'}
+            {zonaFilter && ` en ${zonaFilter}`}
           </p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-8 pb-4">
+
         {/* Ordenar por */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <label className="block text-sm font-medium text-gray-600 mb-2">Ordenar por</label>
@@ -209,7 +221,40 @@ function CompareProfessionals() {
           </select>
         </div>
 
-        {/* Filtro por período simplificado */}
+        {/* Filtro por zona */}
+        {allZones.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="w-5 h-5 text-purple-600" />
+              <span className="text-lg roboto-light text-gray-800">Filtrar por zona de trabajo</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setZonaFilter('')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  !zonaFilter ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Todas las zonas
+              </button>
+              {allZones.map((zone, i) => (
+                <button
+                  key={i}
+                  onClick={() => setZonaFilter(`${zone.zona}, ${zone.provincia}`)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    zonaFilter === `${zone.zona}, ${zone.provincia}`
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  📍 {zone.zona}, {zone.provincia}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Filtro por período */}
         <div className="bg-white rounded-2xl shadow-lg mb-4">
           <button onClick={() => setShowDateFilter(!showDateFilter)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-2xl">
             <div className="flex items-center">
@@ -248,12 +293,24 @@ function CompareProfessionals() {
           )}
         </div>
 
+        {/* Sin resultados tras filtrar */}
+        {sortedProfessionals.length === 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center mb-4">
+            <MapPin className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+            <p className="text-gray-500">Ningún profesional seleccionado trabaja en <strong>{zonaFilter}</strong></p>
+            <button onClick={() => setZonaFilter('')} className="mt-3 text-purple-600 font-semibold text-sm hover:underline">
+              Ver todos
+            </button>
+          </div>
+        )}
+
         {/* Lista de profesionales */}
         <div className="space-y-3">
           {sortedProfessionals.map((prof) => {
             const stats = getDisplayedStats(prof);
             const hasMultipleWorks = prof.workHistory && prof.workHistory.length > 1;
             const badge = getProfessionalBadge(stats.totalRatings);
+            const zones = prof.zones || [];
 
             return (
               <div key={prof.professionalId} className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all overflow-hidden border border-transparent">
@@ -268,33 +325,54 @@ function CompareProfessionals() {
                     <h3 className="text-base font-bold text-gray-800 break-words">{prof.professionalName}</h3>
                     <p className="text-sm text-purple-600 mb-1 break-words">{translateProfession(prof.professionType)}</p>
 
-                    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-1 ${badge.bgColor} ${badge.borderColor} border`}>
+                    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-2 ${badge.bgColor} ${badge.borderColor} border`}>
                       <span className="text-sm">{badge.emoji}</span>
                       <span className={badge.color}>{badge.name}</span>
                     </div>
 
-                    {/* Dropdown de trabajos */}
-                    {hasMultipleWorks && (
-                      <div className="mb-2">
-                        <div className="relative">
-                          <select
-                            value={selectedWorks[prof.professionalId] || 'all'}
-                            onChange={(e) => handleWorkChange(prof.professionalId, e.target.value)}
-                            className="w-full appearance-none border-2 border-gray-200 rounded-xl px-3 py-1.5 pr-8 focus:border-purple-500 focus:outline-none bg-white cursor-pointer text-xs"
+                    {/* Zonas */}
+                    {zones.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {zones.slice(0, 3).map(zone => (
+                          <span
+                            key={zone.id}
+                            className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${
+                              zonaFilter === `${zone.zona}, ${zone.provincia}`
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-purple-50 border-purple-200 text-purple-700'
+                            }`}
                           >
-                            <option value="all">📍 Todos los trabajos</option>
-                            {prof.workHistory.map((work) => (
-                              <option key={work.id} value={work.id}>
-                                {work.businessName} - {work.position}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                        </div>
+                            📍 {zone.zona}
+                          </span>
+                        ))}
+                        {zones.length > 3 && (
+                          <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
+                            +{zones.length - 3} más
+                          </span>
+                        )}
                       </div>
                     )}
 
-                    {/* Estrellas y estadísticas */}
+                    {/* Dropdown de trabajos */}
+                    {hasMultipleWorks && (
+                      <div className="mb-2 relative">
+                        <select
+                          value={selectedWorks[prof.professionalId] || 'all'}
+                          onChange={(e) => handleWorkChange(prof.professionalId, e.target.value)}
+                          className="w-full appearance-none border-2 border-gray-200 rounded-xl px-3 py-1.5 pr-8 focus:border-purple-500 focus:outline-none bg-white cursor-pointer text-xs"
+                        >
+                          <option value="all">📍 Todos los trabajos</option>
+                          {prof.workHistory.map((work) => (
+                            <option key={work.id} value={work.id}>
+                              {work.businessName} - {work.position}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    )}
+
+                    {/* Estrellas */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <RenderStars score={stats.avgScore || 0} size="w-4 h-4" />
                       <span className="text-xs text-gray-600">{(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})</span>
@@ -302,22 +380,20 @@ function CompareProfessionals() {
 
                     {/* Notas */}
                     {prof.notes && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500 italic break-words">📝 {prof.notes}</p>
-                      </div>
+                      <p className="text-sm text-gray-500 italic break-words mt-2">📝 {prof.notes}</p>
                     )}
                   </div>
 
-                  {/* Botones de acción */}
+                  {/* Botones */}
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button 
-                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)} 
+                    <button
+                      onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
                       className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
                     >
                       <Eye className="w-4 h-4" /> Ver CV
                     </button>
-                    <button 
-                      onClick={() => removeProfessional(prof.professionalId)} 
+                    <button
+                      onClick={() => removeProfessional(prof.professionalId)}
                       className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
                     >
                       <Trash2 className="w-4 h-4" /> Quitar
@@ -332,22 +408,15 @@ function CompareProfessionals() {
 
       {/* Botón Home */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
-        <button 
-          onClick={() => navigate('/client-dashboard')} 
+        <button
+          onClick={() => navigate('/client-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white text-white"
         >
           <Home className="w-7 h-7" />
         </button>
       </div>
 
-      {/* Toast del sistema */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
