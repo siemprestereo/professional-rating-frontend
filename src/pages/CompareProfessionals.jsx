@@ -19,11 +19,10 @@ function CompareProfessionals() {
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('top-seniority');
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [showZonaFilter, setShowZonaFilter] = useState(false);
   const [quickFilter, setQuickFilter] = useState('');
 
-  // Filtro por zona
   const [zonaFilter, setZonaFilter] = useState([]);
-
   const [selectedWorks, setSelectedWorks] = useState({});
 
   useEffect(() => {
@@ -41,26 +40,24 @@ function CompareProfessionals() {
     setSelectedWorks(initialWorks);
   }, [location.state, navigate]);
 
-  // Derivar todas las zonas únicas disponibles entre los profesionales
   const allZones = [...new Map(
     allProfessionals
       .flatMap(p => p.zones || [])
       .map(z => [`${z.zona}-${z.provincia}`, z])
   ).values()];
 
-  // Aplicar filtro de zona sobre allProfessionals
   useEffect(() => {
-  if (zonaFilter.length === 0) {
-    setProfessionals(allProfessionals);
-  } else {
-    const filtered = allProfessionals.filter(p =>
-      (p.zones || []).some(z =>
-        zonaFilter.includes(`${z.zona}, ${z.provincia}`)
-      )
-    );
-    setProfessionals(filtered);
-  }
-}, [zonaFilter, allProfessionals]);
+    if (zonaFilter.length === 0) {
+      setProfessionals(allProfessionals);
+    } else {
+      const filtered = allProfessionals.filter(p =>
+        (p.zones || []).some(z =>
+          zonaFilter.includes(`${z.zona}, ${z.provincia}`)
+        )
+      );
+      setProfessionals(filtered);
+    }
+  }, [zonaFilter, allProfessionals]);
 
   const handleSortChange = (e) => {
     const newSort = e.target.value;
@@ -198,7 +195,7 @@ function CompareProfessionals() {
           <h1 className="text-3xl roboto-light text-white mb-2">Comparar Profesionales</h1>
           <p className="text-white/90">
             {sortedProfessionals.length} de {allProfessionals.length} {allProfessionals.length === 1 ? 'profesional' : 'profesionales'}
-            {zonaFilter && ` en ${zonaFilter}`}
+            {zonaFilter.length > 0 && ` · ${zonaFilter.length} ${zonaFilter.length === 1 ? 'zona' : 'zonas'} seleccionadas`}
           </p>
         </div>
       </div>
@@ -221,54 +218,74 @@ function CompareProfessionals() {
           </select>
         </div>
 
-        {/* Filtro por zona */}
-{allZones.length > 0 && (
-  <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-    <div className="flex items-center gap-2 mb-1">
-      <MapPin className="w-5 h-5 text-purple-600 flex-shrink-0" />
-      <span className="text-lg roboto-light text-gray-800">Filtrar por zona de trabajo</span>
-    </div>
-    <p className="text-xs text-gray-400 mb-3 ml-7">Podés seleccionar más de una zona</p>
-    <div className="flex flex-wrap gap-2">
-      {/* Botón Todas las áreas */}
-      <button
-        onClick={() => setZonaFilter([])}
-        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-          zonaFilter.length === 0
-            ? 'bg-purple-600 text-white shadow-md'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-        }`}
-      >
-        Todas las áreas
-      </button>
+        {/* Filtro por zona — fuelle */}
+        {allZones.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg mb-4">
+            <button
+              onClick={() => setShowZonaFilter(!showZonaFilter)}
+              className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-2xl"
+            >
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-purple-600" />
+                <div className="text-left">
+                  <span className="text-lg roboto-light text-gray-800 block">Filtrar por zona de trabajo</span>
+                  <span className="text-xs text-gray-400">
+                    {zonaFilter.length === 0
+                      ? 'Podés seleccionar más de una zona'
+                      : `${zonaFilter.length} ${zonaFilter.length === 1 ? 'zona seleccionada' : 'zonas seleccionadas'}`}
+                  </span>
+                </div>
+              </div>
+              {showZonaFilter
+                ? <ChevronUp className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                : <ChevronDown className="w-5 h-5 text-gray-600 flex-shrink-0" />}
+            </button>
 
-      {/* Chips de zonas */}
-      {allZones.map((zone, i) => {
-        const key = `${zone.zona}, ${zone.provincia}`;
-        const isActive = zonaFilter.includes(key);
-        return (
-          <button
-            key={i}
-            onClick={() => {
-              if (isActive) {
-                setZonaFilter(zonaFilter.filter(z => z !== key));
-              } else {
-                setZonaFilter([...zonaFilter, key]);
-              }
-            }}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              isActive
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            📍 {zone.zona}, {zone.provincia}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-)}
+            {showZonaFilter && (
+              <div className="px-6 pb-6">
+                {/* Grid de 2 columnas para igualar tamaños */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Todas las áreas ocupa las 2 columnas */}
+                  <button
+                    onClick={() => setZonaFilter([])}
+                    className={`col-span-2 py-2.5 rounded-xl text-sm font-semibold transition-all text-center ${
+                      zonaFilter.length === 0
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Todas las áreas
+                  </button>
+
+                  {allZones.map((zone, i) => {
+                    const key = `${zone.zona}, ${zone.provincia}`;
+                    const isActive = zonaFilter.includes(key);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (isActive) {
+                            setZonaFilter(zonaFilter.filter(z => z !== key));
+                          } else {
+                            setZonaFilter([...zonaFilter, key]);
+                          }
+                        }}
+                        className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-center leading-tight ${
+                          isActive
+                            ? 'bg-purple-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        📍 {zone.zona}
+                        <span className="block text-xs font-normal opacity-75">{zone.provincia}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filtro por período */}
         <div className="bg-white rounded-2xl shadow-lg mb-4">
@@ -313,8 +330,11 @@ function CompareProfessionals() {
         {sortedProfessionals.length === 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center mb-4">
             <MapPin className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-500">Ningún profesional seleccionado trabaja en <strong>{zonaFilter}</strong></p>
-            <button onClick={() => setZonaFilter('')} className="mt-3 text-purple-600 font-semibold text-sm hover:underline">
+            <p className="text-gray-600 font-semibold mb-1">Sin resultados</p>
+            <p className="text-gray-400 text-sm mb-3">
+              Ningún profesional trabaja en {zonaFilter.join(' o ')}
+            </p>
+            <button onClick={() => setZonaFilter([])} className="text-purple-600 font-semibold text-sm hover:underline">
               Ver todos
             </button>
           </div>
@@ -331,12 +351,10 @@ function CompareProfessionals() {
             return (
               <div key={prof.professionalId} className="bg-white rounded-2xl shadow-lg p-4 hover:shadow-xl transition-all overflow-hidden border border-transparent">
                 <div className="flex items-start gap-3">
-                  {/* Avatar */}
                   <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600 flex-shrink-0">
                     {prof.professionalName.charAt(0)}
                   </div>
 
-                  {/* Info central */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold text-gray-800 break-words">{prof.professionalName}</h3>
                     <p className="text-sm text-purple-600 mb-1 break-words">{translateProfession(prof.professionType)}</p>
@@ -346,21 +364,24 @@ function CompareProfessionals() {
                       <span className={badge.color}>{badge.name}</span>
                     </div>
 
-                    {/* Zonas */}
+                    {/* Zonas — resalta las activas en el filtro */}
                     {zones.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {zones.slice(0, 3).map(zone => (
-                          <span
-                            key={zone.id}
-                            className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${
-                              zonaFilter === `${zone.zona}, ${zone.provincia}`
-                                ? 'bg-purple-600 text-white border-purple-600'
-                                : 'bg-purple-50 border-purple-200 text-purple-700'
-                            }`}
-                          >
-                            📍 {zone.zona}
-                          </span>
-                        ))}
+                        {zones.slice(0, 3).map(zone => {
+                          const isFiltered = zonaFilter.includes(`${zone.zona}, ${zone.provincia}`);
+                          return (
+                            <span
+                              key={zone.id}
+                              className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${
+                                isFiltered
+                                  ? 'bg-purple-600 text-white border-purple-600'
+                                  : 'bg-purple-50 border-purple-200 text-purple-700'
+                              }`}
+                            >
+                              📍 {zone.zona}
+                            </span>
+                          );
+                        })}
                         {zones.length > 3 && (
                           <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
                             +{zones.length - 3} más
@@ -369,7 +390,6 @@ function CompareProfessionals() {
                       </div>
                     )}
 
-                    {/* Dropdown de trabajos */}
                     {hasMultipleWorks && (
                       <div className="mb-2 relative">
                         <select
@@ -388,19 +408,16 @@ function CompareProfessionals() {
                       </div>
                     )}
 
-                    {/* Estrellas */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <RenderStars score={stats.avgScore || 0} size="w-4 h-4" />
                       <span className="text-xs text-gray-600">{(stats.avgScore || 0).toFixed(1)} ({stats.totalRatings || 0})</span>
                     </div>
 
-                    {/* Notas */}
                     {prof.notes && (
                       <p className="text-sm text-gray-500 italic break-words mt-2">📝 {prof.notes}</p>
                     )}
                   </div>
 
-                  {/* Botones */}
                   <div className="flex flex-col gap-2 flex-shrink-0">
                     <button
                       onClick={() => navigate(`/public-cv/${prof.professionalId}`)}
@@ -422,7 +439,6 @@ function CompareProfessionals() {
         </div>
       </div>
 
-      {/* Botón Home */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
         <button
           onClick={() => navigate('/client-dashboard')}

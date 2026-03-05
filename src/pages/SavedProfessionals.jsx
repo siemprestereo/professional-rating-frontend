@@ -112,7 +112,7 @@ function SavedProfessionals() {
                             }`}
                     >
                         <TrendingUp className="w-6 h-6" />
-                        {canCompare ? `Comparar (${selectedIds.length})` : 'Seleccioná al menos 2'}
+                        {canCompare ? `Comparar (${selectedIds.length})` : 'Seleccioná al menos 2 para poder compararlos'}
                     </button>
                 </div>
             </div>
