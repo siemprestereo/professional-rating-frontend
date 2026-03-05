@@ -114,6 +114,7 @@ function SearchProfessionals() {
   const renderProfessionalCard = (professional, index = 0) => {
     const badge = getProfessionalBadge(professional.totalRatings);
     const professionDisplay = translateProfession(professional.professionType || professional.profession);
+    const zones = professional.zones || [];
 
     return (
       <div
@@ -122,19 +123,38 @@ function SearchProfessionals() {
         className="bg-white rounded-2xl shadow-md p-4 mb-3 cursor-pointer hover:shadow-xl transition-all animate-slideUp border border-gray-100"
         style={{ animationDelay: `${index * 50}ms` }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold text-white flex-shrink-0">
             {professional.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-gray-800 truncate">{professional.name}</h3>
             <p className="text-xs text-purple-600 font-semibold mb-1">{professionDisplay}</p>
+
+            {/* Ubicación personal */}
             {professional.location && (
               <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
-                <MapPin className="w-3 h-3" />
+                <MapPin className="w-3 h-3 flex-shrink-0" />
                 {professional.location}
               </p>
             )}
+
+            {/* Zonas de trabajo */}
+            {zones.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {zones.slice(0, 3).map(zone => (
+                  <span key={zone.id} className="bg-purple-50 border border-purple-200 text-purple-700 text-xs px-2 py-0.5 rounded-full">
+                    📍 {zone.zona}
+                  </span>
+                ))}
+                {zones.length > 3 && (
+                  <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
+                    +{zones.length - 3} más
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <div className="flex">{renderStars(professional.reputationScore || 0)}</div>
               <span className="text-xs font-bold text-gray-700">{(professional.reputationScore || 0).toFixed(1)}</span>
@@ -156,8 +176,7 @@ function SearchProfessionals() {
         <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-10 pb-16 shadow-lg">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl roboto-light text-white mb-4">¿Qué profesional buscás hoy?</h1>
-            
-            {/* Buscador de texto */}
+
             <div className="relative mb-3">
               <input
                 ref={inputRef}
@@ -172,7 +191,6 @@ function SearchProfessionals() {
               </div>
             </div>
 
-            {/* Filtro por provincia */}
             <div className="relative">
               <select
                 value={selectedProvincia}
