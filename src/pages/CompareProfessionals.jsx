@@ -11,7 +11,7 @@ function CompareProfessionals() {
   const navigate = useNavigate();
   const location = useLocation();
   const [professionals, setProfessionals] = useState([]);
-  const [allProfessionals, setAllProfessionals] = useState([]); // copia sin filtrar
+  const [allProfessionals, setAllProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -22,7 +22,7 @@ function CompareProfessionals() {
   const [quickFilter, setQuickFilter] = useState('');
 
   // Filtro por zona
-  const [zonaFilter, setZonaFilter] = useState('');
+  const [zonaFilter, setZonaFilter] = useState([]);
 
   const [selectedWorks, setSelectedWorks] = useState({});
 
@@ -50,17 +50,17 @@ function CompareProfessionals() {
 
   // Aplicar filtro de zona sobre allProfessionals
   useEffect(() => {
-    if (!zonaFilter) {
-      setProfessionals(allProfessionals);
-    } else {
-      const filtered = allProfessionals.filter(p =>
-        (p.zones || []).some(z =>
-          `${z.zona}, ${z.provincia}` === zonaFilter
-        )
-      );
-      setProfessionals(filtered);
-    }
-  }, [zonaFilter, allProfessionals]);
+  if (zonaFilter.length === 0) {
+    setProfessionals(allProfessionals);
+  } else {
+    const filtered = allProfessionals.filter(p =>
+      (p.zones || []).some(z =>
+        zonaFilter.includes(`${z.zona}, ${z.provincia}`)
+      )
+    );
+    setProfessionals(filtered);
+  }
+}, [zonaFilter, allProfessionals]);
 
   const handleSortChange = (e) => {
     const newSort = e.target.value;
@@ -222,37 +222,53 @@ function CompareProfessionals() {
         </div>
 
         {/* Filtro por zona */}
-        {allZones.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-5 h-5 text-purple-600" />
-              <span className="text-lg roboto-light text-gray-800">Filtrar por zona de trabajo</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setZonaFilter('')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  !zonaFilter ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Todas las zonas
-              </button>
-              {allZones.map((zone, i) => (
-                <button
-                  key={i}
-                  onClick={() => setZonaFilter(`${zone.zona}, ${zone.provincia}`)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    zonaFilter === `${zone.zona}, ${zone.provincia}`
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  📍 {zone.zona}, {zone.provincia}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+{allZones.length > 0 && (
+  <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+    <div className="flex items-center gap-2 mb-1">
+      <MapPin className="w-5 h-5 text-purple-600 flex-shrink-0" />
+      <span className="text-lg roboto-light text-gray-800">Filtrar por zona de trabajo</span>
+    </div>
+    <p className="text-xs text-gray-400 mb-3 ml-7">Podés seleccionar más de una zona</p>
+    <div className="flex flex-wrap gap-2">
+      {/* Botón Todas las áreas */}
+      <button
+        onClick={() => setZonaFilter([])}
+        className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+          zonaFilter.length === 0
+            ? 'bg-purple-600 text-white shadow-md'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+        }`}
+      >
+        Todas las áreas
+      </button>
+
+      {/* Chips de zonas */}
+      {allZones.map((zone, i) => {
+        const key = `${zone.zona}, ${zone.provincia}`;
+        const isActive = zonaFilter.includes(key);
+        return (
+          <button
+            key={i}
+            onClick={() => {
+              if (isActive) {
+                setZonaFilter(zonaFilter.filter(z => z !== key));
+              } else {
+                setZonaFilter([...zonaFilter, key]);
+              }
+            }}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              isActive
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            📍 {zone.zona}, {zone.provincia}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+)}
 
         {/* Filtro por período */}
         <div className="bg-white rounded-2xl shadow-lg mb-4">

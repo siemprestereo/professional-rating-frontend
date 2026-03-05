@@ -86,7 +86,6 @@ function SearchProfessionals() {
     try {
       const params = new URLSearchParams();
       params.append('query', searchTerm.trim() || ' ');
-      // Si hay localidad específica la mandamos, sino la provincia
       if (selectedLocalidad) {
         params.append('location', selectedLocalidad);
       } else if (selectedProvinciaNombre) {
@@ -181,8 +180,18 @@ function SearchProfessionals() {
     );
   };
 
-  // Los íconos solo se ocultan cuando hay texto de búsqueda, no por el filtro de ubicación
   const showResults = !!searchTerm.trim();
+
+  // Texto descriptivo de la búsqueda activa
+  const buildSearchSummary = () => {
+    const parts = [];
+    if (searchTerm) parts.push(`"${searchTerm}"`);
+    if (selectedLocalidad) parts.push(`en ${selectedLocalidad}`);
+    else if (selectedProvinciaNombre) parts.push(`en ${selectedProvinciaNombre}`);
+    return parts.length > 0 ? parts.join(' ') : null;
+  };
+
+  const searchSummary = buildSearchSummary();
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -191,7 +200,6 @@ function SearchProfessionals() {
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl roboto-light text-white mb-4">¿Qué profesional buscás hoy?</h1>
 
-            {/* Buscador de texto */}
             <div className="relative mb-3">
               <input
                 ref={inputRef}
@@ -206,7 +214,6 @@ function SearchProfessionals() {
               </div>
             </div>
 
-            {/* Filtro por provincia */}
             <div className="mb-3">
               <select
                 value={selectedProvinciaId}
@@ -221,7 +228,6 @@ function SearchProfessionals() {
               </select>
             </div>
 
-            {/* Filtro por localidad — solo aparece si se eligió una provincia */}
             {selectedProvinciaId && (
               <div className="animate-fadeIn">
                 <SearchableSelect
@@ -242,15 +248,24 @@ function SearchProfessionals() {
           {showResults || selectedProvinciaId ? (
             <div className="animate-fadeIn">
               {professionals.length > 0 ? (
-                professionals.map((p, i) => renderProfessionalCard(p, i))
+                <>
+                  {/* Resumen de búsqueda */}
+                  {searchSummary && (
+                    <p className="text-sm text-gray-500 mb-3 px-1">
+                      {professionals.length} {professionals.length === 1 ? 'resultado' : 'resultados'} para <span className="font-semibold text-gray-700">{searchSummary}</span>
+                    </p>
+                  )}
+                  {professionals.map((p, i) => renderProfessionalCard(p, i))}
+                </>
               ) : !loading && (
                 <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
                   <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                  <p className="text-gray-500">
-                    No encontramos resultados
-                    {searchTerm && ` para "${searchTerm}"`}
-                    {selectedLocalidad && ` en ${selectedLocalidad}`}
-                    {!selectedLocalidad && selectedProvinciaNombre && ` en ${selectedProvinciaNombre}`}
+                  <p className="text-gray-600 font-semibold mb-1">Sin resultados</p>
+                  <p className="text-gray-400 text-sm">
+                    No encontramos profesionales
+                    {searchTerm && <> para <span className="font-medium text-gray-600">"{searchTerm}"</span></>}
+                    {selectedLocalidad && <> en <span className="font-medium text-gray-600">{selectedLocalidad}</span></>}
+                    {!selectedLocalidad && selectedProvinciaNombre && <> en <span className="font-medium text-gray-600">{selectedProvinciaNombre}</span></>}
                   </p>
                 </div>
               )}
