@@ -247,8 +247,8 @@ function CompareProfessionals() {
                   <button
                     onClick={() => setZonaFilter([])}
                     className={`col-span-2 py-2.5 rounded-xl text-sm font-semibold transition-all text-center ${zonaFilter.length === 0
-                        ? 'bg-purple-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
                     Todas las áreas
@@ -269,8 +269,8 @@ function CompareProfessionals() {
                           }
                         }}
                         className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-center leading-tight ${isActive
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-purple-600 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                       >
                         📍 {isCaba ? 'CABA' : zone.zona}
@@ -290,8 +290,11 @@ function CompareProfessionals() {
         <div className="bg-white rounded-2xl shadow-lg mb-4">
           <button onClick={() => setShowDateFilter(!showDateFilter)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-2xl">
             <div className="flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-purple-600" />
-              <span className="text-lg roboto-light text-gray-800">Considerar sólo las calificaciones recibidas en los últimos...</span>
+              <Calendar className="w-5 h-5 mr-2 text-purple-600 flex-shrink-0" />
+              <div className="text-left">
+                <span className="text-lg roboto-light text-gray-800 block">Filtrar por período</span>
+                <span className="text-xs text-gray-400">Solo calificaciones recibidas en el período elegido</span>
+              </div>
             </div>
             {showDateFilter ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
           </button>
@@ -371,8 +374,8 @@ function CompareProfessionals() {
                             <span
                               key={zone.id}
                               className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${isFiltered
-                                  ? 'bg-purple-600 text-white border-purple-600'
-                                  : 'bg-purple-50 border-purple-200 text-purple-700'
+                                ? 'bg-purple-600 text-white border-purple-600'
+                                : 'bg-purple-50 border-purple-200 text-purple-700'
                                 }`}
                             >
                               📍 {zone.zona}
