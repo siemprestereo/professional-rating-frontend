@@ -145,13 +145,6 @@ function SearchProfessionals() {
             <h3 className="text-base font-bold text-gray-800 truncate">{professional.name}</h3>
             <p className="text-xs text-purple-600 font-semibold mb-1">{professionDisplay}</p>
 
-            {professional.location && (
-              <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
-                <MapPin className="w-3 h-3 flex-shrink-0" />
-                {professional.location}
-              </p>
-            )}
-
             {zones.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
                 {zones.slice(0, 3).map(zone => (
@@ -181,17 +174,6 @@ function SearchProfessionals() {
   };
 
   const showResults = !!searchTerm.trim();
-
-  // Texto descriptivo de la búsqueda activa
-  const buildSearchSummary = () => {
-    const parts = [];
-    if (searchTerm) parts.push(`"${searchTerm}"`);
-    if (selectedLocalidad) parts.push(`en ${selectedLocalidad}`);
-    else if (selectedProvinciaNombre) parts.push(`en ${selectedProvinciaNombre}`);
-    return parts.length > 0 ? parts.join(' ') : null;
-  };
-
-  const searchSummary = buildSearchSummary();
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -248,15 +230,7 @@ function SearchProfessionals() {
           {showResults || selectedProvinciaId ? (
             <div className="animate-fadeIn">
               {professionals.length > 0 ? (
-                <>
-                  {/* Resumen de búsqueda */}
-                  {searchSummary && (
-                    <p className="text-sm text-gray-500 mb-3 px-1">
-                      {professionals.length} {professionals.length === 1 ? 'resultado' : 'resultados'} para <span className="font-semibold text-gray-700">{searchSummary}</span>
-                    </p>
-                  )}
-                  {professionals.map((p, i) => renderProfessionalCard(p, i))}
-                </>
+                professionals.map((p, i) => renderProfessionalCard(p, i))
               ) : !loading && (
                 <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
                   <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
