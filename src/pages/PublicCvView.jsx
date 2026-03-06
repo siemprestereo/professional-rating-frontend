@@ -85,7 +85,7 @@ function PublicCvView() {
   };
 
   const handleWorkClick = (workHistoryId) => {
-    navigate(`/professional/${professionalId}/ratings?workHistoryId=${workHistoryId}`);
+    navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
   };
 
   const formatDate = (dateStr) => {
