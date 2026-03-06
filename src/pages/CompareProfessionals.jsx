@@ -243,16 +243,13 @@ function CompareProfessionals() {
 
             {showZonaFilter && (
               <div className="px-6 pb-6">
-                {/* Grid de 2 columnas para igualar tamaños */}
                 <div className="grid grid-cols-2 gap-2">
-                  {/* Todas las áreas ocupa las 2 columnas */}
                   <button
                     onClick={() => setZonaFilter([])}
-                    className={`col-span-2 py-2.5 rounded-xl text-sm font-semibold transition-all text-center ${
-                      zonaFilter.length === 0
+                    className={`col-span-2 py-2.5 rounded-xl text-sm font-semibold transition-all text-center ${zonaFilter.length === 0
                         ? 'bg-purple-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                   >
                     Todas las áreas
                   </button>
@@ -260,6 +257,7 @@ function CompareProfessionals() {
                   {allZones.map((zone, i) => {
                     const key = `${zone.zona}, ${zone.provincia}`;
                     const isActive = zonaFilter.includes(key);
+                    const isCaba = zone.zona === 'Ciudad Autónoma de Buenos Aires';
                     return (
                       <button
                         key={i}
@@ -270,14 +268,15 @@ function CompareProfessionals() {
                             setZonaFilter([...zonaFilter, key]);
                           }
                         }}
-                        className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-center leading-tight ${
-                          isActive
+                        className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-center leading-tight ${isActive
                             ? 'bg-purple-600 text-white shadow-md'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                          }`}
                       >
-                        📍 {zone.zona}
-                        <span className="block text-xs font-normal opacity-75">{zone.provincia}</span>
+                        📍 {isCaba ? 'CABA' : zone.zona}
+                        {!isCaba && (
+                          <span className="block text-xs font-normal opacity-75">{zone.provincia}</span>
+                        )}
                       </button>
                     );
                   })}
@@ -309,9 +308,8 @@ function CompareProfessionals() {
                   <button
                     key={f.id}
                     onClick={() => handleQuickFilterChange(f.id)}
-                    className={`px-6 py-2 rounded-xl font-semibold text-sm transition-all ${
-                      quickFilter === f.id ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`px-6 py-2 rounded-xl font-semibold text-sm transition-all ${quickFilter === f.id ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                   >
                     {f.label}
                   </button>
@@ -372,11 +370,10 @@ function CompareProfessionals() {
                           return (
                             <span
                               key={zone.id}
-                              className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${
-                                isFiltered
+                              className={`text-xs px-2 py-0.5 rounded-full border font-medium transition-all ${isFiltered
                                   ? 'bg-purple-600 text-white border-purple-600'
                                   : 'bg-purple-50 border-purple-200 text-purple-700'
-                              }`}
+                                }`}
                             >
                               📍 {zone.zona}
                             </span>
