@@ -291,7 +291,7 @@ function CompareProfessionals() {
           <button onClick={() => setShowDateFilter(!showDateFilter)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-2xl">
             <div className="flex items-center">
               <Calendar className="w-5 h-5 mr-2 text-purple-600" />
-              <span className="text-lg roboto-light text-gray-800">Comparar según calificaciones recibidas en los últimos...</span>
+              <span className="text-lg roboto-light text-gray-800">Considerar sólo las calificaciones recibidas en los últimos...</span>
             </div>
             {showDateFilter ? <ChevronUp className="w-5 h-5 text-gray-600" /> : <ChevronDown className="w-5 h-5 text-gray-600" />}
           </button>
