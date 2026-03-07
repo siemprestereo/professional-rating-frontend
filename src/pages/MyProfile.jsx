@@ -5,7 +5,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { BACKEND_URL } from '../config';
 
 function MyProfile() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [professional, setProfessional] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -27,12 +27,12 @@ function MyProfile() {
   // ✅ OPTIMIZACIÓN: Carga paralela con Promise.all()
   const loadMyProfile = async () => {
     console.log('📍 loadMyProfile ejecutándose...');
-    
+
     const savedData = localStorage.getItem('professional');
     const token = localStorage.getItem('authToken');
-    
+
     console.log('📦 savedData:', savedData ? 'EXISTS' : 'NULL');
-    
+
     if (!savedData || !token) {
       console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
       navigate('/professional-login');
@@ -143,7 +143,7 @@ function MyProfile() {
           >
             Calificalo
           </button>
-          
+
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -164,9 +164,9 @@ function MyProfile() {
                     <FileText className="w-5 h-5 text-purple-600" />
                     <span className="font-medium text-sm sm:text-base">Mi CV</span>
                   </button>
-                  
+
                   <div className="border-t border-gray-200 my-2"></div>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
@@ -181,8 +181,11 @@ function MyProfile() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-            {professionalName.charAt(0)}
+          <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn border-4 border-white shadow-lg">
+            {professional.profilePicture
+              ? <img src={professional.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
+              : professionalName.charAt(0)
+            }
           </div>
           <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
             {professionalName}
@@ -201,7 +204,7 @@ function MyProfile() {
 
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 -mt-16">
-        
+
         {/* Información Personal */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
           <div className="flex justify-between items-center mb-4">
@@ -209,9 +212,9 @@ function MyProfile() {
               <Info className="w-6 h-6 mr-2 text-blue-600" />
               Información Personal
             </h2>
-            
+
           </div>
-          
+
           <div className="space-y-4">
             {/* Nombre */}
             <div>
@@ -257,7 +260,7 @@ function MyProfile() {
             <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
             Información Profesional
           </h2>
-          
+
           <div className="space-y-4">
             {/* Tipo de profesión */}
             <div>
@@ -300,7 +303,7 @@ function MyProfile() {
 
       {/* Botón Home flotante */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp pointer-events-none">
-        <button 
+        <button
           onClick={() => navigate('/professional-dashboard')}
           className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white pointer-events-auto"
           aria-label="Volver al inicio"

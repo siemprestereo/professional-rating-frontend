@@ -9,7 +9,7 @@ import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
 
 function ClientDashboard() {
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [myRatings, setMyRatings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,7 @@ function ClientDashboard() {
   const loadClientData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     const cachedClient = localStorage.getItem('client');
-    
+
     if (!token) {
       console.log('No hay token, redirigiendo al login');
       navigate('/client-login');
@@ -71,7 +71,7 @@ function ClientDashboard() {
         const clientData = JSON.parse(cachedClient);
         setClient(clientData);
         setLoading(false); // ✅ UI visible inmediatamente
-        
+
         const [profileResponse, ratingsResponse] = await Promise.all([
           fetch(`${BACKEND_URL}/api/auth/me/client`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -96,9 +96,9 @@ function ClientDashboard() {
           setMyRatings([]);
           setStats({ total: 0, average: 0, categories: 0 });
         }
-        
+
         setLoadingRatings(false);
-        
+
       } else {
         // Sin caché: carga secuencial
         const clientResponse = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
@@ -113,13 +113,13 @@ function ClientDashboard() {
           }
           throw new Error('Error al cargar datos del cliente');
         }
-        
+
         const clientData = await clientResponse.json();
         console.log('✅ Datos del cliente:', clientData);
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
         setLoading(false); // ✅ UI visible
-        
+
         // Cargar ratings
         const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -132,10 +132,10 @@ function ClientDashboard() {
           setMyRatings([]);
           setStats({ total: 0, average: 0, categories: 0 });
         }
-        
+
         setLoadingRatings(false);
       }
-      
+
     } catch (error) {
       console.error('Error loading client:', error);
       navigate('/client-login');
@@ -148,12 +148,12 @@ function ClientDashboard() {
   // ✅ Función auxiliar para procesar ratings una sola vez
   const processRatings = useCallback((allRatings) => {
     console.log(`📊 Total de calificaciones: ${allRatings.length}`);
-    
+
     // Ordenar una sola vez
-    const sorted = allRatings.sort((a, b) => 
+    const sorted = allRatings.sort((a, b) =>
       new Date(b.createdAt) - new Date(a.createdAt)
     );
-    
+
     setMyRatings(sorted);
     calculateQuickStats(sorted);
     calculateTopBadges(sorted);
@@ -225,7 +225,7 @@ function ClientDashboard() {
     if (!deleteModal) return;
 
     const ratingIdToDelete = deleteModal.ratingId;
-    
+
     // ✅ Optimistic UI: eliminar inmediatamente de la interfaz
     setMyRatings(prev => {
       const updated = prev.filter(r => r.id !== ratingIdToDelete);
@@ -234,12 +234,12 @@ function ClientDashboard() {
       calculateTopBadges(updated);
       return updated;
     });
-    
+
     setDeleteModal(null);
 
     try {
       await api.deleteRating(ratingIdToDelete);
-      
+
       setToast({
         type: 'success',
         message: 'Calificación eliminada exitosamente'
@@ -247,13 +247,13 @@ function ClientDashboard() {
 
     } catch (error) {
       console.error('Error al eliminar:', error);
-      
+
       // ✅ Rollback: recargar si falla
       setToast({
         type: 'error',
         message: error.response?.data?.message || 'Error al eliminar la calificación'
       });
-      
+
       loadClientData();
     }
   }, [deleteModal, calculateQuickStats, calculateTopBadges, loadClientData]);
@@ -261,23 +261,23 @@ function ClientDashboard() {
   const getTimeRemaining = useCallback((createdAt) => {
     try {
       const now = Date.now();
-      
+
       let dateString = createdAt;
       if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
         dateString = createdAt + 'Z';
       }
-      
+
       const created = new Date(dateString).getTime();
-      
+
       if (isNaN(created)) return null;
-      
+
       const diffMinutes = Math.floor((now - created) / (1000 * 60));
-      
+
       if (diffMinutes >= 30 || diffMinutes < 0) return null;
-      
+
       const remainingMinutes = 30 - diffMinutes;
       return `${remainingMinutes} min`;
-      
+
     } catch (error) {
       console.error('Error calculando tiempo:', error);
       return null;
@@ -294,12 +294,12 @@ function ClientDashboard() {
   }, []);
 
   // ✅ Memoizar valores derivados
-  const firstName = useMemo(() => 
+  const firstName = useMemo(() =>
     client?.name ? client.name.trim().split(' ')[0] : 'Usuario',
     [client?.name]
   );
 
-  const recentRatings = useMemo(() => 
+  const recentRatings = useMemo(() =>
     myRatings.slice(0, 3),
     [myRatings]
   );
@@ -376,8 +376,11 @@ function ClientDashboard() {
         </div>
 
         <div className="text-center">
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn">
-            {client.name ? client.name.charAt(0) : 'U'}
+          <div className="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-white flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn border-4 border-white shadow-lg">
+            {client.profilePicture
+              ? <img src={client.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
+              : (client.name ? client.name.charAt(0) : 'U')
+            }
           </div>
           <h2 className="text-xl roboto-light text-white mb-2 animate-slideUp">{client.name || 'Usuario'}</h2>
           {topBadges.length > 0 && (

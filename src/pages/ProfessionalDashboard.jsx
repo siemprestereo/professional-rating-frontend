@@ -483,8 +483,11 @@ function ProfessionalDashboard() {
         </div>
 
         <div className="text-center">
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn">
-            {fullName.charAt(0).toUpperCase()}
+          <div className="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-white flex items-center justify-center text-3xl font-bold text-purple-600 animate-scaleIn border-4 border-white shadow-lg">
+            {professional.profilePicture
+              ? <img src={professional.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
+              : fullName.charAt(0).toUpperCase()
+            }
           </div>
           <h2 className="text-2xl roboto-light text-white mb-3 animate-slideUp">{fullName}</h2>
 

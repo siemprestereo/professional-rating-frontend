@@ -126,8 +126,11 @@ function PublicCvView() {
         {/* Header */}
         <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8 pb-32">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600">
-              {cvData.professionalName?.charAt(0) || 'P'}
+            <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 border-4 border-white shadow-lg">
+              {cvData.profilePicture
+                ? <img src={cvData.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
+                : (cvData.professionalName?.charAt(0) || 'P')
+              }
             </div>
             <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
             {cvData.professionType && (
