@@ -12,7 +12,6 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validaciones en el frontend
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) {
             setError('Solo se permiten imágenes JPG, PNG o WEBP');
@@ -26,23 +25,24 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
         setError(null);
         setUploading(true);
 
-        // Mostrar preview local inmediatamente
         const localPreview = URL.createObjectURL(file);
         setPreview(localPreview);
 
         try {
             const token = localStorage.getItem('authToken');
+            console.log('🔑 Token:', token ? token.substring(0, 30) + '...' : 'NULL');
 
-            // Paso 1: Pedir firma al backend
+            // Paso 1: Firma
             const signResponse = await fetch(`${BACKEND_URL}/api/users/photo/sign`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            if (!signResponse.ok) throw new Error('Error al obtener firma de upload');
+            console.log('📝 Sign status:', signResponse.status);
+            if (!signResponse.ok) throw new Error(`Error firma: ${signResponse.status}`);
             const signData = await signResponse.json();
+            console.log('📝 Sign data:', signData);
 
-            // Paso 2: Subir directamente a Cloudinary
+            // Paso 2: Cloudinary
             const formData = new FormData();
             formData.append('file', file);
             formData.append('api_key', signData.api_key);
@@ -52,47 +52,59 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
             formData.append('folder', signData.folder);
             formData.append('overwrite', 'true');
 
+            console.log('☁️ Subiendo a Cloudinary:', signData.upload_url);
             const cloudinaryResponse = await fetch(signData.upload_url, {
                 method: 'POST',
                 body: formData
             });
-
-            if (!cloudinaryResponse.ok) throw new Error('Error al subir imagen a Cloudinary');
+            console.log('☁️ Cloudinary status:', cloudinaryResponse.status);
+            if (!cloudinaryResponse.ok) throw new Error(`Error Cloudinary: ${cloudinaryResponse.status}`);
             const cloudinaryData = await cloudinaryResponse.json();
+            console.log('☁️ Cloudinary data:', cloudinaryData);
+            console.log('☁️ public_id recibido:', cloudinaryData.public_id);
+            console.log('☁️ secure_url recibido:', cloudinaryData.secure_url);
 
-            // Paso 3: Confirmar public_id al backend
+            // Paso 3: Confirmar al backend
+            const confirmBody = { publicId: cloudinaryData.public_id };
+            console.log('✅ Confirmando al backend:', confirmBody);
             const confirmResponse = await fetch(`${BACKEND_URL}/api/users/photo`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ publicId: cloudinaryData.public_id })
+                body: JSON.stringify(confirmBody)
             });
+            console.log('✅ Confirm status:', confirmResponse.status);
+            const confirmData = await confirmResponse.json();
+            console.log('✅ Confirm response body:', confirmData);
+            if (!confirmResponse.ok) throw new Error(`Error confirmar: ${confirmResponse.status} - ${JSON.stringify(confirmData)}`);
 
-            if (!confirmResponse.ok) throw new Error('Error al confirmar foto en el servidor');
-
-            // Paso 4: Obtener la URL real que construyó el backend
+            // Paso 4: Obtener perfil actualizado
             const userType = localStorage.getItem('userType');
+            console.log('👤 userType en localStorage:', userType);
             const meEndpoint = userType === 'PROFESSIONAL'
                 ? `${BACKEND_URL}/api/auth/me`
                 : `${BACKEND_URL}/api/auth/me/client`;
+            console.log('👤 Llamando a:', meEndpoint);
 
             const meResponse = await fetch(meEndpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            if (!meResponse.ok) throw new Error('Error al obtener perfil actualizado');
-
+            console.log('👤 Me status:', meResponse.status);
             const userData = await meResponse.json();
+            console.log('👤 Me data:', userData);
+            console.log('🖼️ profilePicture en respuesta:', userData.profilePicture);
 
-            // Notificar al padre con la URL real del backend
+            if (!meResponse.ok) throw new Error(`Error perfil: ${meResponse.status}`);
+
             onUploadSuccess(userData.profilePicture);
+            console.log('🎉 onUploadSuccess llamado con:', userData.profilePicture);
 
         } catch (err) {
-            console.error('Error en upload:', err);
+            console.error('❌ Error en upload:', err);
             setError(err.message || 'Error al subir la foto');
-            setPreview(currentPhoto || null); // Revertir preview
+            setPreview(currentPhoto || null);
         } finally {
             setUploading(false);
         }
@@ -105,7 +117,6 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
     return (
         <div className="flex flex-col items-center">
             <div className="relative">
-                {/* Avatar o foto */}
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-lg border-4 border-white">
                     {preview ? (
                         <img
@@ -118,7 +129,6 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
                     )}
                 </div>
 
-                {/* Botón de cámara */}
                 <label className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all
           ${uploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'}`}>
                     {uploading
