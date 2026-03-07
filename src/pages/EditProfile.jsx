@@ -7,22 +7,23 @@ import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal
 import LoadingScreen from '../components/LoadingScreen';
 import { clearAllAppData, validatePhone } from '../utils/storage';
 import { BACKEND_URL } from '../config';
+import LocationSelector from '../components/LocationSelector';
 
 function EditProfile() {
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
-  
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  
+
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -34,14 +35,14 @@ function EditProfile() {
     try {
       const savedData = localStorage.getItem('client');
       const token = localStorage.getItem('authToken');
-      
+
       if (!savedData || !token) {
         navigate('/client-login');
         return;
       }
 
       const localData = JSON.parse(savedData);
-      
+
       setClient(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -65,7 +66,7 @@ function EditProfile() {
       } catch (fetchError) {
         console.warn('Uso de datos locales por error de red');
       }
-      
+
     } catch (error) {
       console.error('Error al cargar perfil:', error);
       if (error instanceof SyntaxError) {
@@ -93,7 +94,7 @@ function EditProfile() {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -163,10 +164,11 @@ function EditProfile() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 outline-none" />
             </div>
             <div className="mb-6">
-              <label className="block text-gray-700 font-semibold mb-2 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-teal-600" /> Ubicación
-              </label>
-              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 outline-none" />
+              <LocationSelector
+                value={location}
+                onChange={setLocation}
+                focusColor="green"
+              />
             </div>
             <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
@@ -235,7 +237,7 @@ function EditProfile() {
             // 3. Limpiar data de cliente y navegar
             localStorage.removeItem('client');
             setToast({ type: 'success', message: '¡Rol actualizado! Cargando CV...' });
-            
+
             setTimeout(() => {
               navigate('/edit-cv');
             }, 800);
