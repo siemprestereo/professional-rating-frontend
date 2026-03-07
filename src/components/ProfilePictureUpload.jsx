@@ -72,7 +72,7 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
             const profilePicture = confirmData.profilePicture;
             if (!profilePicture) throw new Error('El backend no devolvió la URL de la foto');
 
-            onUploadSuccess(profilePicture);
+            onUploadSuccess(`${profilePicture}?t=${Date.now()}`);
 
         } catch (err) {
             console.error('❌ Error en upload:', err);
