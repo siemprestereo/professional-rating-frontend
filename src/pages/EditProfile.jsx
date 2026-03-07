@@ -8,6 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import { clearAllAppData, validatePhone } from '../utils/storage';
 import { BACKEND_URL } from '../config';
 import LocationSelector from '../components/LocationSelector';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -136,10 +137,16 @@ function EditProfile() {
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-8 pb-24 text-center">
-        <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-teal-600">
-          {name.charAt(0).toUpperCase()}
-        </div>
-        <h1 className="text-3xl roboto-light text-white mb-2">Editar Perfil</h1>
+        <ProfilePictureUpload
+          currentPhoto={client?.profilePicture}
+          userName={name}
+          onUploadSuccess={(url) => {
+            const updated = { ...client, profilePicture: url };
+            setClient(updated);
+            localStorage.setItem('client', JSON.stringify(updated));
+          }}
+        />
+        <h1 className="text-3xl roboto-light text-white mb-2 mt-3">Editar Perfil</h1>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-16">

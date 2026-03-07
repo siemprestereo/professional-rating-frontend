@@ -9,6 +9,7 @@ import { clearAllAppData, validatePhone } from '../utils/storage';
 import { PROFESSIONS } from '../constants/professions';
 import { BACKEND_URL } from '../config';
 import LocationSelector from '../components/LocationSelector';
+import ProfilePictureUpload from '../components/ProfilePictureUpload';
 
 function EditProfileProfessional() {
   const navigate = useNavigate();
@@ -231,10 +232,16 @@ function EditProfileProfessional() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-            {name.charAt(0).toUpperCase()}
-          </div>
-          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
+          <ProfilePictureUpload
+            currentPhoto={professional?.profilePicture}
+            userName={name}
+            onUploadSuccess={(url) => {
+              const updated = { ...professional, profilePicture: url };
+              setProfessional(updated);
+              localStorage.setItem('professional', JSON.stringify(updated));
+            }}
+          />
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp mt-3">
             Editar Perfil
           </h1>
           <p className="text-white/90 text-lg animate-slideUp delay-100">
