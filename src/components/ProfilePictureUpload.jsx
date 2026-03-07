@@ -30,76 +30,49 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
 
         try {
             const token = localStorage.getItem('authToken');
-            console.log('🔑 Token:', token ? token.substring(0, 30) + '...' : 'NULL');
 
             // Paso 1: Firma
             const signResponse = await fetch(`${BACKEND_URL}/api/users/photo/sign`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            console.log('📝 Sign status:', signResponse.status);
-            if (!signResponse.ok) throw new Error(`Error firma: ${signResponse.status}`);
+            if (!signResponse.ok) throw new Error(`Error al obtener firma: ${signResponse.status}`);
             const signData = await signResponse.json();
-            console.log('📝 Sign data:', signData);
 
-            // Paso 2: Cloudinary
+            // Paso 2: Subir a Cloudinary (sin folder — ya está incluido en public_id)
             const formData = new FormData();
             formData.append('file', file);
             formData.append('api_key', signData.api_key);
             formData.append('timestamp', signData.timestamp);
             formData.append('signature', signData.signature);
             formData.append('public_id', signData.public_id);
-            formData.append('folder', signData.folder);
             formData.append('overwrite', 'true');
 
-            console.log('☁️ Subiendo a Cloudinary:', signData.upload_url);
             const cloudinaryResponse = await fetch(signData.upload_url, {
                 method: 'POST',
                 body: formData
             });
-            console.log('☁️ Cloudinary status:', cloudinaryResponse.status);
-            if (!cloudinaryResponse.ok) throw new Error(`Error Cloudinary: ${cloudinaryResponse.status}`);
+            if (!cloudinaryResponse.ok) throw new Error(`Error al subir imagen: ${cloudinaryResponse.status}`);
             const cloudinaryData = await cloudinaryResponse.json();
-            console.log('☁️ Cloudinary data:', cloudinaryData);
-            console.log('☁️ public_id recibido:', cloudinaryData.public_id);
-            console.log('☁️ secure_url recibido:', cloudinaryData.secure_url);
 
-            // Paso 3: Confirmar al backend
-            const confirmBody = { publicId: cloudinaryData.public_id };
-            console.log('✅ Confirmando al backend:', confirmBody);
+            // Paso 3: Confirmar public_id al backend
             const confirmResponse = await fetch(`${BACKEND_URL}/api/users/photo`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(confirmBody)
+                body: JSON.stringify({ publicId: cloudinaryData.public_id })
             });
-            console.log('✅ Confirm status:', confirmResponse.status);
+
             const confirmData = await confirmResponse.json();
-            console.log('✅ Confirm response body:', confirmData);
-            if (!confirmResponse.ok) throw new Error(`Error confirmar: ${confirmResponse.status} - ${JSON.stringify(confirmData)}`);
+            if (!confirmResponse.ok) throw new Error(`Error al confirmar foto: ${confirmData.error || confirmResponse.status}`);
 
-            // Paso 4: Obtener perfil actualizado
-            const userType = localStorage.getItem('userType');
-            console.log('👤 userType en localStorage:', userType);
-            const meEndpoint = userType === 'PROFESSIONAL'
-                ? `${BACKEND_URL}/api/auth/me`
-                : `${BACKEND_URL}/api/auth/me/client`;
-            console.log('👤 Llamando a:', meEndpoint);
+            // Paso 4: Usar la URL construida por el backend directamente
+            const profilePicture = confirmData.profilePicture;
+            if (!profilePicture) throw new Error('El backend no devolvió la URL de la foto');
 
-            const meResponse = await fetch(meEndpoint, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            console.log('👤 Me status:', meResponse.status);
-            const userData = await meResponse.json();
-            console.log('👤 Me data:', userData);
-            console.log('🖼️ profilePicture en respuesta:', userData.profilePicture);
-
-            if (!meResponse.ok) throw new Error(`Error perfil: ${meResponse.status}`);
-
-            onUploadSuccess(userData.profilePicture);
-            console.log('🎉 onUploadSuccess llamado con:', userData.profilePicture);
+            onUploadSuccess(profilePicture);
 
         } catch (err) {
             console.error('❌ Error en upload:', err);
