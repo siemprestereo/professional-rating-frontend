@@ -1,14 +1,15 @@
-// src/components/ProfilePictureUpload.jsx
 import { useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
+import CropModal from './CropModal';
 
 function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState(currentPhoto || null);
     const [error, setError] = useState(null);
+    const [cropSrc, setCropSrc] = useState(null); // imagen original para el modal
 
-    const handleFileChange = async (e) => {
+    const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -23,9 +24,18 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
         }
 
         setError(null);
+
+        // Abrir modal de crop con la imagen original
+        const localUrl = URL.createObjectURL(file);
+        setCropSrc(localUrl);
+    };
+
+    const handleCropConfirm = async (croppedBlob) => {
+        setCropSrc(null);
         setUploading(true);
 
-        const localPreview = URL.createObjectURL(file);
+        // Mostrar preview local inmediatamente
+        const localPreview = URL.createObjectURL(croppedBlob);
         setPreview(localPreview);
 
         try {
@@ -39,9 +49,9 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
             if (!signResponse.ok) throw new Error(`Error al obtener firma: ${signResponse.status}`);
             const signData = await signResponse.json();
 
-            // Paso 2: Subir a Cloudinary (sin folder — ya está incluido en public_id)
+            // Paso 2: Subir blob recortado a Cloudinary
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', croppedBlob, 'avatar.jpg');
             formData.append('api_key', signData.api_key);
             formData.append('timestamp', signData.timestamp);
             formData.append('signature', signData.signature);
@@ -55,7 +65,7 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
             if (!cloudinaryResponse.ok) throw new Error(`Error al subir imagen: ${cloudinaryResponse.status}`);
             const cloudinaryData = await cloudinaryResponse.json();
 
-            // Paso 3: Confirmar public_id al backend
+            // Paso 3: Confirmar al backend
             const confirmResponse = await fetch(`${BACKEND_URL}/api/users/photo`, {
                 method: 'PUT',
                 headers: {
@@ -68,7 +78,6 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
             const confirmData = await confirmResponse.json();
             if (!confirmResponse.ok) throw new Error(`Error al confirmar foto: ${confirmData.error || confirmResponse.status}`);
 
-            // Paso 4: Usar la URL construida por el backend directamente
             const profilePicture = confirmData.profilePicture;
             if (!profilePicture) throw new Error('El backend no devolvió la URL de la foto');
 
@@ -83,49 +92,63 @@ function ProfilePictureUpload({ currentPhoto, userName, onUploadSuccess }) {
         }
     };
 
+    const handleCropCancel = () => {
+        setCropSrc(null);
+    };
+
     const initials = userName
         ? userName.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
         : '?';
 
     return (
-        <div className="flex flex-col items-center">
-            <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-lg border-4 border-white">
-                    {preview ? (
-                        <img
-                            src={preview}
-                            alt="Foto de perfil"
-                            className="w-full h-full object-cover"
+        <>
+            {cropSrc && (
+                <CropModal
+                    imageSrc={cropSrc}
+                    onConfirm={handleCropConfirm}
+                    onCancel={handleCropCancel}
+                />
+            )}
+
+            <div className="flex flex-col items-center">
+                <div className="relative">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-lg border-4 border-white">
+                        {preview ? (
+                            <img
+                                src={preview}
+                                alt="Foto de perfil"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-3xl font-bold text-teal-600">{initials}</span>
+                        )}
+                    </div>
+
+                    <label className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all
+                        ${uploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'}`}>
+                        {uploading
+                            ? <Loader2 className="w-4 h-4 text-white animate-spin" />
+                            : <Camera className="w-4 h-4 text-white" />
+                        }
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleFileChange}
+                            disabled={uploading}
                         />
-                    ) : (
-                        <span className="text-3xl font-bold text-teal-600">{initials}</span>
-                    )}
+                    </label>
                 </div>
 
-                <label className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all
-          ${uploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-500 hover:bg-teal-600'}`}>
-                    {uploading
-                        ? <Loader2 className="w-4 h-4 text-white animate-spin" />
-                        : <Camera className="w-4 h-4 text-white" />
-                    }
-                    <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={handleFileChange}
-                        disabled={uploading}
-                    />
-                </label>
+                {error && (
+                    <p className="text-red-500 text-xs mt-2 text-center">{error}</p>
+                )}
+
+                {uploading && (
+                    <p className="text-white/80 text-xs mt-2">Subiendo foto...</p>
+                )}
             </div>
-
-            {error && (
-                <p className="text-red-500 text-xs mt-2 text-center">{error}</p>
-            )}
-
-            {uploading && (
-                <p className="text-white/80 text-xs mt-2">Subiendo foto...</p>
-            )}
-        </div>
+        </>
     );
 }
 
