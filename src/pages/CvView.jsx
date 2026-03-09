@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, Home, ChevronRight, Search, AlertTriangle, MapPin } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, ChevronRight, Search, AlertTriangle, MapPin } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
+import BackButton from '../components/BackButton';
+import HomeButton from '../components/HomeButton';
+import { translateProfession } from '../utils/professionalUtils';
 import { BACKEND_URL } from '../config';
 
 function CvView() {
   const navigate = useNavigate();
-  const { professionalId } = useParams();  
+  const { professionalId } = useParams();
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -22,22 +25,23 @@ function CvView() {
   const loadCv = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const professional = JSON.parse(localStorage.getItem('professional'));
-      
+      const professional = (() => {
+        try { return JSON.parse(localStorage.getItem('professional')); }
+        catch { return null; }
+      })();
+
       if (!professional && !professionalId) {
         navigate('/professional-login');
         return;
       }
 
       const idToLoad = professionalId || professional?.id;
-      
       const response = await fetch(`${BACKEND_URL}/api/cv/professional/${idToLoad}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setCv(data);
+        setCv(await response.json());
       } else {
         throw new Error('No se pudo cargar el CV');
       }
@@ -65,8 +69,9 @@ function CvView() {
   };
 
   const toggleSearchable = async () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
     try {
-      setIsAnimating(true);
       const token = localStorage.getItem('authToken');
       if (!token) return;
       const response = await fetch(`${BACKEND_URL}/api/professionals/me/searchable`, {
@@ -74,7 +79,7 @@ function CvView() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchable: !isSearchable })
       });
-      if (response.ok) setIsSearchable(!isSearchable);
+      if (response.ok) setIsSearchable(prev => !prev);
     } catch (error) {
       console.error('Error toggling searchable:', error);
     } finally {
@@ -82,30 +87,17 @@ function CvView() {
     }
   };
 
-  const renderStars = (score) => {
-    return [...Array(5)].map((_, i) => (
+  const renderStars = (score) =>
+    [...Array(5)].map((_, i) => (
       <Star key={i} className={`w-5 h-5 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
     ));
-  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
   };
 
-  const translateProfession = (type) => {
-    const translations = {
-      'WAITER': 'Mozo', 'ELECTRICIAN': 'Electricista', 'PAINTER': 'Pintor',
-      'HAIRDRESSER': 'Peluquero', 'PLUMBER': 'Plomero', 'CARPENTER': 'Carpintero',
-      'MECHANIC': 'Mecánico', 'CHEF': 'Chef', 'BARISTA': 'Barista',
-      'BARTENDER': 'Bartender', 'CLEANER': 'Personal de limpieza', 'GARDENER': 'Jardinero',
-      'DRIVER': 'Conductor', 'SECURITY': 'Seguridad', 'RECEPTIONIST': 'Recepcionista'
-    };
-    return translations[type] || type;
-  };
-
-  const handleWorkClick = (workHistoryId, businessName) => {
+  const handleWorkClick = (workHistoryId) => {
     navigate(`/ratings-history?workHistoryId=${workHistoryId}`);
   };
 
@@ -125,24 +117,30 @@ function CvView() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
-        <div className="max-w-4xl mx-auto text-center">
-          <button onClick={() => navigate('/my-profile')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
-            <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
-              {cv.professionalName.charAt(0)}
-            </div>
-            <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">{cv.professionalName}</h1>
-            {cv.professionType && (
-              <p className="text-white/90 text-lg mb-4 animate-slideUp">{translateProfession(cv.professionType)}</p>
-            )}
-          </button>
-          <button onClick={() => navigate('/stats')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
-            <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
-              {renderStars(Math.round(cv.reputationScore || 0))}
-              <span className="ml-2 text-white font-semibold text-lg">{(cv.reputationScore || 0).toFixed(1)}</span>
-            </div>
-            <p className="text-white/90 animate-slideUp delay-200">{cv.totalRatings || 0} calificaciones</p>
-          </button>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <BackButton to="/my-profile" />
+          <div className="text-center">
+            <button onClick={() => navigate('/my-profile')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn border-4 border-white shadow-lg">
+                {cv.profilePicture
+                  ? <img src={cv.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
+                  : cv.professionalName.charAt(0)
+                }
+              </div>
+              <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">{cv.professionalName}</h1>
+              {cv.professionType && (
+                <p className="text-white/90 text-lg mb-4 animate-slideUp">{translateProfession(cv.professionType)}</p>
+              )}
+            </button>
+            <button onClick={() => navigate('/stats')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
+              <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
+                {renderStars(Math.round(cv.reputationScore || 0))}
+                <span className="ml-2 text-white font-semibold text-lg">{(cv.reputationScore || 0).toFixed(1)}</span>
+              </div>
+              <p className="text-white/90 animate-slideUp delay-200">{cv.totalRatings || 0} calificaciones</p>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -186,7 +184,7 @@ function CvView() {
             <svg className="w-6 h-6 text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
-            <p className="font-semibold text-gray-800 text-sm">Descargar CV en PDF</p>
+            <p className="font-semibold text-gray-800 text-sm">Descargar PDF</p>
           </button>
         </div>
 
@@ -199,7 +197,7 @@ function CvView() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base roboto-light text-orange-900 mb-1">⚠️ No podés recibir calificaciones todavía</h3>
-                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.</p>
+                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo en tu CV.</p>
               </div>
             </div>
           </div>
@@ -213,7 +211,7 @@ function CvView() {
             </h2>
             <div className="space-y-2">
               {freelanceActive.map((work) => (
-                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId, work.businessName)} className="border-2 border-purple-200 rounded-xl p-4 cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all group">
+                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)} className="border-2 border-purple-200 rounded-xl p-4 cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all group">
                   <div className="flex items-center gap-2">
                     <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
                     <div className="flex-1">
@@ -233,7 +231,7 @@ function CvView() {
           </div>
         )}
 
-        {/* Trabajos Actuales (dependencia) */}
+        {/* Trabajos Actuales */}
         {employeeActive.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
@@ -241,7 +239,7 @@ function CvView() {
             </h2>
             <div className="space-y-2">
               {employeeActive.map((work) => (
-                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId, work.businessName)} className="border-2 border-blue-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
+                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)} className="border-2 border-blue-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
                   <div className="flex items-center gap-2">
                     <ChevronRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
                     <div>
@@ -264,7 +262,7 @@ function CvView() {
             </h2>
             <div className="space-y-2">
               {pastJobs.map((work) => (
-                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId, work.businessName)} className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group">
+                <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)} className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group">
                   <div className="flex items-center gap-2">
                     <ChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
                     <div className="flex-1">
@@ -318,14 +316,9 @@ function CvView() {
             </div>
           </div>
         )}
-
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button onClick={() => navigate('/professional-dashboard')} className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white" aria-label="Volver al inicio">
-          <Home className="w-7 h-7 text-white" />
-        </button>
-      </div>
+      <HomeButton />
 
       {showShareModal && (
         <ShareModal professionalId={cv.professionalId} professionalName={cv.professionalName} onClose={() => setShowShareModal(false)} />

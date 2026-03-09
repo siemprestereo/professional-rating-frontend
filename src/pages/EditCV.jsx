@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Save, GraduationCap, Home, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Save, GraduationCap, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
+import BackButton from '../components/BackButton';
+import HomeButton from '../components/HomeButton';
 import SearchableSelect from '../components/SearchableSelect';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
@@ -12,10 +14,11 @@ function EditCV() {
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [savingWorkId, setSavingWorkId] = useState(null);
-  const [deletingWorkId, setDeletingWorkId] = useState(null);
-  const [savingEducationId, setSavingEducationId] = useState(null);
-  const [deletingEducationId, setDeletingEducationId] = useState(null);
+  // Usamos Map para tracking de operaciones en curso: workHistoryId → true
+  const [savingWorkIds, setSavingWorkIds] = useState(new Set());
+  const [deletingWorkIds, setDeletingWorkIds] = useState(new Set());
+  const [savingEducationIds, setSavingEducationIds] = useState(new Set());
+  const [deletingEducationIds, setDeletingEducationIds] = useState(new Set());
 
   const [description, setDescription] = useState('');
   const [freelanceJobs, setFreelanceJobs] = useState([]);
@@ -36,30 +39,17 @@ function EditCV() {
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const {
-    provincias,
-    segundoNivel,
-    loadingProvincias,
-    loadingSegundoNivel,
-    fetchSegundoNivel,
-    getSegundoNivelLabel
-  } = useGeoref();
+  const { provincias, segundoNivel, loadingProvincias, loadingSegundoNivel, fetchSegundoNivel, getSegundoNivelLabel } = useGeoref();
 
-  useEffect(() => {
-    loadCV();
-  }, []);
+  useEffect(() => { loadCV(); }, []);
 
   const loadCV = async () => {
     try {
       let professional;
       try {
         professional = JSON.parse(localStorage.getItem('professional'));
-        if (!professional) {
-          navigate('/professional-login');
-          return;
-        }
-      } catch (error) {
-        console.error('Error parseando professional:', error);
+        if (!professional) { navigate('/professional-login'); return; }
+      } catch {
         localStorage.removeItem('professional');
         navigate('/professional-login');
         return;
@@ -91,8 +81,8 @@ function EditCV() {
           totalRatings: exp.totalRatings || 0
         }));
 
-        setFreelanceJobs(allJobs.filter(job => job.isFreelance === true));
-        setEmployeeJobs(allJobs.filter(job => job.isFreelance === false));
+        setFreelanceJobs(allJobs.filter(job => job.isFreelance));
+        setEmployeeJobs(allJobs.filter(job => !job.isFreelance));
         setEducation(data.education || []);
       } else {
         throw new Error('No se pudo cargar el CV');
@@ -105,39 +95,39 @@ function EditCV() {
     }
   };
 
-  const countActiveJobs = () => {
-    return [...freelanceJobs, ...employeeJobs].filter(job => job.currentlyWorking === true).length;
-  };
+  const countActiveJobs = () =>
+    [...freelanceJobs, ...employeeJobs].filter(job => job.currentlyWorking).length;
+
+  // Genera una clave única por trabajo para tracking de loading
+  // Trabaj guardado: su workHistoryId. Trabajo nuevo: índice con prefijo para evitar colisiones
+  const getWorkKey = (job, index, prefix) =>
+    job.workHistoryId ? `id-${job.workHistoryId}` : `new-${prefix}-${index}`;
+
+  const getEduKey = (edu, index) =>
+    edu.id ? `id-${edu.id}` : `new-edu-${index}`;
 
   const handleAddZone = async () => {
     if (!zonaProvinciaId || !zonaSeleccionada) {
       setToast({ type: 'error', message: 'Seleccioná provincia y zona' });
       return;
     }
-
     setSavingZone(true);
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ provincia: zonaProvincia, zona: zonaSeleccionada })
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        setZones([...zones, data]);
+        setZones(prev => [...prev, data]);
         setZonaSeleccionada('');
         setToast({ type: 'success', message: 'Zona agregada correctamente' });
       } else {
         setToast({ type: 'error', message: data.error || 'Error al agregar zona' });
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch {
       setToast({ type: 'error', message: 'Error de conexión' });
     } finally {
       setSavingZone(false);
@@ -149,17 +139,15 @@ function EditCV() {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/zones/${zoneId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (response.ok) {
-        setZones(zones.filter(z => z.id !== zoneId));
+        setZones(prev => prev.filter(z => z.id !== zoneId));
         setToast({ type: 'success', message: 'Zona eliminada' });
       } else {
         setToast({ type: 'error', message: 'Error al eliminar zona' });
       }
-    } catch (error) {
+    } catch {
       setToast({ type: 'error', message: 'Error de conexión' });
     } finally {
       setDeletingZoneId(null);
@@ -167,15 +155,17 @@ function EditCV() {
   };
 
   const handleSaveWorkExperience = async (job, isFreelance, index) => {
-    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
-    if (!job.position || job.position.trim() === '') { setToast({ type: 'error', message: 'El puesto es obligatorio' }); return; }
+    if (!cv?.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
+    if (!job.position?.trim()) { setToast({ type: 'error', message: 'El puesto es obligatorio' }); return; }
     if (job.startDate && job.endDate && !job.currentlyWorking) {
-      const start = new Date(job.startDate);
-      const end = new Date(job.endDate);
-      if (end < start) { setToast({ type: 'error', message: 'La fecha de finalización no puede ser anterior a la de inicio' }); return; }
+      if (new Date(job.endDate) < new Date(job.startDate)) {
+        setToast({ type: 'error', message: 'La fecha de finalización no puede ser anterior a la de inicio' });
+        return;
+      }
     }
 
-    setSavingWorkId(job.workHistoryId || 'new');
+    const key = getWorkKey(job, index, isFreelance ? 'fl' : 'emp');
+    setSavingWorkIds(prev => new Set(prev).add(key));
     try {
       const token = localStorage.getItem('authToken');
       const payload = {
@@ -185,7 +175,7 @@ function EditCV() {
         startDate: job.startDate,
         endDate: job.endDate,
         isActive: job.currentlyWorking,
-        isFreelance: isFreelance,
+        isFreelance,
         description: job.description,
         referenceContact: job.referenceName,
         referencePhone: job.referencePhone || ''
@@ -199,43 +189,42 @@ function EditCV() {
 
       if (response.ok) {
         const data = await response.json();
+        const updatedJob = { ...job, workHistoryId: data.workHistoryId, hasRatings: data.totalRatings > 0, totalRatings: data.totalRatings || 0 };
         if (isFreelance) {
-          const updated = [...freelanceJobs];
-          updated[index] = { ...job, workHistoryId: data.workHistoryId, hasRatings: data.totalRatings > 0, totalRatings: data.totalRatings || 0 };
-          setFreelanceJobs(updated);
+          setFreelanceJobs(prev => { const u = [...prev]; u[index] = updatedJob; return u; });
+          setExpandedFreelance(null);
         } else {
-          const updated = [...employeeJobs];
-          updated[index] = { ...job, workHistoryId: data.workHistoryId, hasRatings: data.totalRatings > 0, totalRatings: data.totalRatings || 0 };
-          setEmployeeJobs(updated);
+          setEmployeeJobs(prev => { const u = [...prev]; u[index] = updatedJob; return u; });
+          setExpandedEmployee(null);
         }
         setToast({ type: 'success', message: 'Experiencia guardada correctamente' });
-        setTimeout(() => { if (isFreelance) setExpandedFreelance(null); else setExpandedEmployee(null); }, 100);
       } else {
         const errorData = await response.json();
         setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
       }
-    } catch (error) {
+    } catch {
       setToast({ type: 'error', message: 'Error de conexión al guardar' });
     } finally {
-      setSavingWorkId(null);
+      setSavingWorkIds(prev => { const s = new Set(prev); s.delete(key); return s; });
     }
   };
 
   const handleSaveEducation = async (edu, index) => {
-    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
-    if ((!edu.institution || edu.institution.trim() === '') && (!edu.degree || edu.degree.trim() === '')) {
+    if (!cv?.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
+    if (!edu.institution?.trim() && !edu.degree?.trim()) {
       setToast({ type: 'error', message: 'Debe ingresar al menos la institución o el título' }); return;
     }
 
-    setSavingEducationId(edu.id || 'new');
+    const key = getEduKey(edu, index);
+    setSavingEducationIds(prev => new Set(prev).add(key));
     try {
       const token = localStorage.getItem('authToken');
       const payload = {
         id: edu.id || null,
         institution: edu.institution || '',
         degree: edu.degree || '',
-        startDate: edu.startDate && edu.startDate !== '' ? edu.startDate : null,
-        endDate: edu.endDate && edu.endDate !== '' ? edu.endDate : null,
+        startDate: edu.startDate || null,
+        endDate: edu.endDate || null,
         currentlyStudying: edu.currentlyStudying || false,
         description: edu.description || ''
       };
@@ -249,65 +238,73 @@ function EditCV() {
       if (response.ok) {
         setToast({ type: 'success', message: 'Ítem guardado correctamente' });
         await loadCV();
-        setTimeout(() => setExpandedEducation(null), 100);
+        setExpandedEducation(null);
       } else {
         const errorData = await response.json();
         setToast({ type: 'error', message: errorData.error || 'Error al guardar' });
       }
-    } catch (error) {
+    } catch {
       setToast({ type: 'error', message: 'Error de conexión al guardar' });
     } finally {
-      setSavingEducationId(null);
+      setSavingEducationIds(prev => { const s = new Set(prev); s.delete(key); return s; });
     }
   };
 
-  const handleDeleteFreelanceJob = async (index) => {
-    const job = freelanceJobs[index];
-    if (!job.workHistoryId) { removeFreelanceJob(index); return; }
-    setDeletingWorkId(job.workHistoryId);
+  const handleDeleteWorkExperience = async (job, isFreelance, index) => {
+    if (!job.workHistoryId) {
+      if (isFreelance) removeFreelanceJob(index);
+      else removeEmployeeJob(index);
+      return;
+    }
+    const id = job.workHistoryId;
+    setDeletingWorkIds(prev => new Set(prev).add(id));
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience/${id}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) { setToast({ type: 'success', message: 'Ítem eliminado correctamente' }); await loadCV(); setExpandedFreelance(null); }
-      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
-    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
-    finally { setDeletingWorkId(null); }
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Trabajo eliminado correctamente' });
+        await loadCV();
+        if (isFreelance) setExpandedFreelance(null);
+        else setExpandedEmployee(null);
+      } else {
+        const e = await response.json();
+        setToast({ type: 'error', message: e.error || 'Error al eliminar' });
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
+    } finally {
+      setDeletingWorkIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }
   };
 
-  const handleDeleteEmployeeJob = async (index) => {
-    const job = employeeJobs[index];
-    if (!job.workHistoryId) { removeEmployeeJob(index); return; }
-    setDeletingWorkId(job.workHistoryId);
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience/${job.workHistoryId}`, {
-        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) { setToast({ type: 'success', message: 'Trabajo eliminado correctamente' }); await loadCV(); setExpandedEmployee(null); }
-      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
-    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
-    finally { setDeletingWorkId(null); }
-  };
-
-  const handleDeleteEducation = async (index) => {
-    const edu = education[index];
+  const handleDeleteEducation = async (edu, index) => {
     if (!edu.id) { removeEducation(index); return; }
-    setDeletingEducationId(edu.id);
+    const id = edu.id;
+    setDeletingEducationIds(prev => new Set(prev).add(id));
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/education/${edu.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/education/${id}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) { setToast({ type: 'success', message: 'Ítem eliminado correctamente' }); await loadCV(); setExpandedEducation(null); }
-      else { const e = await response.json(); setToast({ type: 'error', message: e.error || 'Error al eliminar' }); }
-    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al eliminar' }); }
-    finally { setDeletingEducationId(null); }
+      if (response.ok) {
+        setToast({ type: 'success', message: 'Ítem eliminado correctamente' });
+        await loadCV();
+        setExpandedEducation(null);
+      } else {
+        const e = await response.json();
+        setToast({ type: 'error', message: e.error || 'Error al eliminar' });
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Error de conexión al eliminar' });
+    } finally {
+      setDeletingEducationIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }
   };
 
   const handleSave = async () => {
-    if (!cv || !cv.id) { setToast({ type: 'error', message: 'Error: CV no inicializado correctamente' }); return; }
+    if (!cv?.id) { setToast({ type: 'error', message: 'Error: CV no inicializado' }); return; }
     setSaving(true);
     try {
       const token = localStorage.getItem('authToken');
@@ -316,81 +313,202 @@ function EditCV() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ description })
       });
-      if (response.ok) { setToast({ type: 'success', message: 'CV actualizado correctamente' }); setTimeout(() => navigate('/cv-view'), 1000); }
-      else { const e = await response.json(); setToast({ type: 'error', message: e.error || e.message || 'Error al guardar CV' }); }
-    } catch (error) { setToast({ type: 'error', message: 'Error de conexión al guardar CV' }); }
-    finally { setSaving(false); }
+      if (response.ok) {
+        setToast({ type: 'success', message: 'CV actualizado correctamente' });
+        setTimeout(() => navigate('/cv-view'), 1000);
+      } else {
+        const e = await response.json();
+        setToast({ type: 'error', message: e.error || e.message || 'Error al guardar CV' });
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Error de conexión al guardar CV' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addFreelanceJob = () => {
-    setFreelanceJobs([...freelanceJobs, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: true, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
+    setFreelanceJobs(prev => [...prev, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: true, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
     setExpandedFreelance(freelanceJobs.length);
   };
 
   const updateFreelanceJob = (index, field, value) => {
-    const updated = [...freelanceJobs];
-    if (field === 'currentlyWorking' && value === true) {
-      if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) { setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' }); return; }
-      updated[index].endDate = '';
-    }
-    updated[index][field] = value;
-    setFreelanceJobs(updated);
+    setFreelanceJobs(prev => {
+      const updated = [...prev];
+      if (field === 'currentlyWorking' && value === true) {
+        if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) {
+          setToast({ type: 'warning', message: 'Ya tenés 3 trabajos activos. Desactivá uno para agregar otro.' });
+          return prev;
+        }
+        updated[index] = { ...updated[index], currentlyWorking: true, endDate: '' };
+        return updated;
+      }
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
 
-  const confirmDeleteFreelanceJob = (index) => setDeleteModal({ type: 'freelance', index, title: '¿Eliminar trabajo autónomo?', message: 'Esta acción no se puede deshacer.' });
-  const removeFreelanceJob = (index) => { setFreelanceJobs(freelanceJobs.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedFreelance(null); };
+  const confirmDeleteFreelanceJob = (index) =>
+    setDeleteModal({ type: 'freelance', index, title: '¿Eliminar trabajo autónomo?', message: 'Esta acción no se puede deshacer.' });
+  const removeFreelanceJob = (index) => {
+    setFreelanceJobs(prev => prev.filter((_, i) => i !== index));
+    setDeleteModal(null);
+    setExpandedFreelance(null);
+  };
 
   const addEmployeeJob = () => {
-    setEmployeeJobs([...employeeJobs, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: false, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
+    setEmployeeJobs(prev => [...prev, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: false, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
     setExpandedEmployee(employeeJobs.length);
   };
 
   const updateEmployeeJob = (index, field, value) => {
-    const updated = [...employeeJobs];
-    if (field === 'currentlyWorking' && value === true) {
-      if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) { setToast({ type: 'warning', message: 'Ya tienes 3 trabajos activos. Desactiva uno para agregar otro.' }); return; }
-      updated[index].endDate = '';
-    }
-    updated[index][field] = value;
-    setEmployeeJobs(updated);
+    setEmployeeJobs(prev => {
+      const updated = [...prev];
+      if (field === 'currentlyWorking' && value === true) {
+        if (countActiveJobs() >= 3 && !updated[index].currentlyWorking) {
+          setToast({ type: 'warning', message: 'Ya tenés 3 trabajos activos. Desactivá uno para agregar otro.' });
+          return prev;
+        }
+        updated[index] = { ...updated[index], currentlyWorking: true, endDate: '' };
+        return updated;
+      }
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
 
-  const confirmDeleteEmployeeJob = (index) => setDeleteModal({ type: 'employee', index, title: '¿Eliminar trabajo?', message: 'Esta acción no se puede deshacer.' });
-  const removeEmployeeJob = (index) => { setEmployeeJobs(employeeJobs.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedEmployee(null); };
+  const confirmDeleteEmployeeJob = (index) =>
+    setDeleteModal({ type: 'employee', index, title: '¿Eliminar trabajo?', message: 'Esta acción no se puede deshacer.' });
+  const removeEmployeeJob = (index) => {
+    setEmployeeJobs(prev => prev.filter((_, i) => i !== index));
+    setDeleteModal(null);
+    setExpandedEmployee(null);
+  };
 
   const addEducation = () => {
-    setEducation([...education, { institution: '', degree: '', startDate: '', endDate: '', currentlyStudying: false, description: '' }]);
+    setEducation(prev => [...prev, { institution: '', degree: '', startDate: '', endDate: '', currentlyStudying: false, description: '' }]);
     setExpandedEducation(education.length);
   };
 
   const updateEducation = (index, field, value) => {
-    const updated = [...education];
-    updated[index][field] = value;
-    if (field === 'currentlyStudying' && value === true) updated[index].endDate = '';
-    setEducation(updated);
+    setEducation(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      if (field === 'currentlyStudying' && value === true) updated[index].endDate = '';
+      return updated;
+    });
   };
 
-  const confirmDeleteEducation = (index) => setDeleteModal({ type: 'education', index, title: '¿Eliminar ítem?', message: 'Esta acción no se puede deshacer.' });
-  const removeEducation = (index) => { setEducation(education.filter((_, i) => i !== index)); setDeleteModal(null); setExpandedEducation(null); };
+  const confirmDeleteEducation = (index) =>
+    setDeleteModal({ type: 'education', index, title: '¿Eliminar ítem?', message: 'Esta acción no se puede deshacer.' });
+  const removeEducation = (index) => {
+    setEducation(prev => prev.filter((_, i) => i !== index));
+    setDeleteModal(null);
+    setExpandedEducation(null);
+  };
 
   const handleConfirmDelete = () => {
     if (!deleteModal) return;
-    switch (deleteModal.type) {
-      case 'freelance': handleDeleteFreelanceJob(deleteModal.index); break;
-      case 'employee': handleDeleteEmployeeJob(deleteModal.index); break;
-      case 'education': handleDeleteEducation(deleteModal.index); break;
-    }
+    const { type, index } = deleteModal;
+    if (type === 'freelance') handleDeleteWorkExperience(freelanceJobs[index], true, index);
+    else if (type === 'employee') handleDeleteWorkExperience(employeeJobs[index], false, index);
+    else if (type === 'education') handleDeleteEducation(education[index], index);
     setDeleteModal(null);
+  };
+
+  const renderWorkForm = (job, index, isFreelance) => {
+    const key = getWorkKey(job, index, isFreelance ? 'fl' : 'emp');
+    const isSaving = savingWorkIds.has(key);
+    const isDeleting = job.workHistoryId ? deletingWorkIds.has(job.workHistoryId) : false;
+    const expanded = isFreelance ? expandedFreelance : expandedEmployee;
+    const setExpanded = isFreelance ? setExpandedFreelance : setExpandedEmployee;
+    const updateJob = isFreelance ? updateFreelanceJob : updateEmployeeJob;
+    const confirmDelete = isFreelance ? confirmDeleteFreelanceJob : confirmDeleteEmployeeJob;
+
+    return (
+      <div key={`${isFreelance ? 'fl' : 'emp'}-${index}`} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+        <div onClick={() => setExpanded(expanded === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+          <div className="flex items-center gap-3">
+            {expanded === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+            <div>
+              <p className="font-semibold text-gray-800 text-base">{job.position || 'Sin título'} {job.company && `- ${job.company}`}</p>
+              <p className="text-sm text-gray-500">
+                {job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}
+                {job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {expanded === index && (
+          <div className="p-4 pt-0 border-t border-gray-100">
+            {job.hasRatings && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+                <Lock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-semibold text-orange-800 mb-1">Campos bloqueados</p>
+                  <p className="text-orange-700">Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar.</p>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+              <input type="text" placeholder={isFreelance ? "Título profesional" : "Empresa"} value={isFreelance ? job.position : job.company}
+                onChange={(e) => updateJob(index, isFreelance ? 'position' : 'company', e.target.value)}
+                disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+              <input type="text" placeholder={isFreelance ? "Autónomo" : "Puesto"} value={isFreelance ? job.company : job.position}
+                onChange={(e) => updateJob(index, isFreelance ? 'company' : 'position', e.target.value)}
+                disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                <input type="date" value={job.startDate} onChange={(e) => updateJob(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="flex items-center cursor-pointer">
+                <input type="checkbox" checked={job.currentlyWorking}
+                  onChange={(e) => updateJob(index, 'currentlyWorking', e.target.checked)}
+                  disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
+                <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
+              </label>
+            </div>
+            <textarea placeholder="Descripción" value={job.description} onChange={(e) => updateJob(index, 'description', e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
+            {!isFreelance && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <input type="text" placeholder="Nombre de referencia (opcional)" value={job.referenceName} onChange={(e) => updateJob(index, 'referenceName', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                <input type="tel" placeholder="Teléfono de referencia (opcional)" value={job.referencePhone} onChange={(e) => updateJob(index, 'referencePhone', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+              </div>
+            )}
+            <button onClick={() => handleSaveWorkExperience(job, isFreelance, index)} disabled={isSaving}
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
+              {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar trabajo</>}
+            </button>
+            <button onClick={() => confirmDelete(index)} disabled={isDeleting}
+              className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
+              {isDeleting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</> : <><Trash2 className="w-5 h-5 mr-2" />Eliminar trabajo</>}
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-8 pb-24">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">Editar CV</h1>
-          <p className="text-white/90 text-lg animate-slideUp delay-100">Agregá tu experiencia laboral y educativa</p>
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <BackButton to="/cv-view" />
+          <div className="text-center">
+            <h1 className="text-3xl roboto-light text-white mb-2 mt-2 animate-slideUp">Editar CV</h1>
+            <p className="text-white/90 text-lg animate-slideUp delay-100">Agregá tu experiencia laboral y educativa</p>
+          </div>
         </div>
       </div>
 
@@ -401,13 +519,9 @@ function EditCV() {
           <h2 className="text-2xl roboto-light text-gray-800 mb-4 flex items-center">
             <span className="text-2xl mr-2">👤</span>Sobre mí
           </h2>
-          <textarea
-            placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none text-base"
-            rows="4"
-          />
+          <textarea placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
+            value={description} onChange={(e) => setDescription(e.target.value)}
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none text-base" rows="4" />
         </div>
 
         {/* ZONAS DE TRABAJO */}
@@ -415,80 +529,57 @@ function EditCV() {
           <h2 className="text-2xl roboto-light text-gray-800 mb-2 flex items-center">
             <span className="text-2xl mr-2">📍</span>Zonas de trabajo
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Indicá en qué zonas ofrecés tus servicios. Podés agregar varios partidos o localidades dentro de una misma provincia.
-          </p>
+          <p className="text-sm text-gray-500 mb-4">Indicá en qué zonas ofrecés tus servicios.</p>
 
           <div className="mb-3">
             <label className="block text-gray-700 font-semibold mb-2 text-sm">Provincia</label>
-            <select
-              value={zonaProvinciaId}
-              onChange={(e) => {
-                const id = e.target.value;
-                const prov = provincias.find(p => p.id === id);
-                setZonaProvinciaId(id);
-                setZonaProvincia(prov?.nombre || '');
-                setZonaSeleccionada('');
-                fetchSegundoNivel(id);
-              }}
-              disabled={loadingProvincias}
-              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base disabled:opacity-50"
-            >
+            <select value={zonaProvinciaId} onChange={(e) => {
+              const id = e.target.value;
+              const prov = provincias.find(p => p.id === id);
+              setZonaProvinciaId(id);
+              setZonaProvincia(prov?.nombre || '');
+              setZonaSeleccionada('');
+              fetchSegundoNivel(id);
+            }} disabled={loadingProvincias}
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base disabled:opacity-50">
               <option value="">{loadingProvincias ? 'Cargando...' : 'Seleccioná una provincia'}</option>
-              {provincias.map(p => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
+              {provincias.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
 
           {zonaProvinciaId && (
             <div className="mb-3">
-              <label className="block text-gray-700 font-semibold mb-2 text-sm">
-                {getSegundoNivelLabel(zonaProvinciaId)}
-              </label>
-              <SearchableSelect
-                options={segundoNivel}
-                value={zonaSeleccionada}
-                onChange={setZonaSeleccionada}
+              <label className="block text-gray-700 font-semibold mb-2 text-sm">{getSegundoNivelLabel(zonaProvinciaId)}</label>
+              <SearchableSelect options={segundoNivel} value={zonaSeleccionada} onChange={setZonaSeleccionada}
                 placeholder={`Seleccioná un ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}`}
                 searchPlaceholder={`Buscar ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}...`}
-                loading={loadingSegundoNivel}
-                focusColor="purple"
-              />
+                loading={loadingSegundoNivel} focusColor="purple" />
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleAddZone}
-            disabled={savingZone || !zonaProvinciaId || !zonaSeleccionada}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-base"
-          >
+          <button type="button" onClick={handleAddZone} disabled={savingZone || !zonaProvinciaId || !zonaSeleccionada}
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-base">
             {savingZone ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Agregando...</> : <><Plus className="w-5 h-5 mr-2" />Agregar zona</>}
           </button>
 
-          {zones.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-2">No hay zonas de trabajo agregadas</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {zones.map(zone => (
-                <div key={zone.id} className="flex items-center gap-2 bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
-                  <span>{zone.zona}, {zone.provincia}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteZone(zone.id)}
-                    disabled={deletingZoneId === zone.id}
-                    className="text-purple-400 hover:text-red-500 transition-colors"
-                  >
-                    {deletingZoneId === zone.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <span className="text-base leading-none">×</span>}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          {zones.length === 0
+            ? <p className="text-gray-400 text-sm text-center py-2">No hay zonas de trabajo agregadas</p>
+            : (
+              <div className="flex flex-wrap gap-2">
+                {zones.map(zone => (
+                  <div key={zone.id} className="flex items-center gap-2 bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
+                    <span>{zone.zona}, {zone.provincia}</span>
+                    <button type="button" onClick={() => handleDeleteZone(zone.id)} disabled={deletingZoneId === zone.id}
+                      className="text-purple-400 hover:text-red-500 transition-colors">
+                      {deletingZoneId === zone.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <span className="text-base leading-none">×</span>}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
 
-        {/* BANNER SIN TRABAJOS ACTIVOS */}
+        {/* BANNERS */}
         {countActiveJobs() === 0 && (
           <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
             <div className="flex items-start gap-3">
@@ -497,13 +588,11 @@ function EditCV() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base roboto-light text-orange-900 mb-1">⚠️ No podés recibir calificaciones todavía</h3>
-                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo (marcado con "Aún trabajo aquí") en tu CV.</p>
+                <p className="text-sm text-orange-800">Necesitás al menos un trabajo activo ("Aún trabajo aquí") en tu CV.</p>
               </div>
             </div>
           </div>
         )}
-
-        {/* BANNER LÍMITE 3 TRABAJOS */}
         {countActiveJobs() >= 3 && (
           <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 shadow-lg mb-4 animate-slideUp">
             <div className="flex items-start gap-3">
@@ -512,7 +601,7 @@ function EditCV() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base roboto-light text-blue-900 mb-1">ℹ️ Límite de trabajos activos alcanzado</h3>
-                <p className="text-sm text-blue-800">Ya tienes 3 trabajos activos. Para agregar otro trabajo activo, primero desactiva uno existente.</p>
+                <p className="text-sm text-blue-800">Ya tenés 3 trabajos activos. Desactivá uno para agregar otro.</p>
               </div>
             </div>
           </div>
@@ -528,65 +617,10 @@ function EditCV() {
               <Plus className="w-5 h-5" />
             </button>
           </div>
-
-          {freelanceJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No hay trabajos autónomos agregados</p>
-          ) : (
-            <div className="space-y-2">
-              {freelanceJobs.map((job, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div onClick={() => setExpandedFreelance(expandedFreelance === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      {expandedFreelance === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                      <div>
-                        <p className="font-semibold text-gray-800 text-base">{job.position || 'Sin título'} {job.company && `- ${job.company}`}</p>
-                        <p className="text-sm text-gray-500">{job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}{job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {expandedFreelance === index && (
-                    <div className="p-4 pt-0 border-t border-gray-100">
-                      {job.hasRatings && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
-                          <Lock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                          <div className="text-sm">
-                            <p className="font-semibold text-orange-800 mb-1">Campos bloqueados</p>
-                            <p className="text-orange-700">Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar.</p>
-                          </div>
-                        </div>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input type="text" placeholder="Título profesional" value={job.position} onChange={(e) => updateFreelanceJob(index, 'position', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        <input type="text" placeholder="Autónomo" value={job.company} onChange={(e) => updateFreelanceJob(index, 'company', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                          <input type="date" value={job.startDate} onChange={(e) => updateFreelanceJob(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                          <input type="date" value={job.endDate} onChange={(e) => updateFreelanceJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label className="flex items-center cursor-pointer">
-                          <input type="checkbox" checked={job.currentlyWorking} onChange={(e) => updateFreelanceJob(index, 'currentlyWorking', e.target.checked)} disabled={countActiveJobs() >= 3 && !job.currentlyWorking} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
-                          <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
-                        </label>
-                      </div>
-                      <textarea placeholder="Descripción del proyecto / responsabilidades" value={job.description} onChange={(e) => updateFreelanceJob(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
-                      <button onClick={() => handleSaveWorkExperience(job, true, index)} disabled={savingWorkId === (job.workHistoryId || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
-                        {savingWorkId === (job.workHistoryId || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar trabajo</>}
-                      </button>
-                      <button onClick={() => confirmDeleteFreelanceJob(index)} disabled={deletingWorkId === job.workHistoryId} className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
-                        {deletingWorkId === job.workHistoryId ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</> : <><Trash2 className="w-5 h-5 mr-2" />Eliminar trabajo</>}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {freelanceJobs.length === 0
+            ? <p className="text-gray-500 text-center py-4">No hay trabajos autónomos agregados</p>
+            : <div className="space-y-2">{freelanceJobs.map((job, index) => renderWorkForm(job, index, true))}</div>
+          }
         </div>
 
         {/* TRABAJO EN RELACIÓN DE DEPENDENCIA */}
@@ -599,69 +633,10 @@ function EditCV() {
               <Plus className="w-5 h-5" />
             </button>
           </div>
-
-          {employeeJobs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No hay trabajos en relación de dependencia agregados</p>
-          ) : (
-            <div className="space-y-2">
-              {employeeJobs.map((job, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div onClick={() => setExpandedEmployee(expandedEmployee === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      {expandedEmployee === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                      <div>
-                        <p className="font-semibold text-gray-800 text-base">{job.position || 'Sin título'} {job.company && `- ${job.company}`}</p>
-                        <p className="text-sm text-gray-500">{job.currentlyWorking ? 'Actual' : job.endDate ? 'Finalizado' : 'Sin fechas'}{job.hasRatings && ` • ${job.totalRatings} calificación${job.totalRatings !== 1 ? 'es' : ''}`}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {expandedEmployee === index && (
-                    <div className="p-4 pt-0 border-t border-gray-100">
-                      {job.hasRatings && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
-                          <Lock className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                          <div className="text-sm">
-                            <p className="font-semibold text-orange-800 mb-1">Campos bloqueados</p>
-                            <p className="text-orange-700">Este trabajo ya tiene calificaciones asociadas. El puesto y la empresa no se pueden modificar para mantener la integridad de las calificaciones recibidas.</p>
-                          </div>
-                        </div>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input type="text" placeholder="Empresa" value={job.company} onChange={(e) => updateEmployeeJob(index, 'company', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        <input type="text" placeholder="Puesto" value={job.position} onChange={(e) => updateEmployeeJob(index, 'position', e.target.value)} disabled={job.hasRatings} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                          <input type="date" value={job.startDate} onChange={(e) => updateEmployeeJob(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                          <input type="date" value={job.endDate} onChange={(e) => updateEmployeeJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label className="flex items-center cursor-pointer">
-                          <input type="checkbox" checked={job.currentlyWorking} onChange={(e) => updateEmployeeJob(index, 'currentlyWorking', e.target.checked)} disabled={countActiveJobs() >= 3 && !job.currentlyWorking} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
-                          <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
-                        </label>
-                      </div>
-                      <textarea placeholder="Descripción de responsabilidades" value={job.description} onChange={(e) => updateEmployeeJob(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input type="text" placeholder="Nombre de referencia (opcional)" value={job.referenceName} onChange={(e) => updateEmployeeJob(index, 'referenceName', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        <input type="tel" placeholder="Teléfono de referencia (opcional)" value={job.referencePhone} onChange={(e) => updateEmployeeJob(index, 'referencePhone', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                      </div>
-                      <button onClick={() => handleSaveWorkExperience(job, false, index)} disabled={savingWorkId === (job.workHistoryId || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
-                        {savingWorkId === (job.workHistoryId || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar trabajo</>}
-                      </button>
-                      <button onClick={() => confirmDeleteEmployeeJob(index)} disabled={deletingWorkId === job.workHistoryId} className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
-                        {deletingWorkId === job.workHistoryId ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</> : <><Trash2 className="w-5 h-5 mr-2" />Eliminar trabajo</>}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {employeeJobs.length === 0
+            ? <p className="text-gray-500 text-center py-4">No hay trabajos en relación de dependencia agregados</p>
+            : <div className="space-y-2">{employeeJobs.map((job, index) => renderWorkForm(job, index, false))}</div>
+          }
         </div>
 
         {/* EDUCACIÓN */}
@@ -674,69 +649,71 @@ function EditCV() {
               <Plus className="w-5 h-5" />
             </button>
           </div>
-
-          {education.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No hay experiencia educativa agregada</p>
-          ) : (
-            <div className="space-y-2">
-              {education.map((edu, index) => (
-                <div key={index} className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div onClick={() => setExpandedEducation(expandedEducation === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      {expandedEducation === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
-                      <div>
-                        <p className="font-semibold text-gray-800 text-base">{edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}</p>
-                        <p className="text-sm text-gray-500">{edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {expandedEducation === index && (
-                    <div className="p-4 pt-0 border-t border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <input type="text" placeholder="Institución" value={edu.institution} onChange={(e) => updateEducation(index, 'institution', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        <input type="text" placeholder="Título/Grado" value={edu.degree} onChange={(e) => updateEducation(index, 'degree', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                          <input type="date" value={edu.startDate} onChange={(e) => updateEducation(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                          <input type="date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} disabled={edu.currentlyStudying} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+          {education.length === 0
+            ? <p className="text-gray-500 text-center py-4">No hay experiencia educativa agregada</p>
+            : (
+              <div className="space-y-2">
+                {education.map((edu, index) => {
+                  const key = getEduKey(edu, index);
+                  const isSaving = savingEducationIds.has(key);
+                  const isDeleting = edu.id ? deletingEducationIds.has(edu.id) : false;
+                  return (
+                    <div key={`edu-${index}`} className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                      <div onClick={() => setExpandedEducation(expandedEducation === index ? null : index)} className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          {expandedEducation === index ? <ChevronDown className="w-5 h-5 text-purple-600" /> : <ChevronRight className="w-5 h-5 text-gray-400" />}
+                          <div>
+                            <p className="font-semibold text-gray-800 text-base">{edu.degree || 'Sin título'} {edu.institution && `- ${edu.institution}`}</p>
+                            <p className="text-sm text-gray-500">{edu.currentlyStudying ? 'En curso' : edu.endDate ? 'Finalizado' : 'Sin fechas'}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="mb-3">
-                        <label className="flex items-center cursor-pointer">
-                          <input type="checkbox" checked={edu.currentlyStudying} onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" />
-                          <span className="ml-2 text-base text-gray-700">Actualmente estudio aquí</span>
-                        </label>
-                      </div>
-                      <textarea placeholder="Descripción" value={edu.description} onChange={(e) => updateEducation(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="2" />
-                      <button onClick={() => handleSaveEducation(edu, index)} disabled={savingEducationId === (edu.id || 'new')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
-                        {savingEducationId === (edu.id || 'new') ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar ítem</>}
-                      </button>
-                      <button onClick={() => confirmDeleteEducation(index)} disabled={deletingEducationId === edu.id} className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
-                        {deletingEducationId === edu.id ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</> : <><Trash2 className="w-5 h-5 mr-2" />Eliminar ítem</>}
-                      </button>
+                      {expandedEducation === index && (
+                        <div className="p-4 pt-0 border-t border-gray-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <input type="text" placeholder="Institución" value={edu.institution} onChange={(e) => updateEducation(index, 'institution', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                            <input type="text" placeholder="Título/Grado" value={edu.degree} onChange={(e) => updateEducation(index, 'degree', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
+                              <input type="date" value={edu.startDate} onChange={(e) => updateEducation(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
+                              <input type="date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} disabled={edu.currentlyStudying} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+                            </div>
+                          </div>
+                          <div className="mb-3">
+                            <label className="flex items-center cursor-pointer">
+                              <input type="checkbox" checked={edu.currentlyStudying} onChange={(e) => updateEducation(index, 'currentlyStudying', e.target.checked)} className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" />
+                              <span className="ml-2 text-base text-gray-700">Actualmente estudio aquí</span>
+                            </label>
+                          </div>
+                          <textarea placeholder="Descripción" value={edu.description} onChange={(e) => updateEducation(index, 'description', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="2" />
+                          <button onClick={() => handleSaveEducation(edu, index)} disabled={isSaving}
+                            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-2 text-base">
+                            {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar ítem</>}
+                          </button>
+                          <button onClick={() => confirmDeleteEducation(index)} disabled={isDeleting}
+                            className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
+                            {isDeleting ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</> : <><Trash2 className="w-5 h-5 mr-2" />Eliminar ítem</>}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
         </div>
 
         {/* GUARDAR TODO */}
-        <button onClick={handleSave} disabled={saving} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-lg">
+        <button onClick={handleSave} disabled={saving}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center mb-4 text-lg">
           {saving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Confirmar y guardar todo el CV</>}
         </button>
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button onClick={() => navigate('/professional-dashboard')} className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white" aria-label="Volver al inicio">
-          <Home className="w-7 h-7 text-white" />
-        </button>
-      </div>
+      <HomeButton />
 
       {deleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">

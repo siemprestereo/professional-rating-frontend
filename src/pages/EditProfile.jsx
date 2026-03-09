@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Mail, Phone, MapPin, Save, Trash2, Briefcase, Home } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Save, Trash2, Briefcase } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
 import LoadingScreen from '../components/LoadingScreen';
+import BackButton from '../components/BackButton';
+import HomeButton from '../components/HomeButton';
 import { clearAllAppData, validatePhone } from '../utils/storage';
 import { BACKEND_URL } from '../config';
 import LocationSelector from '../components/LocationSelector';
@@ -28,22 +30,16 @@ function EditProfile() {
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
+  useEffect(() => { loadProfile(); }, []);
 
   const loadProfile = async () => {
     try {
       const savedData = localStorage.getItem('client');
       const token = localStorage.getItem('authToken');
 
-      if (!savedData || !token) {
-        navigate('/client-login');
-        return;
-      }
+      if (!savedData || !token) { navigate('/client-login'); return; }
 
       const localData = JSON.parse(savedData);
-
       setClient(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -51,10 +47,9 @@ function EditProfile() {
       setLocation(localData.location || '');
 
       try {
-        const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+        const response = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (response.ok) {
           const serverData = await response.json();
           setClient(serverData);
@@ -67,18 +62,10 @@ function EditProfile() {
       } catch (fetchError) {
         console.warn('Uso de datos locales por error de red');
       }
-
     } catch (error) {
       console.error('Error al cargar perfil:', error);
-      if (error instanceof SyntaxError) {
-        clearAllAppData();
-        navigate('/client-login');
-        return;
-      }
-      setErrorModal({
-        title: 'Error al cargar perfil',
-        message: 'No se pudieron cargar tus datos.'
-      });
+      if (error instanceof SyntaxError) { clearAllAppData(); navigate('/client-login'); return; }
+      setErrorModal({ title: 'Error al cargar perfil', message: 'No se pudieron cargar tus datos.' });
     } finally {
       setLoading(false);
     }
@@ -95,10 +82,7 @@ function EditProfile() {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ phone, location })
       });
       if (!response.ok) throw new Error('Error al actualizar');
@@ -136,7 +120,10 @@ function EditProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
-      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-8 pb-24 text-center">
+      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 text-center relative">
+        <div className="flex items-start mb-4">
+          <BackButton to="/client-dashboard" />
+        </div>
         <ProfilePictureUpload
           currentPhoto={client?.profilePicture}
           userName={name}
@@ -171,11 +158,7 @@ function EditProfile() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 outline-none" />
             </div>
             <div className="mb-6">
-              <LocationSelector
-                value={location}
-                onChange={setLocation}
-                focusColor="green"
-              />
+              <LocationSelector value={location} onChange={setLocation} focusColor="green" />
             </div>
             <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
@@ -184,7 +167,6 @@ function EditProfile() {
           </form>
         </div>
 
-        {/* Upgrade a Profesional */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-2 border-blue-200">
           <h3 className="text-xl roboto-light text-gray-800 mb-2 flex items-center">
             <Briefcase className="w-6 h-6 mr-2 text-blue-600" /> ¿Sos un profesional?
@@ -195,22 +177,18 @@ function EditProfile() {
           </button>
         </div>
 
-        {/* Borrar Cuenta */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-2 border-red-200">
-          <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center"><Trash2 className="w-6 h-6 mr-2" /> Zona de Peligro</h3>
+          <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center">
+            <Trash2 className="w-6 h-6 mr-2" /> Zona de Peligro
+          </h3>
           <button onClick={() => setShowDeleteModal(true)} className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg">
             Eliminar mi cuenta
           </button>
         </div>
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 pointer-events-none">
-        <button onClick={() => navigate('/client-dashboard')} className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white pointer-events-auto">
-          <Home className="w-7 h-7 text-white" />
-        </button>
-      </div>
+      <HomeButton />
 
-      {/* MODALES */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4">
@@ -227,27 +205,13 @@ function EditProfile() {
         <UpgradeToProfessionalModal
           onClose={() => setShowUpgradeModal(false)}
           onSuccess={(newToken) => {
-            // 1. Guardar Auth básica
             localStorage.setItem('authToken', newToken);
             localStorage.setItem('userType', 'PROFESSIONAL');
-
-            // 2. Crear objeto 'professional' requerido por EditCV
-            const professionalData = {
-              id: client.id,
-              name: client.name,
-              email: client.email,
-              totalRatings: 0,
-              reputationScore: 0
-            };
+            const professionalData = { id: client.id, name: client.name, email: client.email, totalRatings: 0, reputationScore: 0 };
             localStorage.setItem('professional', JSON.stringify(professionalData));
-
-            // 3. Limpiar data de cliente y navegar
             localStorage.removeItem('client');
             setToast({ type: 'success', message: '¡Rol actualizado! Cargando CV...' });
-
-            setTimeout(() => {
-              navigate('/edit-cv');
-            }, 800);
+            setTimeout(() => navigate('/edit-cv'), 800);
           }}
         />
       )}

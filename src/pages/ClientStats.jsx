@@ -1,39 +1,30 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Home, TrendingUp, Award, Calendar } from 'lucide-react';
+import { Star, TrendingUp, Award, Calendar } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import BackButton from '../components/BackButton';
+import HomeButton from '../components/HomeButton';
 import { BADGE_DEFINITIONS, SPECIAL_BADGES } from '../constants/badges';
 import { BACKEND_URL } from '../config';
 
-
 function ClientStats() {
-  const navigate = useNavigate(); 
-  const [client, setClient] = useState(null);
+  const navigate = useNavigate();
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     const token = localStorage.getItem('authToken');
     const savedClient = localStorage.getItem('client');
-    
-    if (!token || !savedClient) {
-      navigate('/client-login');
-      return;
-    }
+    if (!token || !savedClient) { navigate('/client-login'); return; }
 
     try {
       const clientData = JSON.parse(savedClient);
-      setClient(clientData);
-
       const response = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (response.ok) {
         const data = await response.json();
         setRatings(data);
@@ -41,11 +32,7 @@ function ClientStats() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      // Si hay error crítico con el localStorage, limpiar y redirigir
-      if (error instanceof SyntaxError) {
-        localStorage.removeItem('client');
-        navigate('/client-login');
-      }
+      if (error instanceof SyntaxError) { localStorage.removeItem('client'); navigate('/client-login'); }
     } finally {
       setLoading(false);
     }
@@ -53,115 +40,64 @@ function ClientStats() {
 
   const calculateStats = (ratingsData) => {
     if (ratingsData.length === 0) {
-      setStats({
-        total: 0,
-        average: 0,
-        monthlyActivity: [],
-        categoriesCount: 0,
-        withCommentPercentage: 0
-      });
+      setStats({ total: 0, average: 0, monthlyActivity: [], categoriesCount: 0, withCommentPercentage: 0 });
       return;
     }
-
     const total = ratingsData.length;
     const average = ratingsData.reduce((sum, r) => sum + r.score, 0) / total;
-
     const now = new Date();
     const monthlyData = [];
-    
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthName = month.toLocaleDateString('es-AR', { month: 'short' });
-      
       const count = ratingsData.filter(r => {
-        const ratingDate = new Date(r.createdAt);
-        return ratingDate.getMonth() === month.getMonth() && 
-               ratingDate.getFullYear() === month.getFullYear();
+        const d = new Date(r.createdAt);
+        return d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear();
       }).length;
-      
       monthlyData.push({ month: monthName, count });
     }
-
     const categories = new Set(ratingsData.map(r => r.professionalType || 'general'));
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
-    const withCommentPercentage = (withComment / total) * 100;
-
-    setStats({
-      total,
-      average: average,
-      monthlyActivity: monthlyData,
-      categoriesCount: categories.size,
-      withCommentPercentage: Math.round(withCommentPercentage)
-    });
+    setStats({ total, average, monthlyActivity: monthlyData, categoriesCount: categories.size, withCommentPercentage: Math.round((withComment / total) * 100) });
   };
 
-  // Memoizar badges para no recalcular en cada render
   const badges = useMemo(() => {
     if (!stats) return [];
-    
     const earnedBadges = [];
-
-    // Medallas por cantidad (sin duplicados)
     BADGE_DEFINITIONS.forEach(badge => {
       if (stats.total >= badge.threshold) {
         earnedBadges.push({ ...badge, unlocked: true });
       } else {
-        // Solo mostrar la siguiente medalla bloqueada
-        const isNextToUnlock = !earnedBadges.some(b => 
-          b.type === 'quantity' && !b.unlocked
-        );
-        if (isNextToUnlock) {
-          earnedBadges.push({ 
-            ...badge, 
-            unlocked: false,
-            description: `${badge.threshold - stats.total} calificaciones más`
-          });
-        }
+        const isNextToUnlock = !earnedBadges.some(b => b.type === 'quantity' && !b.unlocked);
+        if (isNextToUnlock) earnedBadges.push({ ...badge, unlocked: false, description: `${badge.threshold - stats.total} calificaciones más` });
       }
     });
-
-    // Medallas especiales
     SPECIAL_BADGES.forEach(badge => {
-      if (badge.check(stats)) {
-        earnedBadges.push({ ...badge, unlocked: true, special: true });
-      }
+      if (badge.check(stats)) earnedBadges.push({ ...badge, unlocked: true, special: true });
     });
-
     return earnedBadges;
   }, [stats]);
 
-  const renderStars = (score) => {
-    return [...Array(5)].map((_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
+  const renderStars = (score) => [...Array(5)].map((_, i) => (
+    <Star key={i} className={`w-4 h-4 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+  ));
 
-  if (loading) {
-    return <LoadingScreen gradient="from-green-500 to-teal-600" />;
-  }
+  if (loading) return <LoadingScreen gradient="from-green-500 to-teal-600" />;
 
   const hasNoRatings = ratings.length === 0;
   const hasActivityData = stats && stats.monthlyActivity.length > 0 && stats.total > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 py-8">
+      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
-            📊 Mis Estadísticas
-          </h1>
-          <p className="text-white/90 animate-slideUp delay-100">
-            Tu actividad y tus logros como calificador.
-          </p>
+          <BackButton to="/client-dashboard" />
+          <h1 className="text-3xl roboto-light text-white mb-2 mt-2 animate-slideUp">📊 Mis Estadísticas</h1>
+          <p className="text-white/90 animate-slideUp delay-100">Tu actividad y tus logros como calificador.</p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 -mt-4">
-        {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg animate-slideUp">
             <p className="text-3xl font-bold mb-1">{stats?.total || 0}</p>
@@ -173,39 +109,24 @@ function ClientStats() {
           </div>
         </div>
 
-        {/* Gráfico de Actividad o Mensaje de Bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
           <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
             Actividad (últimos 6 meses)
           </h3>
-          
           {hasActivityData ? (
             <div className="relative h-48 mt-4">
-              {/* Eje Y */}
               <div className="absolute left-0 top-0 bottom-10 w-8 flex flex-col justify-between text-xs text-gray-500">
                 {[...Array(6)].map((_, i) => {
                   const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
-                  const value = Math.ceil(maxCount * (5 - i) / 5);
-                  return <span key={i}>{value}</span>;
+                  return <span key={i}>{Math.ceil(maxCount * (5 - i) / 5)}</span>;
                 })}
               </div>
-
-              {/* Gráfico */}
               <div className="absolute left-10 top-0 right-2 bottom-10">
-                <svg 
-                  className="w-full h-full" 
-                  viewBox="0 0 500 160" 
-                  preserveAspectRatio="none"
-                  role="img"
-                  aria-label="Gráfico de actividad mensual mostrando el número de calificaciones por mes"
-                >
-                  {/* Líneas horizontales de fondo */}
+                <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
                   {[...Array(6)].map((_, i) => (
                     <line key={i} x1="0" y1={i * 32} x2="500" y2={i * 32} stroke="#e5e7eb" strokeWidth="1" />
                   ))}
-
-                  {/* Línea conectando los puntos */}
                   <polyline
                     points={stats.monthlyActivity.map((m, i) => {
                       const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
@@ -213,34 +134,18 @@ function ClientStats() {
                       const y = 10 + ((maxCount - m.count) / maxCount) * 140;
                       return `${x},${y}`;
                     }).join(' ')}
-                    fill="none"
-                    stroke="url(#gradient)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    fill="none" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                   />
-
-                  {/* Puntos en cada mes con tooltip */}
                   {stats.monthlyActivity.map((m, i) => {
                     const maxCount = Math.max(...stats.monthlyActivity.map(m => m.count), 1);
                     const x = (i * 500) / (stats.monthlyActivity.length - 1);
                     const y = 10 + ((maxCount - m.count) / maxCount) * 140;
                     return (
-                      <g key={i}>
-                        <title>{`${m.month}: ${m.count} calificaciones`}</title>
-                        <circle 
-                          cx={x} 
-                          cy={y} 
-                          r="6" 
-                          fill="#10b981" 
-                          stroke="white" 
-                          strokeWidth="2"
-                        />
+                      <g key={i}><title>{`${m.month}: ${m.count} calificaciones`}</title>
+                        <circle cx={x} cy={y} r="6" fill="#10b981" stroke="white" strokeWidth="2" />
                       </g>
                     );
                   })}
-
-                  {/* Gradiente para la línea */}
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="#10b981" />
@@ -249,45 +154,28 @@ function ClientStats() {
                   </defs>
                 </svg>
               </div>
-
-              {/* Eje X - Meses */}
               <div className="absolute left-10 right-2 bottom-0 flex justify-between text-xs text-gray-500">
-                {stats.monthlyActivity.map((m, i) => (
-                  <span key={i} className="capitalize">{m.month}</span>
-                ))}
+                {stats.monthlyActivity.map((m, i) => <span key={i} className="capitalize">{m.month}</span>)}
               </div>
             </div>
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📈</div>
-              <p className="text-gray-600 font-medium mb-2">
-                ¡Empezá a calificar para ver tu actividad!
-              </p>
-              <p className="text-sm text-gray-500">
-                Tu gráfico de actividad aparecerá aquí cuando des tu primera calificación.
-              </p>
+              <p className="text-gray-600 font-medium mb-2">¡Empezá a calificar para ver tu actividad!</p>
+              <p className="text-sm text-gray-500">Tu gráfico aparecerá aquí cuando des tu primera calificación.</p>
             </div>
           )}
         </div>
 
-        {/* Medallas */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Award className="w-5 h-5 mr-2 text-purple-600" />
             Medallas ({badges.filter(b => b.unlocked).length}/{badges.length})
           </h3>
-          
           {badges.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={`border-2 rounded-xl p-4 text-center transition-all ${
-                    badge.unlocked 
-                      ? badge.special ? 'border-purple-300 bg-purple-50' : 'border-green-300 bg-green-50'
-                      : 'border-gray-200 bg-gray-50 opacity-50'
-                  }`}
-                >
+                <div key={badge.id} className={`border-2 rounded-xl p-4 text-center transition-all ${badge.unlocked ? badge.special ? 'border-purple-300 bg-purple-50' : 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50 opacity-50'}`}>
                   <div className="text-4xl mb-2">{badge.icon}</div>
                   <p className="font-bold text-gray-800 text-sm mb-1">{badge.name}</p>
                   <p className="text-xs text-gray-600">{badge.description}</p>
@@ -297,36 +185,23 @@ function ClientStats() {
           ) : (
             <div className="text-center py-8">
               <div className="text-5xl mb-3">🏆</div>
-              <p className="text-gray-600 font-medium mb-1">
-                ¡Desbloqueá tus primeras medallas!
-              </p>
-              <p className="text-sm text-gray-500">
-                Calificá profesionales para ganar insignias y reconocimientos.
-              </p>
+              <p className="text-gray-600 font-medium mb-1">¡Desbloqueá tus primeras medallas!</p>
+              <p className="text-sm text-gray-500">Calificá profesionales para ganar insignias.</p>
             </div>
           )}
         </div>
 
-        {/* Historial Completo */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-250">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-teal-600" />
             Historial de Calificaciones
           </h3>
-          
           {hasNoRatings ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">⭐</div>
-              <p className="text-gray-600 font-medium mb-2">
-                Aún no has dado calificaciones
-              </p>
-              <p className="text-sm text-gray-500 mb-6">
-                Escaneá un código QR o buscá profesionales para empezar a calificar.
-              </p>
-              <button
-                onClick={() => navigate('/client-dashboard')}
-                className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-lg"
-              >
+              <p className="text-gray-600 font-medium mb-2">Aún no has dado calificaciones</p>
+              <p className="text-sm text-gray-500 mb-6">Escaneá un código QR o buscá profesionales para empezar.</p>
+              <button onClick={() => navigate('/client-dashboard')} className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-lg">
                 Ir al Inicio
               </button>
             </div>
@@ -350,12 +225,8 @@ function ClientStats() {
                   </div>
                 ))}
               </div>
-
               {ratings.length > 3 && (
-                <button
-                  onClick={() => navigate('/client-ratings-history')}
-                  className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-3 rounded-xl hover:scale-105 transition-all shadow-lg"
-                >
+                <button onClick={() => navigate('/client-ratings-history')} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold py-3 rounded-xl hover:scale-105 transition-all shadow-lg">
                   Ver todas las calificaciones ({ratings.length})
                 </button>
               )}
@@ -364,14 +235,7 @@ function ClientStats() {
         </div>
       </div>
 
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 animate-slideUp">
-        <button 
-          onClick={() => navigate('/client-dashboard')}
-          className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-2xl border-4 border-white"
-        >
-          <Home className="w-7 h-7 text-white" />
-        </button>
-      </div>
+      <HomeButton />
     </div>
   );
 }
