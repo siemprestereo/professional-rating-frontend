@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart, Edit2, Trash2, Clock } from 'lucide-react';
+import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart, Edit2, Trash2, Clock, X } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Toast from '../components/Toast';
@@ -19,6 +19,7 @@ function ClientDashboard() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -53,24 +54,21 @@ function ClientDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ OPTIMIZACIÓN 1: Una sola petición de ratings + carga paralela con caché
   const loadClientData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     const cachedClient = localStorage.getItem('client');
 
     if (!token) {
-      console.log('No hay token, redirigiendo al login');
       navigate('/client-login');
       setLoading(false);
       return;
     }
 
     try {
-      // ✅ Si hay cliente en caché, cargar perfil y ratings EN PARALELO
       if (cachedClient) {
         const clientData = JSON.parse(cachedClient);
         setClient(clientData);
-        setLoading(false); // ✅ UI visible inmediatamente
+        setLoading(false);
 
         const [profileResponse, ratingsResponse] = await Promise.all([
           fetch(`${BACKEND_URL}/api/auth/me/client`, {
@@ -81,14 +79,12 @@ function ClientDashboard() {
           })
         ]);
 
-        // Actualizar perfil si cambió
         if (profileResponse.ok) {
           const newClientData = await profileResponse.json();
           setClient(newClientData);
           localStorage.setItem('client', JSON.stringify(newClientData));
         }
 
-        // Procesar ratings
         if (ratingsResponse.ok) {
           const allRatings = await ratingsResponse.json();
           processRatings(allRatings);
@@ -100,7 +96,6 @@ function ClientDashboard() {
         setLoadingRatings(false);
 
       } else {
-        // Sin caché: carga secuencial
         const clientResponse = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -115,12 +110,10 @@ function ClientDashboard() {
         }
 
         const clientData = await clientResponse.json();
-        console.log('✅ Datos del cliente:', clientData);
         setClient(clientData);
         localStorage.setItem('client', JSON.stringify(clientData));
-        setLoading(false); // ✅ UI visible
+        setLoading(false);
 
-        // Cargar ratings
         const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -145,15 +138,10 @@ function ClientDashboard() {
     }
   }, [BACKEND_URL, navigate]);
 
-  // ✅ Función auxiliar para procesar ratings una sola vez
   const processRatings = useCallback((allRatings) => {
-    console.log(`📊 Total de calificaciones: ${allRatings.length}`);
-
-    // Ordenar una sola vez
     const sorted = allRatings.sort((a, b) =>
       new Date(b.createdAt) - new Date(a.createdAt)
     );
-
     setMyRatings(sorted);
     calculateQuickStats(sorted);
     calculateTopBadges(sorted);
@@ -164,16 +152,10 @@ function ClientDashboard() {
       setStats({ total: 0, average: 0, categories: 0 });
       return;
     }
-
     const total = ratingsData.length;
     const average = ratingsData.reduce((sum, r) => sum + r.score, 0) / total;
     const categories = new Set(ratingsData.map(r => r.professionalType || 'general')).size;
-
-    setStats({
-      total,
-      average: average.toFixed(1),
-      categories
-    });
+    setStats({ total, average: average.toFixed(1), categories });
   }, []);
 
   const calculateTopBadges = useCallback((ratingsData) => {
@@ -189,15 +171,10 @@ function ClientDashboard() {
 
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
     const commentPercentage = total > 0 ? (withComment / total) * 100 : 0;
-
-    if (commentPercentage >= 80) {
-      badges.push({ icon: '💬', name: 'Comunicador' });
-    }
+    if (commentPercentage >= 80) badges.push({ icon: '💬', name: 'Comunicador' });
 
     const average = total > 0 ? ratingsData.reduce((sum, r) => sum + r.score, 0) / total : 0;
-    if (average >= 4.5) {
-      badges.push({ icon: '🌟', name: 'Generoso' });
-    }
+    if (average >= 4.5) badges.push({ icon: '🌟', name: 'Generoso' });
 
     setTopBadges(badges.slice(0, 3));
   }, []);
@@ -214,22 +191,16 @@ function ClientDashboard() {
   }, [navigate]);
 
   const handleDeleteClick = useCallback((rating) => {
-    setDeleteModal({
-      ratingId: rating.id,
-      professionalName: rating.professionalName
-    });
+    setDeleteModal({ ratingId: rating.id, professionalName: rating.professionalName });
   }, []);
 
-  // ✅ OPTIMIZACIÓN 3: Eliminación optimista (UI instantánea)
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteModal) return;
 
     const ratingIdToDelete = deleteModal.ratingId;
 
-    // ✅ Optimistic UI: eliminar inmediatamente de la interfaz
     setMyRatings(prev => {
       const updated = prev.filter(r => r.id !== ratingIdToDelete);
-      // Recalcular stats con la nueva lista
       calculateQuickStats(updated);
       calculateTopBadges(updated);
       return updated;
@@ -239,21 +210,10 @@ function ClientDashboard() {
 
     try {
       await api.deleteRating(ratingIdToDelete);
-
-      setToast({
-        type: 'success',
-        message: 'Calificación eliminada exitosamente'
-      });
-
+      setToast({ type: 'success', message: 'Calificación eliminada exitosamente' });
     } catch (error) {
       console.error('Error al eliminar:', error);
-
-      // ✅ Rollback: recargar si falla
-      setToast({
-        type: 'error',
-        message: error.response?.data?.message || 'Error al eliminar la calificación'
-      });
-
+      setToast({ type: 'error', message: error.response?.data?.message || 'Error al eliminar la calificación' });
       loadClientData();
     }
   }, [deleteModal, calculateQuickStats, calculateTopBadges, loadClientData]);
@@ -261,59 +221,61 @@ function ClientDashboard() {
   const getTimeRemaining = useCallback((createdAt) => {
     try {
       const now = Date.now();
-
       let dateString = createdAt;
       if (typeof createdAt === 'string' && createdAt.includes('T') && !createdAt.includes('Z') && !createdAt.includes('+')) {
         dateString = createdAt + 'Z';
       }
-
       const created = new Date(dateString).getTime();
-
       if (isNaN(created)) return null;
-
       const diffMinutes = Math.floor((now - created) / (1000 * 60));
-
       if (diffMinutes >= 30 || diffMinutes < 0) return null;
-
-      const remainingMinutes = 30 - diffMinutes;
-      return `${remainingMinutes} min`;
-
+      return `${30 - diffMinutes} min`;
     } catch (error) {
-      console.error('Error calculando tiempo:', error);
       return null;
     }
   }, []);
 
   const renderStars = useCallback((score) => {
     return [...Array(5)].map((_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-      />
+      <Star key={i} className={`w-4 h-4 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
     ));
   }, []);
 
-  // ✅ Memoizar valores derivados
   const firstName = useMemo(() =>
     client?.name ? client.name.trim().split(' ')[0] : 'Usuario',
     [client?.name]
   );
 
-  const recentRatings = useMemo(() =>
-    myRatings.slice(0, 3),
-    [myRatings]
-  );
+  const recentRatings = useMemo(() => myRatings.slice(0, 3), [myRatings]);
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!client) {
-    return null;
-  }
+  if (loading) return <LoadingScreen />;
+  if (!client) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
+
+      {/* Modal foto grande */}
+      {showPhotoModal && client.profilePicture && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          onClick={() => setShowPhotoModal(false)}
+        >
+          <div className="relative" onClick={e => e.stopPropagation()}>
+            <img
+              src={client.profilePicture}
+              alt="Foto de perfil"
+              className="w-72 h-72 rounded-full object-cover shadow-2xl border-4 border-white"
+            />
+            <button
+              onClick={() => setShowPhotoModal(false)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg"
+            >
+              <X className="w-4 h-4 text-gray-700" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
@@ -339,10 +301,7 @@ function ClientDashboard() {
               <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
                 <div className="py-2">
                   <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      navigate('/edit-profile');
-                    }}
+                    onClick={() => { setShowUserMenu(false); navigate('/edit-profile'); }}
                     className="w-full px-4 py-3 text-left text-gray-700 hover:bg-green-50 transition-colors flex items-center gap-3"
                   >
                     <User className="w-5 h-5 text-green-600" />
@@ -350,10 +309,7 @@ function ClientDashboard() {
                   </button>
 
                   <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      navigate('/client-stats');
-                    }}
+                    onClick={() => { setShowUserMenu(false); navigate('/client-stats'); }}
                     className="w-full px-4 py-3 text-left text-gray-700 hover:bg-teal-50 transition-colors flex items-center gap-3"
                   >
                     <BarChart3 className="w-5 h-5 text-teal-600" />
@@ -376,7 +332,10 @@ function ClientDashboard() {
         </div>
 
         <div className="text-center">
-          <div className="w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-white flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn border-4 border-white shadow-lg">
+          <div
+            className={`w-20 h-20 rounded-full mx-auto mb-3 overflow-hidden bg-white flex items-center justify-center text-3xl font-bold text-teal-600 animate-scaleIn border-4 border-white shadow-lg ${client.profilePicture ? 'cursor-pointer active:scale-95 transition-transform' : ''}`}
+            onClick={() => client.profilePicture && setShowPhotoModal(true)}
+          >
             {client.profilePicture
               ? <img src={client.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
               : (client.name ? client.name.charAt(0) : 'U')
@@ -393,7 +352,6 @@ function ClientDashboard() {
       </div>
 
       <div className="px-4 -mt-16">
-        {/* Botones principales */}
         <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
           <button
             onClick={() => navigate('/search')}
@@ -412,7 +370,6 @@ function ClientDashboard() {
           </button>
         </div>
 
-        {/* ✅ OPTIMIZACIÓN 2: Skeleton mientras carga ratings */}
         {loadingRatings ? (
           <div className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp delay-100 animate-pulse">
             <div className="flex items-center justify-around">
@@ -460,17 +417,11 @@ function ClientDashboard() {
           </div>
         )}
 
-        {/* Mensaje de bienvenida */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-150">
-          <h3 className="text-xl roboto-light text-gray-800 mb-2">
-            ¡Hola, {firstName}! 👋
-          </h3>
-          <p className="text-gray-600 text-base">
-            Para calificar a un profesional, pídele que te muestre su código QR.
-          </p>
+          <h3 className="text-xl roboto-light text-gray-800 mb-2">¡Hola, {firstName}! 👋</h3>
+          <p className="text-gray-600 text-base">Para calificar a un profesional, pídele que te muestre su código QR.</p>
         </div>
 
-        {/* Calificaciones Recientes */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-200">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl roboto-light text-gray-800 flex items-center">
@@ -478,10 +429,7 @@ function ClientDashboard() {
               Calificaciones recientes
             </h3>
             {myRatings.length > 3 && (
-              <button
-                onClick={() => navigate('/client-ratings-history')}
-                className="text-teal-600 text-sm font-semibold hover:text-teal-700"
-              >
+              <button onClick={() => navigate('/client-ratings-history')} className="text-teal-600 text-sm font-semibold hover:text-teal-700">
                 Ver todas →
               </button>
             )}
@@ -490,12 +438,8 @@ function ClientDashboard() {
           {myRatings.length === 0 && !loadingRatings ? (
             <div className="text-center py-8">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4 text-base">
-                Aún no has calificado a ningún profesional
-              </p>
-              <p className="text-sm text-gray-400">
-                Escaneá un código QR para comenzar
-              </p>
+              <p className="text-gray-500 mb-4 text-base">Aún no has calificado a ningún profesional</p>
+              <p className="text-sm text-gray-400">Escaneá un código QR para comenzar</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -506,10 +450,7 @@ function ClientDashboard() {
                 return (
                   <div
                     key={rating.id}
-                    className={`rounded-xl p-4 hover:shadow-md transition-all ${canEdit && timeRemaining
-                      ? 'border-2 border-blue-400 bg-blue-50/30'
-                      : 'border border-gray-100'
-                      }`}
+                    className={`rounded-xl p-4 hover:shadow-md transition-all ${canEdit && timeRemaining ? 'border-2 border-blue-400 bg-blue-50/30' : 'border border-gray-100'}`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
@@ -528,11 +469,7 @@ function ClientDashboard() {
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center text-xs text-gray-400">
                         <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
-                        {new Date(rating.createdAt).toLocaleDateString('es-AR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
+                        {new Date(rating.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </div>
 
                       {canEdit && timeRemaining && (
@@ -541,18 +478,10 @@ function ClientDashboard() {
                             <Clock className="w-3 h-3" />
                             <span>{timeRemaining}</span>
                           </div>
-                          <button
-                            onClick={() => handleEditRating(rating)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                            title="Editar calificación"
-                          >
+                          <button onClick={() => handleEditRating(rating)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors">
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteClick(rating)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                            title="Eliminar calificación"
-                          >
+                          <button onClick={() => handleDeleteClick(rating)} className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -573,13 +502,7 @@ function ClientDashboard() {
         professionalName={deleteModal?.professionalName}
       />
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
