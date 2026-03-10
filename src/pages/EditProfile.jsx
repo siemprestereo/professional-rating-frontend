@@ -39,7 +39,15 @@ function EditProfile() {
 
       if (!savedData || !token) { navigate('/client-login'); return; }
 
-      const localData = JSON.parse(savedData);
+      let localData;
+      try {
+        localData = JSON.parse(savedData);
+      } catch {
+        localStorage.removeItem('client');
+        navigate('/client-login');
+        return;
+      }
+
       setClient(localData);
       setName(localData.name || '');
       setEmail(localData.email || '');
@@ -59,7 +67,7 @@ function EditProfile() {
           setLocation(serverData.location || '');
           localStorage.setItem('client', JSON.stringify(serverData));
         }
-      } catch (fetchError) {
+      } catch {
         console.warn('Uso de datos locales por error de red');
       }
     } catch (error) {
@@ -101,10 +109,11 @@ function EditProfile() {
     setDeleting(true);
     try {
       const token = localStorage.getItem('authToken');
-      await fetch(`${BACKEND_URL}/api/auth/delete-account/${client.id}`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/delete-account/${client.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!response.ok) throw new Error('Error al eliminar cuenta');
       clearAllAppData();
       setToast({ type: 'success', message: 'Cuenta eliminada' });
       setTimeout(() => navigate('/'), 2000);
@@ -120,7 +129,7 @@ function EditProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
-      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 text-center relative">
+      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-10 text-center relative">
         <div className="flex items-start mb-4">
           <BackButton to="/client-dashboard" />
         </div>
@@ -136,33 +145,37 @@ function EditProfile() {
         <h1 className="text-3xl roboto-light text-white mb-2 mt-3">Editar Perfil</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-16">
+      <div className="max-w-4xl mx-auto px-4 -mt-6">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <form onSubmit={handleSave}>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
                 <User className="w-5 h-5 mr-2 text-teal-600" /> Nombre
               </label>
-              <input type="text" value={name} disabled className="w-full border-2 bg-gray-50 rounded-2xl px-4 py-3 text-gray-500" />
+              <input type="text" value={name} disabled className="w-full border-2 bg-gray-50 rounded-2xl px-4 py-3 text-gray-500 cursor-not-allowed" />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
                 <Mail className="w-5 h-5 mr-2 text-teal-600" /> Email
               </label>
-              <input type="email" value={email} disabled className="w-full border-2 bg-gray-50 rounded-2xl px-4 py-3 text-gray-500" />
+              <input type="email" value={email} disabled className="w-full border-2 bg-gray-50 rounded-2xl px-4 py-3 text-gray-500 cursor-not-allowed" />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center">
                 <Phone className="w-5 h-5 mr-2 text-teal-600" /> Teléfono
               </label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 outline-none" />
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all" />
             </div>
             <div className="mb-6">
               <LocationSelector value={location} onChange={setLocation} focusColor="green" />
             </div>
-            <button type="submit" disabled={saving} className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg">
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-              Guardar Cambios
+            <button type="submit" disabled={saving}
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg disabled:opacity-50 hover:scale-105 transition-all">
+              {saving
+                ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</>
+                : <><Save className="w-5 h-5 mr-2" />Guardar Cambios</>
+              }
             </button>
           </form>
         </div>
@@ -172,7 +185,8 @@ function EditProfile() {
             <Briefcase className="w-6 h-6 mr-2 text-blue-600" /> ¿Sos un profesional?
           </h3>
           <p className="text-gray-600 mb-4">Convertite en Profesional para recibir calificaciones.</p>
-          <button onClick={() => setShowUpgradeModal(true)} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl">
+          <button onClick={() => setShowUpgradeModal(true)}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all">
             Convertirme en Profesional
           </button>
         </div>
@@ -181,7 +195,11 @@ function EditProfile() {
           <h3 className="text-xl roboto-light text-red-600 mb-2 flex items-center">
             <Trash2 className="w-6 h-6 mr-2" /> Zona de Peligro
           </h3>
-          <button onClick={() => setShowDeleteModal(true)} className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg">
+          <p className="text-gray-600 mb-4 text-base">
+            Una vez eliminada tu cuenta, no podrás recuperar tus datos. <strong>No se puede deshacer.</strong>
+          </p>
+          <button onClick={() => setShowDeleteModal(true)}
+            className="w-full bg-red-500 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-600 transition-all">
             Eliminar mi cuenta
           </button>
         </div>
@@ -190,12 +208,24 @@ function EditProfile() {
       <HomeButton />
 
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl mb-4">¿Eliminar cuenta?</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 animate-scaleIn">
+            <h2 className="text-2xl roboto-light text-gray-800 mb-4">¿Eliminar cuenta?</h2>
+            <p className="text-gray-600 mb-6 text-base">
+              Esta acción es permanente y eliminará todos tus datos. <strong>No se puede deshacer.</strong>
+            </p>
             <div className="flex gap-4">
-              <button onClick={() => setShowDeleteModal(false)} className="flex-1 bg-gray-200 py-3 rounded-2xl">Cancelar</button>
-              <button onClick={handleDeleteAccount} className="flex-1 bg-red-500 text-white py-3 rounded-2xl">Sí, eliminar</button>
+              <button onClick={() => setShowDeleteModal(false)}
+                className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-2xl hover:bg-gray-300 transition-all">
+                Cancelar
+              </button>
+              <button onClick={handleDeleteAccount} disabled={deleting}
+                className="flex-1 bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 disabled:opacity-50 transition-all">
+                {deleting
+                  ? <span className="flex items-center justify-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" />Eliminando...</span>
+                  : 'Sí, eliminar'
+                }
+              </button>
             </div>
           </div>
         </div>
