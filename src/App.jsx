@@ -26,6 +26,7 @@ import CompareProfessionals from './pages/CompareProfessionals';
 import ClientRatingsHistory from './pages/ClientRatingsHistory';
 import EditRatingForm from './pages/EditRatingForm';
 import NetworkStatus from './components/NetworkStatus';
+import AcceptTerms from './pages/AcceptTerms';
 
 function App() {
   return (
@@ -36,10 +37,10 @@ function App() {
         <Routes>
           {/* Rutas públicas */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/terms" element={<AcceptTerms />} />
 
-          {/* CAMBIO: Ahora /professional/:professionalId usa PublicCvView */}
           <Route path="/professional/:professionalId" element={<PublicCvView />} />
-
+          <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
           <Route path="/rate/:code" element={<QRResolve />} />
           <Route path="/rate-professional/:professionalId" element={<RatingForm />} />
           <Route path="/search" element={<SearchProfessionals />} />
@@ -48,105 +49,28 @@ function App() {
           <Route path="/client-login" element={<ClientLogin />} />
           <Route path="/client-register" element={<ClientRegister />} />
           <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
-
-          {/* CV PÚBLICO - Para compartir (sin login) - RUTA ALTERNATIVA */}
-          <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
-
-          {/* RATINGS HISTORY PÚBLICO - Cuando viene workHistoryId (sin login) */}
           <Route path="/ratings-history" element={<RatingsHistory />} />
 
-          {/* Rutas protegidas -- PROFESIONALES */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <ProfessionalDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/professional-dashboard"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <ProfessionalDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/edit-cv"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <EditCV />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stats"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <Stats />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-profile"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <MyProfile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/edit-profile-professional"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <EditProfileProfessional />
-              </ProtectedRoute>
-            }
-          />
+          {/* Rutas protegidas — PROFESIONALES */}
+          <Route path="/dashboard" element={<ProtectedRoute userType="PROFESSIONAL"><ProfessionalDashboard /></ProtectedRoute>} />
+          <Route path="/professional-dashboard" element={<ProtectedRoute userType="PROFESSIONAL"><ProfessionalDashboard /></ProtectedRoute>} />
+          <Route path="/edit-cv" element={<ProtectedRoute userType="PROFESSIONAL"><EditCV /></ProtectedRoute>} />
+          <Route path="/stats" element={<ProtectedRoute userType="PROFESSIONAL"><Stats /></ProtectedRoute>} />
+          <Route path="/my-profile" element={<ProtectedRoute userType="PROFESSIONAL"><MyProfile /></ProtectedRoute>} />
+          <Route path="/edit-profile-professional" element={<ProtectedRoute userType="PROFESSIONAL"><EditProfileProfessional /></ProtectedRoute>} />
+          <Route path="/cv-view" element={<ProtectedRoute userType="PROFESSIONAL"><CvView /></ProtectedRoute>} />
 
-          {/* MI CV - Requiere login, muestra el CV del usuario logueado CON botones de edición */}
-          <Route
-            path="/cv-view"
-            element={
-              <ProtectedRoute userType="PROFESSIONAL">
-                <CvView />
-              </ProtectedRoute>
-            }
-          />
+          {/* Rutas protegidas — CLIENTES */}
+          <Route path="/client-dashboard" element={<ProtectedRoute userType="CLIENT"><ClientDashboard /></ProtectedRoute>} />
+          <Route path="/client-stats" element={<ProtectedRoute userType="CLIENT"><ClientStats /></ProtectedRoute>} />
+          <Route path="/edit-profile" element={<ProtectedRoute userType="CLIENT"><EditProfile /></ProtectedRoute>} />
 
-          {/* Rutas protegidas - CLIENTES */}
-          <Route
-            path="/client-dashboard"
-            element={
-              <ProtectedRoute userType="CLIENT">
-                <ClientDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/client-stats"
-            element={
-              <ProtectedRoute userType="CLIENT">
-                <ClientStats />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/edit-profile"
-            element={
-              <ProtectedRoute userType="CLIENT">
-                <EditProfile />
-              </ProtectedRoute>
-            }
-          />
-
+          {/* Rutas mixtas */}
           <Route path="/edit-rating/:ratingId" element={<EditRatingForm />} />
           <Route path="/saved-professionals" element={<SavedProfessionals />} />
           <Route path="/compare-professionals" element={<CompareProfessionals />} />
           <Route path="/client-ratings-history" element={<ClientRatingsHistory />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

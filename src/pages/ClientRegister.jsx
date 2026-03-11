@@ -18,6 +18,7 @@ function ClientRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -45,17 +46,16 @@ function ClientRegister() {
         saveAuthData('CLIENT', data.token, {
           id: data.id,
           email: data.email,
-          name: data.name
+          name: data.name,
+          termsAccepted: data.data?.termsAccepted ?? false
         });
 
-        if (data.userType === 'CLIENT') {
-          setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
-          setTimeout(() => {
-            handlePostLoginRedirect('/client-dashboard', navigate, true);
-          }, 300);
-        } else {
-          handlePostLoginRedirect('/professional-dashboard', navigate, true);
-        }
+        const destination = data.data?.termsAccepted === false
+          ? '/accept-terms'
+          : '/client-dashboard';
+
+        setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
+        setTimeout(() => navigate(destination, { replace: true }), 300);
       });
     }
   }, [searchParams, navigate]);
@@ -69,13 +69,18 @@ function ClientRegister() {
 
     const formattedName = formatName(name);
 
+    if (!termsAccepted) {
+      setToast({ type: 'error', message: 'Debés aceptar los Términos y Condiciones para registrarte' });
+      return;
+    }
+
     if (password !== confirmPassword) {
       setToast({ type: 'error', message: 'Las contraseñas no coinciden' });
       return;
     }
 
     if (password.length < 8) {
-      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)' });
+      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres' });
       return;
     }
 
@@ -95,17 +100,21 @@ function ClientRegister() {
 
       const data = await response.json();
 
+      // Marcar términos en backend
+      await fetch(`${BACKEND_URL}/api/auth/accept-terms`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${data.token}` }
+      });
+
       saveAuthData('CLIENT', data.token, {
         id: data.id,
         email: data.email,
-        name: data.name
+        name: data.name,
+        termsAccepted: true
       });
 
       setToast({ type: 'success', message: '¡Registro exitoso!' });
-
-      setTimeout(() => {
-        handlePostLoginRedirect('/client-dashboard', navigate, true);
-      }, 300);
+      setTimeout(() => handlePostLoginRedirect('/client-dashboard', navigate, true), 300);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -133,12 +142,8 @@ function ClientRegister() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
             <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">
-            Registro Clientes
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Creá tu cuenta para calificar profesionales
-          </p>
+          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">Registro Clientes</h1>
+          <p className="text-sm sm:text-base text-gray-600">Creá tu cuenta para calificar profesionales</p>
         </div>
 
         <button
@@ -166,139 +171,105 @@ function ClientRegister() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Nombre y apellido
-            </label>
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Nombre y apellido</label>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={handleNameBlur}
-              placeholder="Juan Pérez"
-              autoComplete="name"
-              required
+              type="text" value={name} onChange={(e) => setName(e.target.value)} onBlur={handleNameBlur}
+              placeholder="Juan Pérez" autoComplete="name" required
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
             />
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Email
-            </label>
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Email</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com"
-              autoComplete="email"
-              required
+              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com" autoComplete="email" required
               className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
             />
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <LocationSelector
-              value={location}
-              onChange={setLocation}
-              focusColor="green"
-            />
+            <LocationSelector value={location} onChange={setLocation} focusColor="green" />
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Password
-            </label>
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Password</label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
+                type={showPassword ? "text" : "password"} value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)"
-                autoComplete="new-password"
-                required
-                minLength={6}
+                placeholder="Mínimo 8 caracteres" autoComplete="new-password" required minLength={6}
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)</p>
           </div>
 
-          <div className="mb-4 sm:mb-6">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Confirmar Password
-            </label>
+          <div className="mb-4 sm:mb-5">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Confirmar Password</label>
             <div className="relative">
               <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
+                type={showConfirmPassword ? "text" : "password"} value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repetí tu password"
-                autoComplete="new-password"
-                required
+                placeholder="Repetí tu password" autoComplete="new-password" required
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 sm:py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-base sm:text-lg"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Creando cuenta...
-              </span>
-            ) : (
-              'Crear Cuenta'
-            )}
+          {/* Checkbox T&C */}
+          <label className="flex items-start gap-3 cursor-pointer mb-5 group">
+            <div className="relative mt-0.5 flex-shrink-0">
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="sr-only" />
+              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                termsAccepted ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white group-hover:border-gray-400'
+              }`}>
+                {termsAccepted && (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-gray-600 text-sm leading-relaxed">
+              Leí y acepto los{' '}
+              <button type="button" onClick={() => navigate('/accept-terms')}
+                className="text-green-600 font-semibold hover:underline">
+                Términos y Condiciones
+              </button>
+            </span>
+          </label>
+
+          <button type="submit" disabled={loading || !termsAccepted}
+            className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 sm:py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all text-base sm:text-lg">
+            {loading
+              ? <span className="flex items-center justify-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" />Creando cuenta...</span>
+              : 'Crear Cuenta'
+            }
           </button>
         </form>
 
         <div className="mt-4 sm:mt-6 text-center">
           <p className="text-gray-600 text-sm sm:text-base">
             ¿Ya tenés cuenta?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/client-login')}
-              className="text-green-600 font-semibold hover:text-green-700"
-            >
+            <button type="button" onClick={() => navigate('/client-login')}
+              className="text-green-600 font-semibold hover:text-green-700">
               Iniciá sesión
             </button>
           </p>
         </div>
       </div>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
-      {errorModal && (
-        <ErrorModal
-          title={errorModal.title}
-          message={errorModal.message}
-          onClose={() => setErrorModal(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {errorModal && <ErrorModal title={errorModal.title} message={errorModal.message} onClose={() => setErrorModal(null)} />}
     </div>
   );
 }

@@ -20,12 +20,11 @@ function ProfessionalRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
   const [location, setLocation] = useState('');
 
-
-  // Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
 
@@ -38,35 +37,32 @@ function ProfessionalRegister() {
     }
 
     const code = searchParams.get('code');
-
     if (code) {
-      // Limpiar la URL inmediatamente
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Intercambiar código por JWT
       exchangeOAuthCode(code).then((data) => {
         if (!data) {
           setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
           return;
         }
 
-        // Guardar datos
         saveAuthData('PROFESSIONAL', data.token, {
           id: data.id,
           email: data.email,
-          name: data.name
+          name: data.name,
+          termsAccepted: data.data?.termsAccepted ?? false
         });
 
-        // Siempre redirigir a edit-cv para que complete su perfil (incluyendo profesión)
+        const destination = data.data?.termsAccepted === false
+          ? '/accept-terms'
+          : '/edit-cv';
+
         setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
-        setTimeout(() => {
-          navigate('/edit-cv', { replace: true });
-        }, 300);
+        setTimeout(() => navigate(destination, { replace: true }), 300);
       });
     }
   }, [searchParams, navigate]);
 
-  // Aplicar formatName solo al salir del campo
   const handleNameBlur = () => {
     setName(formatName(name));
   };
@@ -74,12 +70,15 @@ function ProfessionalRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Formatear nombre antes de enviar
     const formattedName = formatName(name);
 
-    // Validaciones
     if (!professionType) {
       setToast({ type: 'error', message: 'Por favor seleccioná tu profesión' });
+      return;
+    }
+
+    if (!termsAccepted) {
+      setToast({ type: 'error', message: 'Debés aceptar los Términos y Condiciones para registrarte' });
       return;
     }
 
@@ -89,7 +88,7 @@ function ProfessionalRegister() {
     }
 
     if (password.length < 8) {
-      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)' });
+      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres' });
       return;
     }
 
@@ -100,11 +99,8 @@ function ProfessionalRegister() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formattedName,
-          email,
-          password,
-          professionType,
-          professionalTitle: professionalTitle || null,
+          name: formattedName, email, password,
+          professionType, professionalTitle: professionalTitle || null,
           location: location || null
         })
       });
@@ -116,21 +112,24 @@ function ProfessionalRegister() {
 
       const data = await response.json();
 
-      // Guardar con función centralizada
+      // Marcar términos en backend
+      await fetch(`${BACKEND_URL}/api/auth/accept-terms`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${data.token}` }
+      });
+
       saveAuthData('PROFESSIONAL', data.token, {
         id: data.id,
         email: data.email,
         name: data.name,
         professionType: data.professionType,
         totalRatings: data.totalRatings || 0,
-        reputationScore: data.reputationScore || 0
+        reputationScore: data.reputationScore || 0,
+        termsAccepted: true
       });
 
       setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
-
-      setTimeout(() => {
-        navigate('/edit-cv');
-      }, 300);
+      setTimeout(() => navigate('/edit-cv'), 300);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -145,11 +144,8 @@ function ProfessionalRegister() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full animate-scaleIn">
-        <button
-          type="button"
-          onClick={() => navigate('/professional-login')}
-          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base"
-        >
+        <button type="button" onClick={() => navigate('/professional-login')}
+          className="text-gray-600 mb-3 sm:mb-4 flex items-center hover:text-gray-800 transition-colors text-base">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Volver al login
         </button>
@@ -158,20 +154,12 @@ function ProfessionalRegister() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
             <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">
-            Registro Profesionales
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Creá tu perfil profesional
-          </p>
+          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">Registro Profesionales</h1>
+          <p className="text-sm sm:text-base text-gray-600">Creá tu perfil profesional</p>
         </div>
 
-        {/* Botón de Google */}
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base"
-        >
+        <button type="button" onClick={handleGoogleLogin}
+          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-semibold py-2.5 sm:py-3 rounded-2xl mb-3 sm:mb-4 flex items-center justify-center hover:bg-gray-50 transition-all hover-lift text-sm sm:text-base">
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -192,172 +180,117 @@ function ProfessionalRegister() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Nombre y apellido
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={handleNameBlur}
-              placeholder="Juan Pérez"
-              autoComplete="name"
-              required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-            />
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Nombre y apellido</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} onBlur={handleNameBlur}
+              placeholder="Juan Pérez" autoComplete="name" required
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base" />
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com"
-              autoComplete="email"
-              required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-            />
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com" autoComplete="email" required
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base" />
           </div>
 
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 flex items-center text-sm sm:text-base">
-              <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
-              Tipo de profesión *
+              <Briefcase className="w-5 h-5 mr-2 text-purple-600" />Tipo de profesión *
             </label>
-            <select
-              value={professionType}
-              onChange={(e) => setProfessionType(e.target.value)}
-              required
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-            >
+            <select value={professionType} onChange={(e) => setProfessionType(e.target.value)} required
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base">
               <option value="">Seleccioná una opción</option>
               {PROFESSIONS.map((prof) => (
-                <option key={prof.value} value={prof.value}>
-                  {prof.label}
-                </option>
+                <option key={prof.value} value={prof.value}>{prof.label}</option>
               ))}
             </select>
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Título profesional (opcional)
-            </label>
-            <input
-              type="text"
-              value={professionalTitle}
-              onChange={(e) => setProfessionalTitle(e.target.value)}
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Título profesional (opcional)</label>
+            <input type="text" value={professionalTitle} onChange={(e) => setProfessionalTitle(e.target.value)}
               placeholder="Ej: Mozo Senior, Electricista Matriculado"
-              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-            />
-          </div>
-
-          {/* NUEVO: selector de ubicación */}
-          <div className="mb-3 sm:mb-4">
-            <LocationSelector
-              value={location}
-              onChange={setLocation}
-              focusColor="blue"
-            />
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base" />
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Password
-            </label>
+            <LocationSelector value={location} onChange={setLocation} focusColor="blue" />
+          </div>
+
+          <div className="mb-3 sm:mb-4">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Password</label>
             <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
+              <input type={showPassword ? "text" : "password"} value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
+                placeholder="Mínimo 8 caracteres" autoComplete="new-password" required minLength={6}
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)</p>
           </div>
 
-          <div className="mb-4 sm:mb-6">
-            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">
-              Confirmar Password
-            </label>
+          <div className="mb-4 sm:mb-5">
+            <label className="block text-gray-700 font-semibold mb-1.5 sm:mb-2 text-sm sm:text-base">Confirmar Password</label>
             <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
+              <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repetí tu password"
-                autoComplete="new-password"
-                required
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
+                placeholder="Repetí tu password" autoComplete="new-password" required
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-blue-500 focus:outline-none transition-all text-sm sm:text-base" />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-base sm:text-lg"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Creando cuenta...
-              </span>
-            ) : (
-              'Crear Cuenta'
-            )}
+          {/* Checkbox T&C */}
+          <label className="flex items-start gap-3 cursor-pointer mb-5 group">
+            <div className="relative mt-0.5 flex-shrink-0">
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="sr-only" />
+              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                termsAccepted ? 'bg-blue-500 border-blue-500' : 'border-gray-300 bg-white group-hover:border-gray-400'
+              }`}>
+                {termsAccepted && (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-gray-600 text-sm leading-relaxed">
+              Leí y acepto los{' '}
+              <button type="button" onClick={() => navigate('/accept-terms')}
+                className="text-blue-600 font-semibold hover:underline">
+                Términos y Condiciones
+              </button>
+            </span>
+          </label>
+
+          <button type="submit" disabled={loading || !termsAccepted}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 sm:py-4 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all ripple text-base sm:text-lg">
+            {loading
+              ? <span className="flex items-center justify-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" />Creando cuenta...</span>
+              : 'Crear Cuenta'
+            }
           </button>
         </form>
+
         <div className="mt-4 sm:mt-6 text-center">
           <p className="text-gray-600 text-sm sm:text-base">
             ¿Ya tenés cuenta?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/professional-login')}
-              className="text-blue-600 font-semibold hover:text-blue-700"
-            >
+            <button type="button" onClick={() => navigate('/professional-login')}
+              className="text-blue-600 font-semibold hover:text-blue-700">
               Iniciá sesión
             </button>
           </p>
         </div>
       </div>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
-      {errorModal && (
-        <ErrorModal
-          title={errorModal.title}
-          message={errorModal.message}
-          onClose={() => setErrorModal(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {errorModal && <ErrorModal title={errorModal.title} message={errorModal.message} onClose={() => setErrorModal(null)} />}
     </div>
   );
 }
