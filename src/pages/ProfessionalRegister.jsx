@@ -53,7 +53,7 @@ function ProfessionalRegister() {
           termsAccepted: data.data?.termsAccepted ?? false
         });
 
-        const destination = data.data?.termsAccepted === false
+        const destination = !data.data?.termsAccepted
           ? '/accept-terms'
           : '/edit-cv';
 
