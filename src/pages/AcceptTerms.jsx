@@ -65,7 +65,7 @@ function AcceptTerms() {
             </div>
             <div>
               <h1 className="text-2xl roboto-light text-white">Términos y Condiciones</h1>
-              <p className="text-white/80 text-sm">Versión 1.0 — Marzo 2025 — República Argentina</p>
+              <p className="text-white/80 text-sm">Marzo 2025 — República Argentina</p>
             </div>
           </div>
         </div>
