@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GraduationCap, ChevronRight, Heart, Share2, MapPin } from 'lucide-react';
+import { GraduationCap, ChevronRight, Heart, Share2, MapPin, Home } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import Toast from '../components/Toast';
 import ShareModal from '../components/ShareModal';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-import HomeButton from '../components/HomeButton';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { renderStars } from '../utils/uiHelpers';
 import { getProfessionLabel } from '../constants/professions';
@@ -83,9 +82,14 @@ function PublicCvView() {
     }
   };
 
-  // Navega a stats públicas del profesional — NO a /ratings-history (ruta autenticada del profesional)
-  const handleWorkClick = (workHistoryId) => {
+  const handleWorkClick = () => {
     navigate(`/stats-public/${professionalId}`);
+  };
+
+  const handleHome = () => {
+    if (userType === 'PROFESSIONAL') navigate('/professional-dashboard');
+    else if (userType === 'CLIENT') navigate('/client-dashboard');
+    else navigate('/');
   };
 
   const formatDate = (dateStr) => {
@@ -162,7 +166,6 @@ function PublicCvView() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 -mt-20 pb-8">
-          {/* Contacto */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
             <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
               <span className="text-2xl mr-2">📞</span> Contacto
@@ -358,7 +361,16 @@ function PublicCvView() {
         </div>
       </div>
 
-      <HomeButton />
+      {/* Botón Home fuera del blur — navegación inteligente según userType */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50 pointer-events-none">
+        <button
+          onClick={handleHome}
+          className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl border-4 border-white pointer-events-auto active:scale-95 transition-transform"
+          aria-label="Inicio"
+        >
+          <Home className="w-7 h-7 text-white" />
+        </button>
+      </div>
 
       {!isLoggedIn && <LoginRequiredModal onClose={() => navigate('/')} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
