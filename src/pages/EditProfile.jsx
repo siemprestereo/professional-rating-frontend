@@ -129,7 +129,7 @@ function EditProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
-      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-10 text-center relative">
+      <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-16 text-center relative">
         <div className="flex items-start mb-4">
           <BackButton to="/client-dashboard" />
         </div>
@@ -145,7 +145,7 @@ function EditProfile() {
         <h1 className="text-3xl roboto-light text-white mb-2 mt-3">Editar Perfil</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-6">
+      <div className="max-w-4xl mx-auto px-4 mt-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <form onSubmit={handleSave}>
             <div className="mb-4">
