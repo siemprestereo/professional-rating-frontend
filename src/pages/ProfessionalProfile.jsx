@@ -1,110 +1,142 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GraduationCap, ChevronRight, Heart, Share2, MapPin } from 'lucide-react';
+import { Star, Briefcase, Award, ArrowLeft, Loader2, Search, X } from 'lucide-react';
+import api from '../services/api.js';
 import LoadingScreen from '../components/LoadingScreen';
-import Toast from '../components/Toast';
-import ShareModal from '../components/ShareModal';
-import LoginRequiredModal from '../components/LoginRequiredModal';
-import HomeButton from '../components/HomeButton';
-import { getProfessionalBadge } from '../utils/professionalBadge';
-import { renderStars } from '../utils/uiHelpers';
-import { getProfessionLabel } from '../constants/professions';
-import { BACKEND_URL } from '../config';
 
-function PublicCvView() {
+
+function ProfessionalProfile() {
   const { professionalId } = useParams();
   const navigate = useNavigate();
-  const [cvData, setCvData] = useState(null);
+  const [professional, setProfessional] = useState(null);
+  const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [checkingFavorite, setCheckingFavorite] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showWorkplaceSelector, setShowWorkplaceSelector] = useState(false);
 
-  const token = localStorage.getItem('authToken');
-  const userType = localStorage.getItem('userType');
-  const isLoggedIn = !!token;
-  const isClient = !!(token && userType === 'CLIENT');
+  useEffect(() => {
+    loadProfessionalData();
+  }, [professionalId]);
 
-  useEffect(() => { loadData(); }, [professionalId]);
-
-  const loadData = async () => {
+  const loadProfessionalData = async () => {
     try {
-      const cvResponse = await fetch(`${BACKEND_URL}/api/cv/professional/${professionalId}`);
-      if (!cvResponse.ok) throw new Error('CV no encontrado');
-      const data = await cvResponse.json();
-      setCvData(data);
+      const [profileData, ratingsData] = await Promise.all([
+        api.getProfessionalProfile(professionalId),
+        api.getProfessionalRatings(professionalId)
+      ]);
 
-      if (isClient) {
-        setCheckingFavorite(true);
-        try {
-          const favoriteResponse = await fetch(
-            `${BACKEND_URL}/api/clients/me/favorites/${professionalId}/check`,
-            { headers: { 'Authorization': `Bearer ${token}` } }
-          );
-          if (favoriteResponse.ok) {
-            const favoriteData = await favoriteResponse.json();
-            setIsFavorite(favoriteData.isFavorite);
-          }
-        } catch {
-          // silencioso — favoritos no críticos
-        } finally {
-          setCheckingFavorite(false);
-        }
-      }
+      // Mapear campos del backend al formato esperado
+      const mappedProfile = {
+        ...profileData,
+        professionalName: profileData.name,
+        reputationScore: profileData.averageRating || 0
+      };
+
+      setProfessional(mappedProfile);
+      setRatings(ratingsData);
     } catch (error) {
-      console.error('Error loading data:', error);
-      setError('No se pudo cargar el CV');
+      console.error('Error loading professional:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleFavorite = async () => {
-    if (!isClient) {
-      setToast({ type: 'error', message: 'Solo los clientes pueden guardar favoritos' });
-      return;
-    }
-    const previousState = isFavorite;
-    setIsFavorite(!isFavorite);
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites/${professionalId}`, {
-        method: isFavorite ? 'DELETE' : 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: isFavorite ? undefined : JSON.stringify({})
-      });
-      if (!response.ok) throw new Error('Error al actualizar favorito');
-      setToast({ type: 'success', message: isFavorite ? 'Eliminado de guardados' : 'Guardado en favoritos' });
-    } catch {
-      setIsFavorite(previousState);
-      setToast({ type: 'error', message: 'Error al guardar' });
+  const handleRateClick = () => {
+    // Filtrar solo trabajos activos
+    const activeWorkplaces = professional.workHistory?.filter(work => work.isActive) || [];
+
+    if (activeWorkplaces.length === 0) {
+      // No tiene trabajos activos, ir directo sin workHistoryId
+      navigate(`/rate-professional/${professionalId}`);
+    } else if (activeWorkplaces.length === 1) {
+      // Tiene 1 trabajo activo, ir directo con ese workHistoryId
+      navigate(`/rate-professional/${professionalId}?workHistoryId=${activeWorkplaces[0].workHistoryId}`);
+    } else {
+      // Tiene múltiples trabajos activos, mostrar selector
+      setShowWorkplaceSelector(true);
     }
   };
 
-  // Navega a stats públicas del profesional — NO a /ratings-history (ruta autenticada del profesional)
-  const handleWorkClick = (workHistoryId) => {
-    navigate(`/stats-public/${professionalId}`);
+  const handleWorkplaceSelect = (workHistoryId) => {
+    setShowWorkplaceSelector(false);
+    navigate(`/rate-professional/${professionalId}?workHistoryId=${workHistoryId}`);
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+  const getWorkplaceIcon = (businessName) => {
+    const name = businessName?.toLowerCase() || '';
+    if (name.includes('restaurant') || name.includes('parrilla')) return '🍽️';
+    if (name.includes('bar')) return '🍺';
+    if (name.includes('café') || name.includes('cafe')) return '☕';
+    if (name.includes('hotel')) return '🏨';
+    if (name.includes('catering')) return '📋';
+    return '💼';
   };
 
-  if (loading) return <LoadingScreen message="Cargando CV..." />;
-
-  if (error || !cvData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 text-center max-w-md">
-          <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-3xl">❌</span>
+  const renderStars = (score) => {
+    const stars = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const diff = score - i;
+      
+      if (diff >= 1) {
+        stars.push(
+          <Star
+            key={i}
+            className="w-5 h-5 text-yellow-400 fill-yellow-400 transition-all duration-300"
+          />
+        );
+      } else if (diff > 0 && diff < 1) {
+        const percentage = Math.round(diff * 100);
+        stars.push(
+          <div key={i} className="relative inline-flex w-5 h-5">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <defs>
+                <linearGradient id={`grad-${i}`}>
+                  <stop offset={`${percentage}%`} stopColor="#FBBF24" />
+                  <stop offset={`${percentage}%`} stopColor="#D1D5DB" />
+                </linearGradient>
+              </defs>
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                fill={`url(#grad-${i})`}
+                stroke="none"
+              />
+            </svg>
           </div>
-          <h2 className="text-2xl roboto-light text-gray-800 mb-2">CV no encontrado</h2>
-          <p className="text-gray-600 mb-6">El CV que buscás no existe o ya no está disponible</p>
-          <button onClick={() => navigate('/')} className="bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all">
+        );
+      } else {
+        stars.push(
+          <Star
+            key={i}
+            className="w-5 h-5 text-gray-300 transition-all duration-300"
+          />
+        );
+      }
+    }
+    
+    return stars;
+  };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!professional) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="bg-white rounded-2xl p-8 text-center animate-scaleIn">
+          <p className="text-gray-600 mb-4 text-base">Profesional no encontrado</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-all ripple text-base"
+          >
             Volver al inicio
           </button>
         </div>
@@ -112,261 +144,201 @@ function PublicCvView() {
     );
   }
 
-  const workHistory = cvData.workHistory || [];
-  const freelanceActive = workHistory.filter(w => w.isFreelance && w.isActive);
-  const employeeActive = workHistory.filter(w => !w.isFreelance && w.isActive);
-  const pastJobs = workHistory.filter(w => !w.isActive);
-  const badge = getProfessionalBadge(cvData.totalRatings || 0);
+  const activeWorkplaces = professional.workHistory?.filter(work => work.isActive) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className={!isLoggedIn ? 'filter blur-sm pointer-events-none' : ''}>
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8 pb-32">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 border-4 border-white shadow-lg">
-              {cvData.profilePicture
-                ? <img src={cvData.profilePicture} alt="Foto de perfil" className="w-full h-full object-cover" />
-                : (cvData.professionalName?.charAt(0) || 'P')
-              }
-            </div>
-            <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
-            {cvData.professionType && (
-              <p className="text-white/90 text-lg mb-3">{getProfessionLabel(cvData.professionType)}</p>
-            )}
-
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${badge.bgColor} ${badge.borderColor} border-2`}>
-                <span className="text-xl">{badge.emoji}</span>
-                <span className={badge.color}>{badge.name}</span>
-              </div>
-
-              {isClient && !checkingFavorite && (
-                <button onClick={toggleFavorite}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg border-2 border-white active:scale-90 ${isFavorite ? 'bg-red-500 hover:bg-red-600' : 'bg-white hover:bg-gray-100'}`}
-                  aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}>
-                  <Heart className={`w-6 h-6 transition-transform ${isFavorite ? 'text-white fill-white scale-110' : 'text-gray-400'}`} />
-                </button>
-              )}
-            </div>
-
-            <div onClick={() => navigate(`/stats-public/${professionalId}`)} className="cursor-pointer hover:scale-105 transition-transform">
-              <div className="flex items-center justify-center mb-3">
-                {renderStars(cvData.reputationScore || 0)}
-                <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
-              </div>
-              <p className="text-white/80 text-sm">
-                {cvData.totalRatings || 0} {cvData.totalRatings === 1 ? 'calificación' : 'calificaciones'}
-              </p>
-            </div>
+    <div className="min-h-screen bg-gray-50 animate-fadeIn">
+      {/* Navbar */}
+      <nav className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-4 animate-slideDown">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div 
+            onClick={() => navigate('/')}
+            className="text-xl font-bold text-white cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            ProRate
           </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 -mt-20 pb-8">
-          {/* Contacto */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-              <span className="text-2xl mr-2">📞</span> Contacto
-            </h2>
-            <div className="space-y-3">
-              {cvData.professionalEmail && (
-                <a href={`mailto:${cvData.professionalEmail}`} className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-all group">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Email</p>
-                    <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors break-all">{cvData.professionalEmail}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
-                </a>
-              )}
-
-              {cvData.professionalPhone && (
-                <a href={`https://wa.me/${cvData.professionalPhone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-400 transition-all group">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors flex-shrink-0">
-                    <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">WhatsApp</p>
-                    <p className="font-semibold text-gray-800 group-hover:text-green-600 transition-colors break-words">{cvData.professionalPhone}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
-                </a>
-              )}
-
-              {cvData.professionalLocation && (
-                <div className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Ubicación</p>
-                    <p className="font-semibold text-gray-800 break-words">{cvData.professionalLocation}</p>
-                  </div>
-                </div>
-              )}
-
-              <button onClick={() => setShowShareModal(true)} className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-purple-50 hover:border-purple-400 transition-all group">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors flex-shrink-0">
-                  <Share2 className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs text-gray-500 font-semibold">Compartir</p>
-                  <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">Compartir este CV</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
-              </button>
-            </div>
-          </div>
-
-          {cvData.description && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-3">Sobre mí</h2>
-              <p className="text-gray-600 break-words whitespace-pre-wrap">{cvData.description}</p>
-            </div>
-          )}
-
-          {cvData.zones && cvData.zones.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <MapPin className="w-6 h-6 mr-2 text-purple-600" />Zonas de trabajo
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {cvData.zones.map(zone => (
-                  <span key={zone.id} className="bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
-                    📍 {zone.zona}, {zone.provincia}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-            <button onClick={() => navigate(`/stats-public/${professionalId}`)}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-4 px-6 rounded-xl hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-lg">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 4 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span className="text-lg">Ver estadísticas de {cvData.professionalName?.split(' ')[0] || 'profesional'}</span>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/search')}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all text-base"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Buscar </span>
             </button>
           </div>
+        </div>
+      </nav>
 
-          {freelanceActive.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <span className="text-2xl mr-2">💼</span>Trabajo Autónomo Actual
-              </h2>
-              <div className="space-y-2">
-                {freelanceActive.map((work) => (
-                  <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)}
-                    className="border-2 border-purple-200 rounded-xl p-4 cursor-pointer hover:bg-purple-50 hover:border-purple-400 transition-all group">
-                    <div className="flex items-center gap-2">
-                      <ChevronRight className="w-5 h-5 text-purple-600 group-hover:translate-x-1 transition-transform" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-bold text-gray-800 text-lg">{work.position}</p>
-                          <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">Autónomo</span>
-                        </div>
-                        {work.businessName && work.businessName !== 'Autónomo' && (
-                          <p className="text-purple-600 font-semibold">{work.businessName}</p>
-                        )}
-                        <p className="text-sm text-gray-500">📅 {formatDate(work.startDate)} - Presente</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {employeeActive.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <span className="text-2xl mr-2">🏢</span>Trabajos Actuales
-              </h2>
-              <div className="space-y-2">
-                {employeeActive.map((work) => (
-                  <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)}
-                    className="border-2 border-blue-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
-                    <div className="flex items-center gap-2">
-                      <ChevronRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
-                      <div>
-                        <p className="font-bold text-gray-800 text-lg">{work.position}</p>
-                        <p className="text-blue-600 font-semibold">{work.businessName}</p>
-                        <p className="text-sm text-gray-500">📅 {formatDate(work.startDate)} - Presente</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {pastJobs.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <span className="text-2xl mr-2">📋</span>Experiencias Laborales Pasadas
-              </h2>
-              <div className="space-y-2">
-                {pastJobs.map((work) => (
-                  <div key={work.workHistoryId} onClick={() => handleWorkClick(work.workHistoryId)}
-                    className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all group">
-                    <div className="flex items-center gap-2">
-                      <ChevronRight className="w-5 h-5 text-gray-600 group-hover:translate-x-1 transition-transform" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-bold text-gray-800 text-lg">{work.position}</p>
-                          {work.isFreelance && <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">Autónomo</span>}
-                        </div>
-                        <p className="text-gray-600 font-semibold">{work.businessName}</p>
-                        <p className="text-sm text-gray-500">📅 {formatDate(work.startDate)} - {formatDate(work.endDate)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {cvData.education && cvData.education.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <GraduationCap className="w-6 h-6 mr-2 text-purple-600" />Educación y capacitaciones
-              </h2>
-              <div className="space-y-4">
-                {cvData.education.map((edu, index) => (
-                  <div key={index} className="border-l-4 border-purple-600 pl-4">
-                    <p className="font-bold text-gray-800">{edu.degree}</p>
-                    <p className="text-purple-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">
-                      {formatDate(edu.startDate)} - {edu.currentlyStudying ? 'Presente' : formatDate(edu.endDate)}
-                    </p>
-                    {edu.description && <p className="text-gray-600 mt-2 text-sm">{edu.description}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* Header con perfil */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="w-24 h-24 bg-white rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn">
+            {professional.professionalName.charAt(0)}
+          </div>
+          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
+            {professional.professionalName}
+          </h1>
+          <div className="flex items-center justify-center mb-4 animate-slideUp delay-100">
+            {renderStars(Math.round(professional.reputationScore))}
+            <span className="ml-2 text-white font-semibold text-lg">
+              {professional.reputationScore.toFixed(1)}
+            </span>
+          </div>
+          <p className="text-white/90 animate-slideUp delay-200">
+            {professional.totalRatings} {professional.totalRatings === 1 ? 'calificación' : 'calificaciones'}
+          </p>
         </div>
       </div>
 
-      <HomeButton />
+      {/* Contenido */}
+      <div className="max-w-4xl mx-auto px-4 -mt-16">
+        {/* Descripción */}
+        {professional.description && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp hover-lift">
+            <h2 className="text-xl roboto-light text-gray-800 mb-3">Sobre mí</h2>
+            <p className="text-gray-600 text-base">{professional.description}</p>
+          </div>
+        )}
 
-      {!isLoggedIn && <LoginRequiredModal onClose={() => navigate('/')} />}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      {showShareModal && (
-        <ShareModal professionalId={professionalId} professionalName={cvData.professionalName} onClose={() => setShowShareModal(false)} />
+        {/* Experiencias */}
+        {professional.workHistory && professional.workHistory.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100 hover-lift">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
+              Experiencia
+            </h2>
+            <div className="space-y-4">
+              {professional.workHistory.map((exp, index) => (
+                <div 
+                  key={exp.workHistoryId} 
+                  className="border-l-4 border-purple-600 pl-4 animate-slideUp"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <h3 className="font-semibold text-gray-800 text-base">{exp.position}</h3>
+                  <p className="text-purple-600 font-medium text-base">{exp.businessName}</p>
+                  <p className="text-sm text-gray-500">
+                    {exp.startDate} - {exp.endDate || 'Presente'}
+                  </p>
+                  {exp.isActive && (
+                    <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                      Activo
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Botón para calificar */}
+        <button
+          onClick={handleRateClick}
+          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg mb-4 flex items-center justify-center animate-scaleIn delay-200 hover-scale ripple text-lg"
+        >
+          <Star className="w-5 h-5 mr-2" />
+          Calificar a {professional.professionalName.split(' ')[0]}
+        </button>
+
+        {/* Calificaciones recientes */}
+        {ratings.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slideUp delay-300 hover-lift">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <Award className="w-6 h-6 mr-2 text-yellow-500" />
+              Calificaciones Recientes
+            </h2>
+            <div className="space-y-4">
+              {ratings.slice(0, 5).map((rating, index) => (
+                <div 
+                  key={rating.id} 
+                  className="border-b border-gray-100 pb-4 last:border-0 animate-slideUp"
+                  style={{ animationDelay: `${(index + 4) * 0.1}s` }}
+                >
+                  <div className="flex items-center mb-2">
+                    {renderStars(rating.score)}
+                    <span className="ml-2 text-sm text-gray-500">
+                      {new Date(rating.createdAt).toLocaleDateString('es-AR')}
+                    </span>
+                  </div>
+                  {rating.comment && (
+                    <p className="text-gray-600 text-base mb-2">{rating.comment}</p>
+                  )}
+                  
+                  {/* Mostrar workplace específico si existe */}
+                  {rating.workplaceName ? (
+                    <div className="flex items-start gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-lg inline-block">
+                      <Briefcase className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                      <span>
+                        <span className="font-semibold">Calificado en:</span> {rating.workplaceName}
+                        {rating.workplacePosition && ` (${rating.workplacePosition})`}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">
+                      {rating.businessName}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Sheet - Selector de lugar de trabajo */}
+      {showWorkplaceSelector && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-30 z-40 animate-fadeIn"
+            onClick={() => setShowWorkplaceSelector(false)}
+          />
+          
+          {/* Bottom Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 animate-slideUp">
+            <div className="bg-white rounded-t-3xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto">
+              {/* Handle bar */}
+              <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+              
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-xl roboto-light text-gray-800">¿Dónde te atendió?</h3>
+                <button
+                  onClick={() => setShowWorkplaceSelector(false)}
+                  className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-500 mb-4">
+                Seleccioná el lugar donde {professional.professionalName.split(' ')[0]} te atendió
+              </p>
+              
+              <div className="space-y-3">
+                {activeWorkplaces.map((work) => (
+                  <button
+                    key={work.workHistoryId}
+                    onClick={() => handleWorkplaceSelect(work.workHistoryId)}
+                    className="w-full text-left p-4 bg-gray-50 hover:bg-purple-50 rounded-2xl transition-all active:scale-95 border-2 border-transparent hover:border-purple-500"
+                  >
+                    <div className="flex items-center">
+                      <span className="text-3xl mr-3">{getWorkplaceIcon(work.businessName)}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-800 text-base">{work.businessName}</p>
+                        <p className="text-sm text-gray-500">{work.position}</p>
+                      </div>
+                      <span className="text-purple-600">→</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-export default PublicCvView;
+export default ProfessionalProfile;
