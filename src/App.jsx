@@ -27,7 +27,6 @@ import ClientRatingsHistory from './pages/ClientRatingsHistory';
 import EditRatingForm from './pages/EditRatingForm';
 import NetworkStatus from './components/NetworkStatus';
 import AcceptTerms from './pages/AcceptTerms';
-import AcceptTerms from './pages/AcceptTerms';
 import TermsPage from './pages/TermsPage';
 
 function App() {
@@ -39,7 +38,7 @@ function App() {
         <Routes>
           {/* Rutas públicas */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/terms" element={<AcceptTerms />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/accept-terms" element={<AcceptTerms />} />
 
           <Route path="/professional/:professionalId" element={<PublicCvView />} />
@@ -53,10 +52,6 @@ function App() {
           <Route path="/client-register" element={<ClientRegister />} />
           <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
           <Route path="/ratings-history" element={<RatingsHistory />} />
-
-
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/accept-terms" element={<AcceptTerms />} />
 
           {/* Rutas protegidas — PROFESIONALES */}
           <Route path="/dashboard" element={<ProtectedRoute userType="PROFESSIONAL"><ProfessionalDashboard /></ProtectedRoute>} />
