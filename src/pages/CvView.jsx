@@ -42,16 +42,20 @@ function CvView() {
 
       if (response.ok) {
         setCv(await response.json());
+      } else if (response.status === 400 || response.status === 404) {
+        // Sin CV — redirigir a crearlo solo si es el propio perfil
+        if (!professionalId) {
+          navigate('/edit-cv', { replace: true });
+        }
       } else {
-        throw new Error('No se pudo cargar el CV');
+        throw new Error('Error al cargar CV');
       }
     } catch (error) {
-      console.error('Error loading CV:', error);
+      // silencioso
     } finally {
       setLoading(false);
     }
   };
-
   const loadSearchableStatus = async () => {
     try {
       const token = localStorage.getItem('authToken');
