@@ -48,7 +48,7 @@ function CvView() {
           navigate('/edit-cv', { replace: true });
         }
       } else {
-        throw new Error('Error al cargar CV');
+        throw new Error('Error al cargar C.V');
       }
     } catch (error) {
       // silencioso
