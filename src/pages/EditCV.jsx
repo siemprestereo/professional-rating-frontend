@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Plus, Save, GraduationCap, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
@@ -8,13 +8,14 @@ import HomeButton from '../components/HomeButton';
 import SearchableSelect from '../components/SearchableSelect';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
+import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 
 function EditCV() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [cv, setCv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  // Usamos Map para tracking de operaciones en curso: workHistoryId → true
   const [savingWorkIds, setSavingWorkIds] = useState(new Set());
   const [deletingWorkIds, setDeletingWorkIds] = useState(new Set());
   const [savingEducationIds, setSavingEducationIds] = useState(new Set());
@@ -40,6 +41,29 @@ function EditCV() {
   const [toast, setToast] = useState(null);
 
   const { provincias, segundoNivel, loadingProvincias, loadingSegundoNivel, fetchSegundoNivel, getSegundoNivelLabel } = useGeoref();
+
+  // Manejar código OAuth si viene de Google
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      exchangeOAuthCode(code).then((data) => {
+        if (!data) {
+          navigate('/professional-login');
+          return;
+        }
+        saveAuthData('PROFESSIONAL', data.token, {
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          termsAccepted: data.data?.termsAccepted ?? false
+        });
+        if (!data.data?.termsAccepted) {
+          navigate('/accept-terms', { replace: true });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => { loadCV(); }, []);
 
@@ -88,7 +112,6 @@ function EditCV() {
         throw new Error('No se pudo cargar el CV');
       }
     } catch (error) {
-      console.error('Error loading CV:', error);
       setToast({ type: 'error', message: 'Error al cargar CV' });
     } finally {
       setLoading(false);
@@ -98,8 +121,6 @@ function EditCV() {
   const countActiveJobs = () =>
     [...freelanceJobs, ...employeeJobs].filter(job => job.currentlyWorking).length;
 
-  // Genera una clave única por trabajo para tracking de loading
-  // Trabaj guardado: su workHistoryId. Trabajo nuevo: índice con prefijo para evitar colisiones
   const getWorkKey = (job, index, prefix) =>
     job.workHistoryId ? `id-${job.workHistoryId}` : `new-${prefix}-${index}`;
 

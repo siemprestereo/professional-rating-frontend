@@ -130,7 +130,6 @@ function ClientDashboard() {
       }
 
     } catch (error) {
-      console.error('Error loading client:', error);
       navigate('/client-login');
     } finally {
       setLoading(false);
@@ -212,7 +211,6 @@ function ClientDashboard() {
       await api.deleteRating(ratingIdToDelete);
       setToast({ type: 'success', message: 'Calificación eliminada exitosamente' });
     } catch (error) {
-      console.error('Error al eliminar:', error);
       setToast({ type: 'error', message: error.response?.data?.message || 'Error al eliminar la calificación' });
       loadClientData();
     }
