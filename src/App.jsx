@@ -38,6 +38,7 @@ function App() {
           {/* Rutas públicas */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/terms" element={<AcceptTerms />} />
+          <Route path="/accept-terms" element={<AcceptTerms />} />
 
           <Route path="/professional/:professionalId" element={<PublicCvView />} />
           <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
