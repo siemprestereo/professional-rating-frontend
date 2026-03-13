@@ -35,8 +35,15 @@ function ProfessionalDashboard() {
       exchangeOAuthCode(codeFromUrl).then((data) => {
         if (data) {
           saveAuthData('PROFESSIONAL', data.token, {
-            id: data.id, email: data.email, name: data.name
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            termsAccepted: data.data?.termsAccepted ?? false
           });
+          if (!data.data?.termsAccepted) {
+            navigate('/accept-terms', { replace: true });
+            return;
+          }
         }
         loadDashboardData();
       });

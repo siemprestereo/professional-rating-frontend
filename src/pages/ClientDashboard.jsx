@@ -34,8 +34,13 @@ function ClientDashboard() {
           saveAuthData('CLIENT', data.token, {
             id: data.id,
             email: data.email,
-            name: data.name
+            name: data.name,
+            termsAccepted: data.data?.termsAccepted ?? false
           });
+          if (!data.data?.termsAccepted) {
+            navigate('/accept-terms', { replace: true });
+            return;
+          }
         }
         loadClientData();
       });
