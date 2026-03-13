@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { FileText, ArrowLeft } from 'lucide-react';
-import HomeButton from '../components/HomeButton';
+
 
 function TermsPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
+    <div className="min-h-screen bg-gray-50 pb-16 animate-fadeIn">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
         <div className="max-w-3xl mx-auto">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4">
@@ -167,7 +167,7 @@ function TermsPage() {
         </p>
       </div>
 
-      <HomeButton />
+     
     </div>
   );
 }
