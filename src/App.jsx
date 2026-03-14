@@ -28,6 +28,7 @@ import EditRatingForm from './pages/EditRatingForm';
 import NetworkStatus from './components/NetworkStatus';
 import AcceptTerms from './pages/AcceptTerms';
 import TermsPage from './pages/TermsPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -72,6 +73,8 @@ function App() {
           <Route path="/saved-professionals" element={<SavedProfessionals />} />
           <Route path="/compare-professionals" element={<CompareProfessionals />} />
           <Route path="/client-ratings-history" element={<ClientRatingsHistory />} />
+          {/* Admin */}
+          <Route path="/admin" element={<ProtectedRoute userType="ADMIN"><AdminDashboard /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -18,10 +18,9 @@ function ProfessionalLogin() {
   const [loginError, setLoginError] = useState('');
   const [shake, setShake] = useState(false);
 
-  // ✅ Detectar errores de OAuth e intercambiar código por token
   useEffect(() => {
     const errorParam = searchParams.get('error');
-    
+
     if (errorParam === 'email_already_registered_as_client') {
       setErrorModal({
         title: 'Email ya registrado',
@@ -32,10 +31,8 @@ function ProfessionalLogin() {
 
     const code = searchParams.get('code');
     if (code) {
-      // Limpiar la URL inmediatamente
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // Intercambiar código por JWT
       exchangeOAuthCode(code).then((data) => {
         if (!data) {
           setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
@@ -75,19 +72,18 @@ function ProfessionalLogin() {
 
       if (!response.ok) {
         const errorMessage = await getLoginErrorMessage(response);
-        
         setLoginError(errorMessage);
         setShake(true);
         setPassword('');
-        
         setTimeout(() => setShake(false), 500);
         setLoading(false);
         return;
       }
 
       const data = await response.json();
-      
-      saveAuthData('PROFESSIONAL', data.token, {
+      const userType = data.userType || 'PROFESSIONAL';
+
+      saveAuthData(userType, data.token, {
         id: data.id,
         email: data.email,
         name: data.name,
@@ -97,11 +93,15 @@ function ProfessionalLogin() {
       });
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
-      
+
       setTimeout(() => {
-        handlePostLoginRedirect('/professional-dashboard', navigate, true);
+        if (userType === 'ADMIN') {
+          window.location.href = 'https://www.calificalo.com.ar/admin';
+        } else {
+          handlePostLoginRedirect('/professional-dashboard', navigate, true);
+        }
       }, 300);
-      
+
     } catch (err) {
       console.error('Error en login:', err);
       setLoginError('Error de conexión. Intentá nuevamente.');
@@ -179,8 +179,8 @@ function ProfessionalLogin() {
               autoComplete="email"
               required
               className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
-                loginError 
-                  ? 'border-red-500 focus:border-red-500' 
+                loginError
+                  ? 'border-red-500 focus:border-red-500'
                   : 'border-gray-200 focus:border-blue-500'
               } ${shake ? 'animate-shake' : ''}`}
             />
@@ -202,8 +202,8 @@ function ProfessionalLogin() {
                 autoComplete="current-password"
                 required
                 className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
-                  loginError 
-                    ? 'border-red-500 focus:border-red-500' 
+                  loginError
+                    ? 'border-red-500 focus:border-red-500'
                     : 'border-gray-200 focus:border-blue-500'
                 } ${shake ? 'animate-shake' : ''}`}
               />
@@ -212,11 +212,7 @@ function ProfessionalLogin() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -245,9 +241,7 @@ function ProfessionalLogin() {
 
           <button
             type="button"
-            onClick={() => {
-              console.log('Recuperar contraseña');
-            }}
+            onClick={() => console.log('Recuperar contraseña')}
             className="w-full text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm sm:text-base"
           >
             ¿Olvidaste tu contraseña?
@@ -269,13 +263,9 @@ function ProfessionalLogin() {
       </div>
 
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
-      
+
       {errorModal && (
         <ErrorModal
           title={errorModal.title}
@@ -290,7 +280,6 @@ function ProfessionalLogin() {
           10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
           20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
-        
         .animate-shake {
           animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
