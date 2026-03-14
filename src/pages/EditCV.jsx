@@ -556,7 +556,7 @@ function EditCV() {
             <label className="block text-gray-700 font-semibold mb-2 text-sm">Provincia</label>
             <select value={zonaProvinciaId} onChange={(e) => {
               const id = e.target.value;
-              console.log('provincia id:', id);
+              alert('provincia id: ' + id); //AGREGADO
               const prov = provincias.find(p => p.id === id);
               setZonaProvinciaId(id);
               setZonaProvincia(prov?.nombre || '');
