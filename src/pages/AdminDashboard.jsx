@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
-  Loader2, RefreshCw, Search, AlertTriangle
+  Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -32,23 +32,20 @@ function ConfirmModal({ title, message, confirmLabel, confirmColor = 'red', onCo
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
+            className={`flex-1 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 ${
               confirmColor === 'red'
                 ? 'bg-red-600 hover:bg-red-700'
                 : 'bg-yellow-500 hover:bg-yellow-600'
             }`}
           >
-            {loading
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : confirmLabel
-            }
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : confirmLabel}
           </button>
         </div>
       </div>
@@ -69,10 +66,9 @@ function AdminDashboard() {
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL');
 
-  // Modales
-  const [confirmSuspend, setConfirmSuspend] = useState(null);   // { id, name, suspended }
-  const [confirmDeleteUser, setConfirmDeleteUser] = useState(null); // { id, name }
-  const [confirmDeleteRating, setConfirmDeleteRating] = useState(null); // id
+  const [confirmSuspend, setConfirmSuspend] = useState(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
+  const [confirmDeleteRating, setConfirmDeleteRating] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
@@ -330,14 +326,12 @@ function AdminDashboard() {
               </button>
             </div>
 
-            {/* Lista vacía */}
             {filteredUsers.length === 0 && (
               <div className="text-center py-8 text-gray-400 text-sm">
                 No se encontraron usuarios
               </div>
             )}
 
-            {/* Lista */}
             {filteredUsers.map(user => (
               <div key={user.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <button
@@ -368,12 +362,54 @@ function AdminDashboard() {
 
                 {expandedUser === user.id && (
                   <div className="border-t border-gray-100 px-4 py-3 space-y-2">
+
+                    {/* Info común */}
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                       <span>ID: {user.id}</span>
-                      <span>Ratings: {user.totalRatings}</span>
                       <span>Email verificado: {user.emailVerified ? '✅' : '❌'}</span>
                       <span>Auth: {user.authProvider}</span>
                     </div>
+
+                    {/* Info según rol */}
+                    {user.activeRole === 'PROFESSIONAL' ? (
+                      <div className="bg-purple-50 rounded-xl px-3 py-2 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-500">Calificaciones recibidas</p>
+                          <p className="font-bold text-purple-700 text-base">{user.totalRatings}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 rounded-xl px-3 py-2 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-500">Calificaciones emitidas</p>
+                          <p className="font-bold text-green-700 text-base">{user.totalRatings}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Promedio dado</p>
+                          <p className="font-bold text-green-700 text-base">
+                            {user.averageScoreGiven > 0 ? `${user.averageScoreGiven.toFixed(1)} ★` : '—'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Botones de acción según rol */}
+                    {user.activeRole === 'PROFESSIONAL' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => window.open(`/professional/${user.id}`, '_blank')}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
+                        >
+                          <FileText className="w-3.5 h-3.5" /> Ver CV
+                        </button>
+                        <button
+                          onClick={() => window.open(`/stats-public/${user.id}`, '_blank')}
+                          className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                        >
+                          <TrendingUp className="w-3.5 h-3.5" /> Ver Stats
+                        </button>
+                      </div>
+                    )}
 
                     {/* Suspender / Reactivar */}
                     <button
@@ -443,7 +479,7 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* Modal — Suspender / Reactivar usuario */}
+      {/* Modal — Suspender / Reactivar */}
       {confirmSuspend && (
         <ConfirmModal
           title={confirmSuspend.suspended ? 'Reactivar cuenta' : 'Suspender cuenta'}
@@ -453,7 +489,7 @@ function AdminDashboard() {
               : `¿Querés suspender la cuenta de ${confirmSuspend.name}? El usuario no podrá iniciar sesión hasta que la reactives.`
           }
           confirmLabel={confirmSuspend.suspended ? 'Reactivar' : 'Suspender'}
-          confirmColor={confirmSuspend.suspended ? 'yellow' : 'yellow'}
+          confirmColor="yellow"
           onConfirm={handleToggleSuspend}
           onCancel={() => setConfirmSuspend(null)}
           loading={actionLoading === confirmSuspend.id}
