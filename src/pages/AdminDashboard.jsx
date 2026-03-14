@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
-  Loader2, RefreshCw, Search
+  Loader2, RefreshCw, Search, AlertTriangle
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -15,6 +15,47 @@ const authHeader = () => ({
   Authorization: `Bearer ${getToken()}`
 });
 
+function ConfirmModal({ title, message, confirmLabel, confirmColor = 'red', onConfirm, onCancel, loading }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+            confirmColor === 'red' ? 'bg-red-100' : 'bg-yellow-100'
+          }`}>
+            <AlertTriangle className={`w-5 h-5 ${confirmColor === 'red' ? 'text-red-600' : 'text-yellow-600'}`} />
+          </div>
+          <h3 className="font-bold text-gray-800">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-5">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className={`flex-1 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
+              confirmColor === 'red'
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-yellow-500 hover:bg-yellow-600'
+            }`}
+          >
+            {loading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : confirmLabel
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('stats');
@@ -25,9 +66,13 @@ function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
   const [expandedUser, setExpandedUser] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+
+  // Modales
+  const [confirmSuspend, setConfirmSuspend] = useState(null);   // { id, name, suspended }
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState(null); // { id, name }
+  const [confirmDeleteRating, setConfirmDeleteRating] = useState(null); // id
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
@@ -77,17 +122,19 @@ function AdminDashboard() {
     }
   };
 
-  const toggleSuspend = async (userId) => {
-    setActionLoading(userId);
+  const handleToggleSuspend = async () => {
+    if (!confirmSuspend) return;
+    setActionLoading(confirmSuspend.id);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}/suspend`, {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users/${confirmSuspend.id}/suspend`, {
         method: 'PATCH',
         headers: authHeader()
       });
-      if (!res.ok) throw new Error('Error al suspender usuario');
+      if (!res.ok) throw new Error('Error al modificar usuario');
       setUsers(prev =>
-        prev.map(u => u.id === userId ? { ...u, suspended: !u.suspended } : u)
+        prev.map(u => u.id === confirmSuspend.id ? { ...u, suspended: !u.suspended } : u)
       );
+      setConfirmSuspend(null);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -95,16 +142,36 @@ function AdminDashboard() {
     }
   };
 
-  const deleteRating = async (ratingId) => {
-    setActionLoading(ratingId);
+  const handleDeleteUser = async () => {
+    if (!confirmDeleteUser) return;
+    setActionLoading(confirmDeleteUser.id);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/ratings/${ratingId}`, {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users/${confirmDeleteUser.id}`, {
+        method: 'DELETE',
+        headers: authHeader()
+      });
+      if (!res.ok) throw new Error('Error al eliminar usuario');
+      setUsers(prev => prev.filter(u => u.id !== confirmDeleteUser.id));
+      setExpandedUser(null);
+      setConfirmDeleteUser(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteRating = async () => {
+    if (!confirmDeleteRating) return;
+    setActionLoading(confirmDeleteRating);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/ratings/${confirmDeleteRating}`, {
         method: 'DELETE',
         headers: authHeader()
       });
       if (!res.ok) throw new Error('Error al eliminar calificación');
-      setRatings(prev => prev.filter(r => r.id !== ratingId));
-      setConfirmDelete(null);
+      setRatings(prev => prev.filter(r => r.id !== confirmDeleteRating));
+      setConfirmDeleteRating(null);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -122,8 +189,7 @@ function AdminDashboard() {
       user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearch.toLowerCase());
     const matchesRole =
-      userRoleFilter === 'ALL' ||
-      user.activeRole === userRoleFilter;
+      userRoleFilter === 'ALL' || user.activeRole === userRoleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -141,6 +207,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -178,6 +245,7 @@ function AdminDashboard() {
       </div>
 
       <div className="p-4 max-w-2xl mx-auto">
+
         {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 flex items-center justify-between text-sm">
@@ -262,13 +330,14 @@ function AdminDashboard() {
               </button>
             </div>
 
-            {/* Lista */}
+            {/* Lista vacía */}
             {filteredUsers.length === 0 && (
               <div className="text-center py-8 text-gray-400 text-sm">
                 No se encontraron usuarios
               </div>
             )}
 
+            {/* Lista */}
             {filteredUsers.map(user => (
               <div key={user.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <button
@@ -305,21 +374,28 @@ function AdminDashboard() {
                       <span>Email verificado: {user.emailVerified ? '✅' : '❌'}</span>
                       <span>Auth: {user.authProvider}</span>
                     </div>
+
+                    {/* Suspender / Reactivar */}
                     <button
-                      onClick={() => toggleSuspend(user.id)}
-                      disabled={actionLoading === user.id}
+                      onClick={() => setConfirmSuspend({ id: user.id, name: user.name, suspended: user.suspended })}
                       className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors ${
                         user.suspended
                           ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                          : 'bg-red-50 text-red-700 hover:bg-red-100'
+                          : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
                       }`}
                     >
-                      {actionLoading === user.id
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : user.suspended
-                          ? <><CheckCircle className="w-4 h-4" /> Reactivar cuenta</>
-                          : <><Ban className="w-4 h-4" /> Suspender cuenta</>
+                      {user.suspended
+                        ? <><CheckCircle className="w-4 h-4" /> Reactivar cuenta</>
+                        : <><Ban className="w-4 h-4" /> Suspender cuenta</>
                       }
+                    </button>
+
+                    {/* Eliminar */}
+                    <button
+                      onClick={() => setConfirmDeleteUser({ id: user.id, name: user.name })}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" /> Eliminar cuenta
                     </button>
                   </div>
                 )}
@@ -355,7 +431,7 @@ function AdminDashboard() {
                     )}
                   </div>
                   <button
-                    onClick={() => setConfirmDelete(rating.id)}
+                    onClick={() => setConfirmDeleteRating(rating.id)}
                     className="flex-shrink-0 text-red-400 hover:text-red-600 transition-colors p-1"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -367,32 +443,47 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* Modal confirmar eliminación */}
-      {confirmDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="font-bold text-gray-800 mb-2">¿Eliminar calificación?</h3>
-            <p className="text-sm text-gray-600 mb-5">Esta acción no se puede deshacer.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => deleteRating(confirmDelete)}
-                disabled={actionLoading === confirmDelete}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm flex items-center justify-center gap-2"
-              >
-                {actionLoading === confirmDelete
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : 'Eliminar'
-                }
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Modal — Suspender / Reactivar usuario */}
+      {confirmSuspend && (
+        <ConfirmModal
+          title={confirmSuspend.suspended ? 'Reactivar cuenta' : 'Suspender cuenta'}
+          message={
+            confirmSuspend.suspended
+              ? `¿Querés reactivar la cuenta de ${confirmSuspend.name}? El usuario podrá volver a iniciar sesión.`
+              : `¿Querés suspender la cuenta de ${confirmSuspend.name}? El usuario no podrá iniciar sesión hasta que la reactives.`
+          }
+          confirmLabel={confirmSuspend.suspended ? 'Reactivar' : 'Suspender'}
+          confirmColor={confirmSuspend.suspended ? 'yellow' : 'yellow'}
+          onConfirm={handleToggleSuspend}
+          onCancel={() => setConfirmSuspend(null)}
+          loading={actionLoading === confirmSuspend.id}
+        />
+      )}
+
+      {/* Modal — Eliminar usuario */}
+      {confirmDeleteUser && (
+        <ConfirmModal
+          title="Eliminar cuenta"
+          message={`¿Estás seguro de que querés eliminar la cuenta de ${confirmDeleteUser.name}? Se borrarán todos sus datos y esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          confirmColor="red"
+          onConfirm={handleDeleteUser}
+          onCancel={() => setConfirmDeleteUser(null)}
+          loading={actionLoading === confirmDeleteUser.id}
+        />
+      )}
+
+      {/* Modal — Eliminar calificación */}
+      {confirmDeleteRating && (
+        <ConfirmModal
+          title="Eliminar calificación"
+          message="¿Estás seguro de que querés eliminar esta calificación? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          confirmColor="red"
+          onConfirm={handleDeleteRating}
+          onCancel={() => setConfirmDeleteRating(null)}
+          loading={actionLoading === confirmDeleteRating}
+        />
       )}
     </div>
   );
