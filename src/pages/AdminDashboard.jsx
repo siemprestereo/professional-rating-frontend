@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
-  Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp
+  Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
+  MessageSquare, Clock
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -65,6 +66,13 @@ function AdminDashboard() {
   const [expandedUser, setExpandedUser] = useState(null);
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+
+  // Filtros de ratings
+  const [ratingSearch, setRatingSearch] = useState('');
+  const [ratingScoreFilter, setRatingScoreFilter] = useState(0); // 0 = todos
+  const [ratingCommentFilter, setRatingCommentFilter] = useState('ALL'); // ALL, WITH, WITHOUT
+  const [ratingTimeFilter, setRatingTimeFilter] = useState('ALL'); // ALL, 1h, 1d, 1w, 1m
+  const [ratingSortOrder, setRatingSortOrder] = useState('DESC'); // DESC, ASC
 
   const [confirmSuspend, setConfirmSuspend] = useState(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
@@ -189,6 +197,50 @@ function AdminDashboard() {
     return matchesSearch && matchesRole;
   });
 
+  const getTimeThreshold = () => {
+    const now = new Date();
+    if (ratingTimeFilter === '1h') return new Date(now - 1 * 60 * 60 * 1000);
+    if (ratingTimeFilter === '1d') return new Date(now - 24 * 60 * 60 * 1000);
+    if (ratingTimeFilter === '1w') return new Date(now - 7 * 24 * 60 * 60 * 1000);
+    if (ratingTimeFilter === '1m') return new Date(now - 30 * 24 * 60 * 60 * 1000);
+    return null;
+  };
+
+  const filteredRatings = ratings
+    .filter(r => {
+      const matchesSearch =
+        r.clientName?.toLowerCase().includes(ratingSearch.toLowerCase()) ||
+        r.professionalName?.toLowerCase().includes(ratingSearch.toLowerCase());
+      const matchesScore = ratingScoreFilter === 0 || r.score === ratingScoreFilter;
+      const matchesComment =
+        ratingCommentFilter === 'ALL' ||
+        (ratingCommentFilter === 'WITH' && r.comment && r.comment.trim().length > 0) ||
+        (ratingCommentFilter === 'WITHOUT' && (!r.comment || r.comment.trim().length === 0));
+      const threshold = getTimeThreshold();
+      const matchesTime = !threshold || new Date(r.createdAt) >= threshold;
+      return matchesSearch && matchesScore && matchesComment && matchesTime;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return ratingSortOrder === 'DESC' ? dateB - dateA : dateA - dateB;
+    });
+
+  const hasActiveRatingFilters =
+    ratingSearch !== '' ||
+    ratingScoreFilter !== 0 ||
+    ratingCommentFilter !== 'ALL' ||
+    ratingTimeFilter !== 'ALL' ||
+    ratingSortOrder !== 'DESC';
+
+  const resetRatingFilters = () => {
+    setRatingSearch('');
+    setRatingScoreFilter(0);
+    setRatingCommentFilter('ALL');
+    setRatingTimeFilter('ALL');
+    setRatingSortOrder('DESC');
+  };
+
   const tabs = [
     { id: 'stats', label: 'Estadísticas', icon: BarChart2 },
     { id: 'users', label: 'Usuarios', icon: Users },
@@ -199,6 +251,14 @@ function AdminDashboard() {
     { id: 'ALL', label: 'Todos' },
     { id: 'PROFESSIONAL', label: 'Profesionales' },
     { id: 'CLIENT', label: 'Clientes' }
+  ];
+
+  const timeFilters = [
+    { id: 'ALL', label: 'Todas' },
+    { id: '1h', label: '1 hora' },
+    { id: '1d', label: '1 día' },
+    { id: '1w', label: '1 semana' },
+    { id: '1m', label: '1 mes' },
   ];
 
   return (
@@ -286,8 +346,6 @@ function AdminDashboard() {
         {/* ── USERS ── */}
         {!loading && activeTab === 'users' && (
           <div className="space-y-3">
-
-            {/* Buscador */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -299,7 +357,6 @@ function AdminDashboard() {
               />
             </div>
 
-            {/* Filtros de rol */}
             <div className="flex gap-2">
               {roleFilters.map(filter => (
                 <button
@@ -316,20 +373,15 @@ function AdminDashboard() {
               ))}
             </div>
 
-            {/* Contador y refresh */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                {filteredUsers.length} de {users.length} usuarios
-              </p>
+              <p className="text-sm text-gray-500">{filteredUsers.length} de {users.length} usuarios</p>
               <button onClick={fetchUsers} className="flex items-center gap-1 text-sm text-blue-600">
                 <RefreshCw className="w-4 h-4" /> Actualizar
               </button>
             </div>
 
             {filteredUsers.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">
-                No se encontraron usuarios
-              </div>
+              <div className="text-center py-8 text-gray-400 text-sm">No se encontraron usuarios</div>
             )}
 
             {filteredUsers.map(user => (
@@ -362,15 +414,12 @@ function AdminDashboard() {
 
                 {expandedUser === user.id && (
                   <div className="border-t border-gray-100 px-4 py-3 space-y-2">
-
-                    {/* Info común */}
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                       <span>ID: {user.id}</span>
                       <span>Email verificado: {user.emailVerified ? '✅' : '❌'}</span>
                       <span>Auth: {user.authProvider}</span>
                     </div>
 
-                    {/* Info según rol */}
                     {user.activeRole === 'PROFESSIONAL' ? (
                       <div className="bg-purple-50 rounded-xl px-3 py-2 grid grid-cols-2 gap-2 text-xs">
                         <div>
@@ -393,7 +442,6 @@ function AdminDashboard() {
                       </div>
                     )}
 
-                    {/* Botones de acción según rol */}
                     {user.activeRole === 'PROFESSIONAL' && (
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -411,7 +459,6 @@ function AdminDashboard() {
                       </div>
                     )}
 
-                    {/* Suspender / Reactivar */}
                     <button
                       onClick={() => setConfirmSuspend({ id: user.id, name: user.name, suspended: user.suspended })}
                       className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors ${
@@ -426,7 +473,6 @@ function AdminDashboard() {
                       }
                     </button>
 
-                    {/* Eliminar */}
                     <button
                       onClick={() => setConfirmDeleteUser({ id: user.id, name: user.name })}
                       className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
@@ -443,19 +489,122 @@ function AdminDashboard() {
         {/* ── RATINGS ── */}
         {!loading && activeTab === 'ratings' && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">{ratings.length} calificaciones</p>
-              <button onClick={fetchRatings} className="flex items-center gap-1 text-sm text-blue-600">
-                <RefreshCw className="w-4 h-4" /> Actualizar
-              </button>
+
+            {/* Buscador */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={ratingSearch}
+                onChange={e => setRatingSearch(e.target.value)}
+                placeholder="Buscar por cliente o profesional..."
+                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 bg-white"
+              />
             </div>
-            {ratings.map(rating => (
+
+            {/* Filtro por puntaje */}
+            <div className="flex gap-1.5">
+              {[0, 1, 2, 3, 4, 5].map(score => (
+                <button
+                  key={score}
+                  onClick={() => setRatingScoreFilter(score)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                    ratingScoreFilter === score
+                      ? 'bg-yellow-500 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-yellow-300'
+                  }`}
+                >
+                  {score === 0 ? 'Todos' : `${score}★`}
+                </button>
+              ))}
+            </div>
+
+            {/* Filtro por comentario */}
+            <div className="flex gap-2">
+              {[
+                { id: 'ALL', label: 'Todos' },
+                { id: 'WITH', label: 'Con comentario' },
+                { id: 'WITHOUT', label: 'Sin comentario' }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setRatingCommentFilter(f.id)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
+                    ratingCommentFilter === f.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
+                  }`}
+                >
+                  {f.id === 'WITH' && <MessageSquare className="w-3 h-3" />}
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Filtro por tiempo */}
+            <div className="flex gap-1.5">
+              {timeFilters.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setRatingTimeFilter(f.id)}
+                  className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
+                    ratingTimeFilter === f.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-purple-300'
+                  }`}
+                >
+                  {f.id !== 'ALL' && <Clock className="w-3 h-3" />}
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Ordenar + contador + reset */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-500">
+                  {filteredRatings.length} de {ratings.length}
+                </p>
+                {hasActiveRatingFilters && (
+                  <button
+                    onClick={resetRatingFilters}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRatingSortOrder(prev => prev === 'DESC' ? 'ASC' : 'DESC')}
+                  className="flex items-center gap-1 text-xs font-semibold text-gray-600 bg-white border border-gray-200 px-3 py-1.5 rounded-xl hover:border-gray-400 transition-colors"
+                >
+                  {ratingSortOrder === 'DESC' ? '↓ Más recientes' : '↑ Más antiguos'}
+                </button>
+                <button onClick={fetchRatings} className="flex items-center gap-1 text-sm text-blue-600">
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {filteredRatings.length === 0 && (
+              <div className="text-center py-8 text-gray-400 text-sm">
+                No se encontraron calificaciones
+              </div>
+            )}
+
+            {filteredRatings.map(rating => (
               <div key={rating.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-yellow-500 font-bold text-sm">{'★'.repeat(rating.score)}</span>
                       <span className="text-xs text-gray-400">#{rating.id}</span>
+                      {rating.createdAt && (
+                        <span className="text-xs text-gray-400">
+                          {new Date(rating.createdAt).toLocaleDateString('es-AR')}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-500">
                       <span className="font-medium text-gray-700">{rating.clientName}</span>
