@@ -10,6 +10,8 @@ import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 
+const CABA_ID = '02';
+
 function EditCV() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,7 +44,6 @@ function EditCV() {
 
   const { provincias, segundoNivel, loadingProvincias, loadingSegundoNivel, fetchSegundoNivel, getSegundoNivelLabel } = useGeoref();
 
-  // Manejar código OAuth si viene de Google
   useEffect(() => {
     const code = searchParams.get('code');
     if (code) {
@@ -111,7 +112,7 @@ function EditCV() {
       } else {
         throw new Error('No se pudo cargar el CV');
       }
-    } catch (error) {
+    } catch {
       setToast({ type: 'error', message: 'Error al cargar CV' });
     } finally {
       setLoading(false);
@@ -371,6 +372,7 @@ function EditCV() {
 
   const confirmDeleteFreelanceJob = (index) =>
     setDeleteModal({ type: 'freelance', index, title: '¿Eliminar trabajo autónomo?', message: 'Esta acción no se puede deshacer.' });
+
   const removeFreelanceJob = (index) => {
     setFreelanceJobs(prev => prev.filter((_, i) => i !== index));
     setDeleteModal(null);
@@ -400,6 +402,7 @@ function EditCV() {
 
   const confirmDeleteEmployeeJob = (index) =>
     setDeleteModal({ type: 'employee', index, title: '¿Eliminar trabajo?', message: 'Esta acción no se puede deshacer.' });
+
   const removeEmployeeJob = (index) => {
     setEmployeeJobs(prev => prev.filter((_, i) => i !== index));
     setDeleteModal(null);
@@ -422,6 +425,7 @@ function EditCV() {
 
   const confirmDeleteEducation = (index) =>
     setDeleteModal({ type: 'education', index, title: '¿Eliminar ítem?', message: 'Esta acción no se puede deshacer.' });
+
   const removeEducation = (index) => {
     setEducation(prev => prev.filter((_, i) => i !== index));
     setDeleteModal(null);
@@ -556,7 +560,6 @@ function EditCV() {
             <label className="block text-gray-700 font-semibold mb-2 text-sm">Provincia</label>
             <select value={zonaProvinciaId} onChange={(e) => {
               const id = e.target.value;
-              alert('provincia id: ' + id); //AGREGADO
               const prov = provincias.find(p => p.id === id);
               setZonaProvinciaId(id);
               setZonaProvincia(prov?.nombre || '');
@@ -572,10 +575,19 @@ function EditCV() {
           {zonaProvinciaId && (
             <div className="mb-3">
               <label className="block text-gray-700 font-semibold mb-2 text-sm">{getSegundoNivelLabel(zonaProvinciaId)}</label>
-              <SearchableSelect options={segundoNivel} value={zonaSeleccionada} onChange={setZonaSeleccionada}
+              <SearchableSelect
+                options={
+                  zonaProvinciaId === CABA_ID
+                    ? [{ nombre: 'Todos los barrios' }, ...segundoNivel]
+                    : segundoNivel
+                }
+                value={zonaSeleccionada}
+                onChange={setZonaSeleccionada}
                 placeholder={`Seleccioná un ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}`}
                 searchPlaceholder={`Buscar ${getSegundoNivelLabel(zonaProvinciaId).toLowerCase()}...`}
-                loading={loadingSegundoNivel} focusColor="purple" />
+                loading={loadingSegundoNivel}
+                focusColor="purple"
+              />
             </div>
           )}
 
