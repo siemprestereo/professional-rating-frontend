@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
-  Loader2, RefreshCw
+  Loader2, RefreshCw, Search
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -26,6 +26,8 @@ function AdminDashboard() {
   const [error, setError] = useState(null);
   const [expandedUser, setExpandedUser] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('ALL');
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
@@ -115,10 +117,26 @@ function AdminDashboard() {
     navigate('/professional-login');
   };
 
+  const filteredUsers = users.filter(user => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      user.email.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole =
+      userRoleFilter === 'ALL' ||
+      user.activeRole === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
+
   const tabs = [
     { id: 'stats', label: 'Estadísticas', icon: BarChart2 },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'ratings', label: 'Calificaciones', icon: Star }
+  ];
+
+  const roleFilters = [
+    { id: 'ALL', label: 'Todos' },
+    { id: 'PROFESSIONAL', label: 'Profesionales' },
+    { id: 'CLIENT', label: 'Clientes' }
   ];
 
   return (
@@ -204,13 +222,54 @@ function AdminDashboard() {
         {/* ── USERS ── */}
         {!loading && activeTab === 'users' && (
           <div className="space-y-3">
+
+            {/* Buscador */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                placeholder="Buscar por nombre o email..."
+                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 bg-white"
+              />
+            </div>
+
+            {/* Filtros de rol */}
+            <div className="flex gap-2">
+              {roleFilters.map(filter => (
+                <button
+                  key={filter.id}
+                  onClick={() => setUserRoleFilter(filter.id)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                    userRoleFilter === filter.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Contador y refresh */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">{users.length} usuarios</p>
+              <p className="text-sm text-gray-500">
+                {filteredUsers.length} de {users.length} usuarios
+              </p>
               <button onClick={fetchUsers} className="flex items-center gap-1 text-sm text-blue-600">
                 <RefreshCw className="w-4 h-4" /> Actualizar
               </button>
             </div>
-            {users.map(user => (
+
+            {/* Lista */}
+            {filteredUsers.length === 0 && (
+              <div className="text-center py-8 text-gray-400 text-sm">
+                No se encontraron usuarios
+              </div>
+            )}
+
+            {filteredUsers.map(user => (
               <div key={user.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <button
                   className="w-full flex items-center justify-between px-4 py-3"
