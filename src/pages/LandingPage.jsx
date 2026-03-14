@@ -53,6 +53,8 @@ function LandingPage() {
   const handleDashboard = () => {
     if (userInfo?.role === 'PROFESSIONAL') {
       navigate('/professional-dashboard');
+    } else if (userInfo?.role === 'ADMIN') {
+      navigate('/admin');
     } else {
       navigate('/client-dashboard');
     }
