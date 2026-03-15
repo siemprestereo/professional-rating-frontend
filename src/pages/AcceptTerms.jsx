@@ -32,15 +32,15 @@ function AcceptTerms() {
         const stored = storedData ? JSON.parse(storedData) : {};
         localStorage.setItem(key, JSON.stringify({ ...stored, termsAccepted: true }));
       } catch (e) {
-        console.error("Error actualizando storage local", e);
+        //
       }
 
       // Redirección
       const targetPath = userType === 'PROFESSIONAL' ? '/professional-dashboard' : '/client-dashboard';
       navigate(targetPath, { replace: true });
 
-    } catch (err) {
-      console.error("Error en la petición:", err);
+    } catch {
+      //
     } finally {
       setLoading(false);
     }
