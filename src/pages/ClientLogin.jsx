@@ -121,15 +121,22 @@ function ClientLogin() {
 
         {/* Banner QR — visible solo si viene de escanear un QR */}
         {qrProfessionalName && (
-          <div className="bg-yellow-400 rounded-2xl px-4 py-4 flex items-start gap-3 animate-slideDown shadow-lg">
-            <Star className="w-6 h-6 text-yellow-800 flex-shrink-0 mt-0.5 fill-yellow-800" />
-            <div>
-              <p className="font-bold text-yellow-900 text-sm sm:text-base">
-                Escaneaste el QR de {qrProfessionalName}
-              </p>
-              <p className="text-yellow-800 text-xs sm:text-sm mt-0.5">
-                Iniciá sesión o creá una cuenta para poder calificar
-              </p>
+          <div className="qr-banner-glow bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-4 animate-slideDown shadow-xl relative overflow-hidden">
+            {/* Shimmer */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-fast" />
+
+            <div className="relative flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <Star className="w-7 h-7 text-yellow-900 fill-yellow-900 animate-bounce-subtle" />
+              </div>
+              <div>
+                <p className="font-bold text-yellow-900 text-base sm:text-lg leading-tight">
+                  ¡Escaneaste el QR de {qrProfessionalName}!
+                </p>
+                <p className="text-yellow-800 text-sm mt-1">
+                  Iniciá sesión o creá una cuenta para poder calificar
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -195,11 +202,10 @@ function ClientLogin() {
                 placeholder="tu@email.com"
                 autoComplete="email"
                 required
-                className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
-                  loginError
+                className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${loginError
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-gray-200 focus:border-green-500'
-                } ${shake ? 'animate-shake' : ''}`}
+                  } ${shake ? 'animate-shake' : ''}`}
               />
             </div>
 
@@ -218,11 +224,10 @@ function ClientLogin() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
-                    loginError
+                  className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${loginError
                       ? 'border-red-500 focus:border-red-500'
                       : 'border-gray-200 focus:border-green-500'
-                  } ${shake ? 'animate-shake' : ''}`}
+                    } ${shake ? 'animate-shake' : ''}`}
                 />
                 <button
                   type="button"
@@ -258,7 +263,7 @@ function ClientLogin() {
 
             <button
               type="button"
-              onClick={() => {}}
+              onClick={() => { }}
               className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors text-sm sm:text-base"
             >
               ¿Olvidaste tu contraseña?
