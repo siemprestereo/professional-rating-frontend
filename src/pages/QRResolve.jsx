@@ -18,7 +18,18 @@ function QRResolve() {
   const resolveQRCode = async () => {
     try {
       const response = await api.resolveQR(code);
-      setProfessionalId(response.professionalId);
+      const profId = response.professionalId;
+
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // Guardar contexto para mostrar el banner en el login
+        localStorage.setItem('redirectAfterLogin', `/rate/${code}`);
+        localStorage.setItem('qrProfessionalName', response.professionalName || '');
+        navigate('/client-login');
+        return;
+      }
+
+      setProfessionalId(profId);
       setLoading(false);
     } catch (err) {
       console.error('Error resolving QR:', err);
@@ -58,7 +69,6 @@ function QRResolve() {
     );
   }
 
-  // ✅ Renderizar RatingForm directamente sin cambiar la URL
   return <RatingForm professionalIdFromToken={professionalId} />;
 }
 
