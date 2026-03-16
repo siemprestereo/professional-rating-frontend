@@ -20,7 +20,6 @@ function ClientLogin() {
   const [qrProfessionalName, setQrProfessionalName] = useState(null);
 
   useEffect(() => {
-    // Detectar si viene de un QR
     const name = localStorage.getItem('qrProfessionalName');
     if (name) setQrProfessionalName(name);
 
@@ -48,6 +47,8 @@ function ClientLogin() {
           email: data.email,
           name: data.name
         });
+
+        localStorage.removeItem('qrProfessionalName');
 
         if (data.userType === 'CLIENT') {
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
@@ -92,7 +93,6 @@ function ClientLogin() {
         name: data.name
       });
 
-      // Limpiar el contexto del QR
       localStorage.removeItem('qrProfessionalName');
 
       setToast({ type: 'success', message: '¡Login exitoso!' });
@@ -119,12 +119,9 @@ function ClientLogin() {
     <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center p-4 animate-fadeIn">
       <div className="max-w-md w-full space-y-3">
 
-        {/* Banner QR — visible solo si viene de escanear un QR */}
         {qrProfessionalName && (
           <div className="qr-banner-glow bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-6 animate-slideDown shadow-xl relative overflow-hidden">
-            {/* Shimmer */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-fast" />
-
             <div className="relative flex items-start gap-3">
               <div className="flex-shrink-0 mt-1">
                 <Star className="w-8 h-8 text-yellow-900 fill-yellow-900 animate-bounce-subtle" />
@@ -141,7 +138,6 @@ function ClientLogin() {
           </div>
         )}
 
-        {/* Card de login */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 animate-scaleIn">
           <button
             type="button"
@@ -183,7 +179,7 @@ function ClientLogin() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-xs sm:text-sm">
-              <span className="px-4 bg-white text-gray-500">O ingresá con email</span>
+              <span className="px-4 bg-white text-gray-500">O ingresá con email si ya tenés cuenta</span>
             </div>
           </div>
 
@@ -195,17 +191,13 @@ function ClientLogin() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setLoginError('');
-                }}
+                onChange={(e) => { setEmail(e.target.value); setLoginError(''); }}
                 placeholder="tu@email.com"
                 autoComplete="email"
                 required
-                className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${loginError
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-gray-200 focus:border-green-500'
-                  } ${shake ? 'animate-shake' : ''}`}
+                className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${
+                  loginError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-green-500'
+                } ${shake ? 'animate-shake' : ''}`}
               />
             </div>
 
@@ -217,17 +209,13 @@ function ClientLogin() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setLoginError('');
-                  }}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${loginError
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-gray-200 focus:border-green-500'
-                    } ${shake ? 'animate-shake' : ''}`}
+                  className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${
+                    loginError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-green-500'
+                  } ${shake ? 'animate-shake' : ''}`}
                 />
                 <button
                   type="button"
@@ -263,7 +251,7 @@ function ClientLogin() {
 
             <button
               type="button"
-              onClick={() => { }}
+              onClick={() => {}}
               className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors text-sm sm:text-base"
             >
               ¿Olvidaste tu contraseña?
@@ -285,10 +273,7 @@ function ClientLogin() {
         </div>
       </div>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
-
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {errorModal && (
         <ErrorModal
           title={errorModal.title}

@@ -50,10 +50,9 @@ function ClientRegister() {
           termsAccepted: data.data?.termsAccepted ?? false
         });
 
-        const destination = !data.data?.termsAccepted
-          ? '/accept-terms'
-          : '/client-dashboard';
+        localStorage.removeItem('qrProfessionalName');
 
+        const destination = !data.data?.termsAccepted ? '/accept-terms' : '/client-dashboard';
         setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
         setTimeout(() => navigate(destination, { replace: true }), 300);
       });
@@ -100,7 +99,6 @@ function ClientRegister() {
 
       const data = await response.json();
 
-      // Marcar términos en backend
       await fetch(`${BACKEND_URL}/api/auth/accept-terms`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${data.token}` }
@@ -113,8 +111,11 @@ function ClientRegister() {
         termsAccepted: true
       });
 
+      localStorage.removeItem('qrProfessionalName');
+
       setToast({ type: 'success', message: '¡Registro exitoso!' });
       setTimeout(() => handlePostLoginRedirect('/client-dashboard', navigate, true), 300);
+
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {
@@ -225,12 +226,12 @@ function ClientRegister() {
             </div>
           </div>
 
-          {/* Checkbox T&C */}
           <label className="flex items-start gap-3 cursor-pointer mb-5 group">
             <div className="relative mt-0.5 flex-shrink-0">
               <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="sr-only" />
-              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${termsAccepted ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white group-hover:border-gray-400'
-                }`}>
+              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                termsAccepted ? 'bg-green-500 border-green-500' : 'border-gray-300 bg-white group-hover:border-gray-400'
+              }`}>
                 {termsAccepted && (
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
