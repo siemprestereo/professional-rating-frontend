@@ -121,19 +121,19 @@ function ClientLogin() {
 
         {/* Banner QR — visible solo si viene de escanear un QR */}
         {qrProfessionalName && (
-          <div className="qr-banner-glow bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-4 animate-slideDown shadow-xl relative overflow-hidden">
+          <div className="qr-banner-glow bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-6 animate-slideDown shadow-xl relative overflow-hidden">
             {/* Shimmer */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-fast" />
 
             <div className="relative flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <Star className="w-7 h-7 text-yellow-900 fill-yellow-900 animate-bounce-subtle" />
+              <div className="flex-shrink-0 mt-1">
+                <Star className="w-8 h-8 text-yellow-900 fill-yellow-900 animate-bounce-subtle" />
               </div>
               <div>
-                <p className="font-bold text-yellow-900 text-base sm:text-lg leading-tight">
+                <p className="font-bold text-yellow-900 text-lg sm:text-xl leading-tight">
                   ¡Escaneaste el QR de {qrProfessionalName}!
                 </p>
-                <p className="text-yellow-800 text-sm mt-1">
+                <p className="text-yellow-800 text-sm sm:text-base mt-1.5">
                   Iniciá sesión o creá una cuenta para poder calificar
                 </p>
               </div>
@@ -203,8 +203,8 @@ function ClientLogin() {
                 autoComplete="email"
                 required
                 className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 focus:outline-none transition-all text-sm sm:text-base ${loginError
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-gray-200 focus:border-green-500'
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-gray-200 focus:border-green-500'
                   } ${shake ? 'animate-shake' : ''}`}
               />
             </div>
@@ -225,8 +225,8 @@ function ClientLogin() {
                   autoComplete="current-password"
                   required
                   className={`w-full border-2 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:outline-none transition-all text-sm sm:text-base ${loginError
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:border-green-500'
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-gray-200 focus:border-green-500'
                     } ${shake ? 'animate-shake' : ''}`}
                 />
                 <button
