@@ -1,33 +1,5 @@
 import { memo } from 'react';
-import { Loader2 } from 'lucide-react';
-
-const QRIcon = ({ size = 40, color = '#f97316' }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Top-left square */}
-    <rect x="5" y="5" width="38" height="38" rx="4" fill={color}/>
-    <rect x="13" y="13" width="22" height="22" rx="2" fill="white"/>
-    <rect x="19" y="19" width="10" height="10" fill={color}/>
-    {/* Top-right square */}
-    <rect x="57" y="5" width="38" height="38" rx="4" fill={color}/>
-    <rect x="65" y="13" width="22" height="22" rx="2" fill="white"/>
-    <rect x="71" y="19" width="10" height="10" fill={color}/>
-    {/* Bottom-left square */}
-    <rect x="5" y="57" width="38" height="38" rx="4" fill={color}/>
-    <rect x="13" y="65" width="22" height="22" rx="2" fill="white"/>
-    <rect x="19" y="71" width="10" height="10" fill={color}/>
-    {/* Data dots - right bottom area */}
-    <rect x="57" y="57" width="10" height="10" rx="1" fill={color}/>
-    <rect x="71" y="57" width="10" height="10" rx="1" fill={color}/>
-    <rect x="85" y="57" width="10" height="10" rx="1" fill={color}/>
-    <rect x="57" y="71" width="10" height="10" rx="1" fill={color}/>
-    <rect x="85" y="71" width="10" height="10" rx="1" fill={color}/>
-    <rect x="57" y="85" width="10" height="10" rx="1" fill={color}/>
-    <rect x="71" y="85" width="10" height="10" rx="1" fill={color}/>
-    <rect x="85" y="85" width="10" height="10" rx="1" fill={color}/>
-    {/* Extra data dots */}
-    <rect x="71" y="71" width="10" height="10" rx="1" fill={color}/>
-  </svg>
-);
+import { Loader2, QrCode } from 'lucide-react';
 
 const QRCodeCard = memo(({ 
   qrCode, 
@@ -116,7 +88,7 @@ const QRCodeCard = memo(({
           {generatingQR ? (
             <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
           ) : (
-            <QRIcon size={44} color="#f97316" />
+            <QrCode className="w-11 h-11 text-orange-500" />
           )}
         </button>
       </div>
