@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Briefcase, Award, Edit, Home, ChevronDown, User, FileText, LogOut, Mail, Phone, MapPin, Info } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Edit, Home, ChevronDown, FileText, LogOut } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import BackButton from '../components/BackButton';
 import { BACKEND_URL } from '../config';
 
 function MyProfile() {
@@ -24,40 +25,31 @@ function MyProfile() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ✅ OPTIMIZACIÓN: Carga paralela con Promise.all()
   const loadMyProfile = async () => {
-    console.log('📍 loadMyProfile ejecutándose...');
-
     const savedData = localStorage.getItem('professional');
     const token = localStorage.getItem('authToken');
 
-    console.log('📦 savedData:', savedData ? 'EXISTS' : 'NULL');
-
     if (!savedData || !token) {
-      console.log('🚨 No hay datos de professional en localStorage, redirigiendo al login');
       navigate('/professional-login');
       setLoading(false);
       return;
     }
 
     const localData = JSON.parse(savedData);
-    console.log('✅ Professional data loaded:', localData);
     setProfessional(localData);
 
     try {
-      // ✅ Cargar desde el endpoint correcto que tiene TODOS los datos
       const response = await fetch(`${BACKEND_URL}/api/professionals/${localData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         const updatedData = await response.json();
-        console.log('✅ Datos actualizados desde backend:', updatedData);
         setProfessional(updatedData);
         localStorage.setItem('professional', JSON.stringify(updatedData));
       }
-    } catch (error) {
-      console.error('Error loading profile data:', error);
+    } catch {
+      // silencioso
     } finally {
       setLoading(false);
     }
@@ -75,40 +67,7 @@ function MyProfile() {
     navigate('/cv-view');
   };
 
-  const renderStars = (score) => {
-    return [...Array(5)].map((_, i) => (
-      <Star
-        key={i}
-        className={`w-5 h-5 transition-all duration-300 ${i < score ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
-
-  const getProfessionTypeLabel = (type) => {
-    const translations = {
-      'WAITER': 'Mozo/Camarero',
-      'ELECTRICIAN': 'Electricista',
-      'PAINTER': 'Pintor',
-      'HAIRDRESSER': 'Peluquero',
-      'PLUMBER': 'Plomero',
-      'CARPENTER': 'Carpintero',
-      'MECHANIC': 'Mecánico',
-      'CHEF': 'Chef',
-      'BARISTA': 'Barista',
-      'BARTENDER': 'Bartender',
-      'CLEANER': 'Personal de limpieza',
-      'GARDENER': 'Jardinero',
-      'DRIVER': 'Conductor',
-      'SECURITY': 'Seguridad',
-      'RECEPTIONIST': 'Recepcionista',
-      'OTHER': 'Otro'
-    };
-    return translations[type] || type;
-  };
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  if (loading) return <LoadingScreen />;
 
   if (!professional) {
     return (
@@ -126,23 +85,17 @@ function MyProfile() {
     );
   }
 
-  const reputationScore = professional.reputationScore || professional.averageRating || 0;
-  const totalRatings = professional.totalRatings || 0;
   const professionalName = professional.name || professional.professionalName || 'Mi Perfil';
   const firstName = professionalName.split(' ')[0];
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
-      {/* Header con navbar */}
+
+      {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
-            className="text-white text-2xl hover:scale-105 transition-transform logo-pulse"
-            style={{ fontFamily: 'Playball, cursive' }}
-          >
-            Calificalo
-          </button>
+          {/* Botón volver igual que CvView */}
+          <BackButton to="/professional-dashboard" />
 
           <div className="relative" ref={dropdownRef}>
             <button
@@ -164,9 +117,7 @@ function MyProfile() {
                     <FileText className="w-5 h-5 text-purple-600" />
                     <span className="font-medium text-sm sm:text-base">Mi CV</span>
                   </button>
-
                   <div className="border-t border-gray-200 my-2"></div>
-
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
@@ -187,18 +138,10 @@ function MyProfile() {
               : professionalName.charAt(0)
             }
           </div>
-          <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">
+          <h1 className="text-3xl roboto-light text-white mb-1 animate-slideUp">
             {professionalName}
           </h1>
-          <div className="flex items-center justify-center mb-4 animate-slideUp delay-100">
-            {renderStars(Math.round(reputationScore))}
-            <span className="ml-2 text-white font-semibold text-lg">
-              {reputationScore.toFixed(1)}
-            </span>
-          </div>
-          <p className="text-white/90 animate-slideUp delay-200 text-base">
-            {totalRatings} {totalRatings === 1 ? 'calificación' : 'calificaciones'}
-          </p>
+          <p className="text-white/70 text-sm animate-slideUp delay-100">Mi Perfil</p>
         </div>
       </div>
 
@@ -207,96 +150,54 @@ function MyProfile() {
 
         {/* Información Personal */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl roboto-light text-gray-800 flex items-center">
-              <Info className="w-6 h-6 mr-2 text-blue-600" />
-              Información Personal
-            </h2>
-
-          </div>
-
-          <div className="space-y-4">
-            {/* Nombre */}
-            <div>
-              <div className="flex items-center text-gray-500 text-sm mb-1">
-                <User className="w-4 h-4 mr-2" />
-                <span className="font-semibold">Nombre completo</span>
-              </div>
-              <p className="text-gray-800 text-base ml-6">{professionalName}</p>
-            </div>
-
-            {/* Email */}
-            <div>
-              <div className="flex items-center text-gray-500 text-sm mb-1">
-                <Mail className="w-4 h-4 mr-2" />
-                <span className="font-semibold">Email</span>
-              </div>
-              <p className="text-gray-800 text-base ml-6">{professional.email || 'No especificado'}</p>
-            </div>
-
-            {/* Teléfono */}
-            <div>
-              <div className="flex items-center text-gray-500 text-sm mb-1">
-                <Phone className="w-4 h-4 mr-2" />
-                <span className="font-semibold">Teléfono</span>
-              </div>
-              <p className="text-gray-800 text-base ml-6">{professional.phone || 'No especificado'}</p>
-            </div>
-
-            {/* Ubicación */}
-            <div>
-              <div className="flex items-center text-gray-500 text-sm mb-1">
-                <MapPin className="w-4 h-4 mr-2" />
-                <span className="font-semibold">Ubicación</span>
-              </div>
-              <p className="text-gray-800 text-base ml-6">{professional.location || 'No especificada'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Información Profesional */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-50">
-          <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-            <Briefcase className="w-6 h-6 mr-2 text-purple-600" />
-            Información Profesional
+          <h2 className="text-xl roboto-light text-gray-800 mb-5 flex items-center">
+            <User className="w-6 h-6 mr-2 text-blue-600" />
+            Información Personal
           </h2>
 
-          <div className="space-y-4">
-            {/* Tipo de profesión */}
+          <div className="space-y-5">
             <div>
-              <p className="text-gray-500 text-sm font-semibold mb-1">Tipo de Profesión</p>
-              <p className="text-gray-800 text-base">
-                {professional.professionType ? getProfessionTypeLabel(professional.professionType) : 'No especificado'}
-              </p>
-            </div>
-
-            {/* Título Profesional */}
-            <div>
-              <p className="text-gray-500 text-sm font-semibold mb-1">Título Profesional</p>
-              <p className="text-gray-800 text-base">
-                {professional.professionalTitle || 'No especificado'}
-              </p>
-            </div>
-
-            {/* Mensaje si no hay datos profesionales completos */}
-            {(!professional.professionType || !professional.professionalTitle) && (
-              <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                <p className="text-yellow-800 text-sm">
-                  ⚠️ Completá tu información profesional para que los clientes te encuentren más fácilmente
-                </p>
+              <div className="flex items-center text-gray-400 text-sm mb-1">
+                <User className="w-4 h-4 mr-2" />
+                <span>Nombre completo</span>
               </div>
-            )}
+              <p className="text-gray-800 text-base font-medium ml-6">{professionalName}</p>
+            </div>
+
+            <div>
+              <div className="flex items-center text-gray-400 text-sm mb-1">
+                <Mail className="w-4 h-4 mr-2" />
+                <span>Email</span>
+              </div>
+              <p className="text-gray-800 text-base font-medium ml-6">{professional.email || 'No especificado'}</p>
+            </div>
+
+            <div>
+              <div className="flex items-center text-gray-400 text-sm mb-1">
+                <Phone className="w-4 h-4 mr-2" />
+                <span>Teléfono</span>
+              </div>
+              <p className="text-gray-800 text-base font-medium ml-6">{professional.phone || 'No especificado'}</p>
+            </div>
+
+            <div>
+              <div className="flex items-center text-gray-400 text-sm mb-1">
+                <MapPin className="w-4 h-4 mr-2" />
+                <span>Ubicación</span>
+              </div>
+              <p className="text-gray-800 text-base font-medium ml-6">{professional.location || 'No especificada'}</p>
+            </div>
           </div>
         </div>
 
-        {/* Botón Editar Perfil completo */}
+        {/* Botón Editar */}
         <div className="mb-6">
           <button
             onClick={() => navigate('/edit-profile-professional')}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 animate-slideUp delay-100"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 animate-slideUp delay-50"
           >
             <Edit className="w-5 h-5" />
-            Editar Perfil Completo
+            Editar Perfil
           </button>
         </div>
       </div>
