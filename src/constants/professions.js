@@ -7,6 +7,7 @@ export const PROFESSIONS = [
   { value: 'HAIRDRESSER', label: 'Peluquero' },
   { value: 'PLUMBER', label: 'Plomero' },
   { value: 'CARPENTER', label: 'Carpintero' },
+  { value: 'PILATES', label: 'Instructora de pilates' },
   { value: 'MECHANIC', label: 'Mecánico' },
   { value: 'CHEF', label: 'Chef' },
   { value: 'BARISTA', label: 'Barista' },

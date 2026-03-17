@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, TrendingUp, Users, Calendar, ChevronDown, User, FileText, LogOut } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import HomeButton from '../components/HomeButton';
+import BackButton from '../components/BackButton';
 import { BACKEND_URL } from '../config';
 
 function Stats() {
@@ -84,13 +85,7 @@ function Stats() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => navigate('/professional-dashboard')}
-            className="text-white text-2xl hover:scale-105 transition-transform"
-            style={{ fontFamily: 'Playball, cursive' }}
-          >
-            Calificalo
-          </button>
+          <BackButton />
 
           <div className="relative" ref={dropdownRef}>
             <button onClick={() => setShowUserMenu(!showUserMenu)}

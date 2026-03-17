@@ -80,7 +80,7 @@ function SavedProfessionals() {
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-8">
         <div className="max-w-4xl mx-auto">
-          <BackButton to="/client-dashboard" />
+          <BackButton />
           <h1 className="text-3xl roboto-light text-white mb-3 mt-2">Profesionales guardados</h1>
           <button
             onClick={handleCompare}

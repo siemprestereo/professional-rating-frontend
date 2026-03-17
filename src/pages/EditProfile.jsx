@@ -131,7 +131,7 @@ function EditProfile() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-16 text-center relative">
         <div className="flex items-start mb-4">
-          <BackButton to="/client-dashboard" />
+          <BackButton />
         </div>
         <ProfilePictureUpload
           currentPhoto={client?.profilePicture}

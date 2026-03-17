@@ -123,7 +123,7 @@ function CvView() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
         <div className="max-w-4xl mx-auto">
-          <BackButton to="/my-profile" />
+          <BackButton />
           <div className="text-center">
             <button onClick={() => navigate('/my-profile')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
               <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn border-4 border-white shadow-lg">

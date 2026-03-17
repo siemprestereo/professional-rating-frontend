@@ -95,7 +95,7 @@ function MyProfile() {
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
           {/* Botón volver igual que CvView */}
-          <BackButton to="/professional-dashboard" />
+          <BackButton />
 
           <div className="relative" ref={dropdownRef}>
             <button

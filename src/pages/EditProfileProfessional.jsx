@@ -183,7 +183,7 @@ function EditProfileProfessional() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-32">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
         <div className="max-w-4xl mx-auto">
-          <BackButton to="/professional-dashboard" />
+          <BackButton />
           <div className="text-center">
             <ProfilePictureUpload
               currentPhoto={professional?.profilePicture}

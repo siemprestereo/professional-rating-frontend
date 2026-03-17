@@ -91,7 +91,7 @@ function ClientStats() {
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-8">
         <div className="max-w-4xl mx-auto">
-          <BackButton to="/client-dashboard" />
+          <BackButton />
           <h1 className="text-3xl roboto-light text-white mb-2 mt-2 animate-slideUp">📊 Mis Estadísticas</h1>
           <p className="text-white/90 animate-slideUp delay-100">Tu actividad y tus logros como calificador.</p>
         </div>

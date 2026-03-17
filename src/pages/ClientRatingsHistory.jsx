@@ -104,7 +104,7 @@ function ClientRatingsHistory() {
     <div className="min-h-screen bg-gray-50 pb-24 animate-fadeIn">
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-8">
         <div className="max-w-4xl mx-auto">
-          <BackButton to="/client-stats" />
+          <BackButton />
           <h1 className="text-3xl roboto-light text-white mb-2 mt-2">Historial de Calificaciones</h1>
           <p className="text-white/90">{ratings.length} {ratings.length === 1 ? 'calificación otorgada' : 'calificaciones otorgadas'}</p>
         </div>
