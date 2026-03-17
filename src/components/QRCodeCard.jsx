@@ -9,9 +9,9 @@ const QRCodeCard = memo(({
   onClose 
 }) => {
   return (
-    <div className="mb-16 animate-slideUp relative">
+    <div className="mb-20 animate-slideUp relative">
       {/* Bloque naranja */}
-      <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl px-6 pt-6 pb-20 text-center relative overflow-hidden">
+      <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl px-6 pt-6 pb-24 text-center relative overflow-hidden">
         
         {/* Shimmer */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
@@ -52,9 +52,6 @@ const QRCodeCard = memo(({
                       className="mx-auto border-2 border-orange-200 rounded-lg w-full max-w-[240px] md:max-w-xs animate-pulseGlow"
                     />
                   </div>
-                  <p className="text-sm md:text-base text-white/90 mb-2">
-                    <span className="font-semibold">Código:</span> {qrCode.code}
-                  </p>
 
                   {timeLeft && !timeLeft.expired && (
                     <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 mb-3 mx-auto max-w-xs">
@@ -86,16 +83,16 @@ const QRCodeCard = memo(({
       </div>
 
       {/* Botón redondo que sobresale */}
-      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
         <button
-          onClick={qrCode ? onGenerate : onGenerate}
+          onClick={onGenerate}
           disabled={generatingQR}
-          className="w-20 h-20 rounded-full bg-white border-4 border-orange-500 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50"
+          className="w-24 h-24 rounded-full bg-white border-4 border-orange-500 shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50"
         >
           {generatingQR ? (
-            <Loader2 className="w-9 h-9 text-orange-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
           ) : (
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="3" y="3" width="7" height="7" rx="1" fill="#f97316"/>
               <rect x="14" y="3" width="7" height="7" rx="1" fill="#f97316"/>
               <rect x="3" y="14" width="7" height="7" rx="1" fill="#f97316"/>

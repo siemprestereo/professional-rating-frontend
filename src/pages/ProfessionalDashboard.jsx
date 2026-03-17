@@ -21,6 +21,7 @@ function ProfessionalDashboard() {
   const [hasWorkExperiences, setHasWorkExperiences] = useState(true);
   const [timeLeft, setTimeLeft] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
   const dropdownRef = useRef(null);
 
   const [toast, setToast] = useState(null);
@@ -297,6 +298,18 @@ function ProfessionalDashboard() {
     ));
   }, []);
 
+  const getBadgeDescription = useCallback((totalRatings) => {
+    if (totalRatings >= 20) {
+      return '🥇 Sos Veterano, el nivel más alto. ¡Seguí así!';
+    } else if (totalRatings >= 5) {
+      const remaining = 20 - totalRatings;
+      return `🥈 Sos Experimentado. Te faltan ${remaining} calificación${remaining !== 1 ? 'es' : ''} para alcanzar el nivel Veterano 🥇`;
+    } else {
+      const remaining = 5 - totalRatings;
+      return `🥉 Sos Principiante. Te faltan ${remaining} calificación${remaining !== 1 ? 'es' : ''} para alcanzar el nivel Experimentado 🥈`;
+    }
+  }, []);
+
   const firstName = useMemo(() => professional ? getFirstName(professional.name) : '', [professional]);
   const fullName = useMemo(() => professional ? capitalizeName(professional.name) : '', [professional]);
   const badge = useMemo(() => getProfessionalBadge(professional?.totalRatings || 0), [professional?.totalRatings]);
@@ -324,6 +337,38 @@ function ProfessionalDashboard() {
               className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg"
             >
               <X className="w-4 h-4 text-gray-700" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal badge */}
+      {showBadgeModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-6"
+          onClick={() => setShowBadgeModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 max-w-sm w-full animate-scaleIn"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <span className="text-5xl">{badge.emoji}</span>
+              <h2 className="text-xl font-semibold text-gray-800 mt-2">{badge.name}</h2>
+            </div>
+            <p className="text-gray-600 text-base text-center leading-relaxed mb-2">
+              {getBadgeDescription(professional.totalRatings || 0)}
+            </p>
+            <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-400 text-center space-y-1">
+              <p>🥉 Principiante — 0 a 4 calificaciones</p>
+              <p>🥈 Experimentado — 5 a 19 calificaciones</p>
+              <p>🥇 Veterano — 20 o más calificaciones</p>
+            </div>
+            <button
+              onClick={() => setShowBadgeModal(false)}
+              className="mt-5 w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+            >
+              Entendido
             </button>
           </div>
         </div>
@@ -380,10 +425,14 @@ function ProfessionalDashboard() {
           </div>
           <h2 className="text-2xl roboto-light text-white mb-3 animate-slideUp">{fullName}</h2>
 
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2 animate-slideUp delay-50`}>
+          {/* Badge clickeable */}
+          <button
+            onClick={() => setShowBadgeModal(true)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2 animate-slideUp delay-50 active:scale-95 transition-transform`}
+          >
             <span className="text-xl">{badge.emoji}</span>
             <span className={badge.color}>{badge.name}</span>
-          </div>
+          </button>
 
           <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
             {renderStars(Math.round(professional.reputationScore || 0))}
