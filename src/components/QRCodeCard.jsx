@@ -1,6 +1,34 @@
 import { memo } from 'react';
 import { Loader2 } from 'lucide-react';
 
+const QRIcon = ({ size = 40, color = '#f97316' }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Top-left square */}
+    <rect x="5" y="5" width="38" height="38" rx="4" fill={color}/>
+    <rect x="13" y="13" width="22" height="22" rx="2" fill="white"/>
+    <rect x="19" y="19" width="10" height="10" fill={color}/>
+    {/* Top-right square */}
+    <rect x="57" y="5" width="38" height="38" rx="4" fill={color}/>
+    <rect x="65" y="13" width="22" height="22" rx="2" fill="white"/>
+    <rect x="71" y="19" width="10" height="10" fill={color}/>
+    {/* Bottom-left square */}
+    <rect x="5" y="57" width="38" height="38" rx="4" fill={color}/>
+    <rect x="13" y="65" width="22" height="22" rx="2" fill="white"/>
+    <rect x="19" y="71" width="10" height="10" fill={color}/>
+    {/* Data dots - right bottom area */}
+    <rect x="57" y="57" width="10" height="10" rx="1" fill={color}/>
+    <rect x="71" y="57" width="10" height="10" rx="1" fill={color}/>
+    <rect x="85" y="57" width="10" height="10" rx="1" fill={color}/>
+    <rect x="57" y="71" width="10" height="10" rx="1" fill={color}/>
+    <rect x="85" y="71" width="10" height="10" rx="1" fill={color}/>
+    <rect x="57" y="85" width="10" height="10" rx="1" fill={color}/>
+    <rect x="71" y="85" width="10" height="10" rx="1" fill={color}/>
+    <rect x="85" y="85" width="10" height="10" rx="1" fill={color}/>
+    {/* Extra data dots */}
+    <rect x="71" y="71" width="10" height="10" rx="1" fill={color}/>
+  </svg>
+);
+
 const QRCodeCard = memo(({ 
   qrCode, 
   generatingQR, 
@@ -10,13 +38,10 @@ const QRCodeCard = memo(({
 }) => {
   return (
     <div className="mb-20 animate-slideUp relative">
-      {/* Bloque naranja */}
       <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl shadow-2xl px-6 pt-6 pb-24 text-center relative overflow-hidden">
         
-        {/* Shimmer */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
 
-        {/* Botón cerrar cuando hay QR activo */}
         {qrCode && (
           <button
             onClick={(e) => { e.stopPropagation(); onClose(); }}
@@ -82,7 +107,6 @@ const QRCodeCard = memo(({
         </div>
       </div>
 
-      {/* Botón redondo que sobresale */}
       <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
         <button
           onClick={onGenerate}
@@ -92,18 +116,7 @@ const QRCodeCard = memo(({
           {generatingQR ? (
             <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
           ) : (
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="3" width="7" height="7" rx="1" fill="#f97316"/>
-              <rect x="14" y="3" width="7" height="7" rx="1" fill="#f97316"/>
-              <rect x="3" y="14" width="7" height="7" rx="1" fill="#f97316"/>
-              <rect x="5" y="5" width="3" height="3" fill="white"/>
-              <rect x="16" y="5" width="3" height="3" fill="white"/>
-              <rect x="5" y="16" width="3" height="3" fill="white"/>
-              <rect x="14" y="14" width="3" height="3" fill="#f97316"/>
-              <rect x="18" y="14" width="3" height="3" fill="#f97316"/>
-              <rect x="14" y="18" width="3" height="3" fill="#f97316"/>
-              <rect x="18" y="18" width="3" height="3" fill="#f97316"/>
-            </svg>
+            <QRIcon size={44} color="#f97316" />
           )}
         </button>
       </div>

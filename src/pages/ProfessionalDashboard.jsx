@@ -320,7 +320,6 @@ function ProfessionalDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
 
-      {/* Modal foto grande */}
       {showPhotoModal && professional.profilePicture && (
         <div
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
@@ -342,7 +341,6 @@ function ProfessionalDashboard() {
         </div>
       )}
 
-      {/* Modal badge */}
       {showBadgeModal && (
         <div
           className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-6"
@@ -356,14 +354,9 @@ function ProfessionalDashboard() {
               <span className="text-5xl">{badge.emoji}</span>
               <h2 className="text-xl font-semibold text-gray-800 mt-2">{badge.name}</h2>
             </div>
-            <p className="text-gray-600 text-base text-center leading-relaxed mb-2">
+            <p className="text-gray-600 text-base text-center leading-relaxed">
               {getBadgeDescription(professional.totalRatings || 0)}
             </p>
-            <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-400 text-center space-y-1">
-              <p>🥉 Principiante — 0 a 4 calificaciones</p>
-              <p>🥈 Experimentado — 5 a 19 calificaciones</p>
-              <p>🥇 Veterano — 20 o más calificaciones</p>
-            </div>
             <button
               onClick={() => setShowBadgeModal(false)}
               className="mt-5 w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
@@ -374,7 +367,6 @@ function ProfessionalDashboard() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
           <button
@@ -425,7 +417,6 @@ function ProfessionalDashboard() {
           </div>
           <h2 className="text-2xl roboto-light text-white mb-3 animate-slideUp">{fullName}</h2>
 
-          {/* Badge clickeable */}
           <button
             onClick={() => setShowBadgeModal(true)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-3 ${badge.bgColor} ${badge.borderColor} border-2 animate-slideUp delay-50 active:scale-95 transition-transform`}
@@ -434,13 +425,19 @@ function ProfessionalDashboard() {
             <span className={badge.color}>{badge.name}</span>
           </button>
 
-          <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
-            {renderStars(Math.round(professional.reputationScore || 0))}
-            <span className="ml-2 text-white font-semibold text-lg">
-              {(professional.reputationScore || 0).toFixed(1)}
-            </span>
-          </div>
-          <p className="text-white/90 animate-slideUp delay-200">{professional.totalRatings || 0} calificaciones</p>
+          {/* Estrellas y calificaciones — tappable → stats */}
+          <button
+            onClick={() => navigate('/stats')}
+            className="flex flex-col items-center w-full active:scale-95 transition-transform"
+          >
+            <div className="flex items-center justify-center mb-2 animate-slideUp delay-100">
+              {renderStars(Math.round(professional.reputationScore || 0))}
+              <span className="ml-2 text-white font-semibold text-lg">
+                {(professional.reputationScore || 0).toFixed(1)}
+              </span>
+            </div>
+            <p className="text-white/90 animate-slideUp delay-200">{professional.totalRatings || 0} calificaciones</p>
+          </button>
         </div>
       </div>
 
