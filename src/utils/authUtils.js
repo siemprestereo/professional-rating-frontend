@@ -114,7 +114,6 @@ export const clearAuthData = () => {
   localStorage.removeItem('userType');
   localStorage.removeItem('client');
   localStorage.removeItem('professional');
-  localStorage.removeItem('redirectAfterLogin');
 };
 
 /**

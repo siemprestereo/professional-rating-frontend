@@ -25,6 +25,10 @@ function QRResolve() {
         // Guardar contexto para mostrar el banner en el login
         localStorage.setItem('redirectAfterLogin', `/rate/${code}`);
         localStorage.setItem('qrProfessionalName', response.professionalName || '');
+        console.log('✅ Guardado en localStorage:', {
+          redirect: localStorage.getItem('redirectAfterLogin'),
+          name: localStorage.getItem('qrProfessionalName')
+        });
         navigate('/client-login');
         return;
       }
