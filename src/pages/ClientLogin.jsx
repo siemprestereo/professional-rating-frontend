@@ -33,10 +33,22 @@ function ClientLogin() {
     }
 
     const code = searchParams.get('code');
+
+    console.log('🔍 useEffect ejecutado');
+    console.log('🔍 code en URL:', code);
+    console.log('🔍 redirectAfterLogin:', localStorage.getItem('redirectAfterLogin'));
+    console.log('🔍 qrProfessionalName:', localStorage.getItem('qrProfessionalName'));
+
     if (code) {
       window.history.replaceState({}, document.title, window.location.pathname);
 
+      console.log('🔍 Procesando OAuth code...');
+
       exchangeOAuthCode(code).then((data) => {
+        console.log('🔍 exchangeOAuthCode completado');
+        console.log('🔍 data.userType:', data?.userType);
+        console.log('🔍 redirectAfterLogin después del exchange:', localStorage.getItem('redirectAfterLogin'));
+
         if (!data) {
           setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
           return;
@@ -53,6 +65,7 @@ function ClientLogin() {
         if (data.userType === 'CLIENT') {
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
           setTimeout(() => {
+            console.log('🔍 Antes de redirect - redirectAfterLogin:', localStorage.getItem('redirectAfterLogin'));
             handlePostLoginRedirect('/client-dashboard', navigate, true);
           }, 300);
         } else {
