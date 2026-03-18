@@ -167,11 +167,11 @@ function ClientDashboard() {
     const badges = [];
     const total = ratingsData.length;
 
-    if (total >= 100) badges.push({ icon: '⭐', name: 'Legendario' });
-    else if (total >= 50) badges.push({ icon: '👑', name: 'Maestro' });
-    else if (total >= 25) badges.push({ icon: '💎', name: 'Experto' });
-    else if (total >= 10) badges.push({ icon: '🥇', name: 'Experimentado' });
-    else if (total >= 5) badges.push({ icon: '🥈', name: 'Activo' });
+    if (total >= 101) badges.push({ icon: '⭐', name: 'Legendario' });
+    else if (total >= 51) badges.push({ icon: '👑', name: 'Maestro' });
+    else if (total >= 26) badges.push({ icon: '💎', name: 'Experto' });
+    else if (total >= 11) badges.push({ icon: '🥇', name: 'Experimentado' });
+    else if (total >= 6) badges.push({ icon: '🥈', name: 'Activo' });
     else if (total >= 1) badges.push({ icon: '🥉', name: 'Primera' });
 
     const withComment = ratingsData.filter(r => r.comment && r.comment.trim().length > 0).length;
@@ -188,10 +188,10 @@ function ClientDashboard() {
     const descriptions = {
       'Primera': 'Diste tu primera calificación. ¡Bienvenido a la comunidad!',
       'Activo': 'Ya calificaste a 5 profesionales. ¡Seguís construyendo la comunidad!',
-      'Experimentado': 'Con 10 calificaciones ya sos un calificador experimentado.',
-      'Experto': '25 calificaciones. Tu opinión tiene mucho peso en la plataforma.',
-      'Maestro': '50 calificaciones. Sos uno de los calificadores más activos.',
-      'Legendario': '100 calificaciones. ¡Sos una leyenda de Calificalo!',
+      'Experimentado': 'Hiciste más de 10 calificaciones ya sos un calificador experimentado.',
+      'Experto': 'Hiciste más de 25 calificaciones. Tu opinión tiene mucho peso en la plataforma.',
+      'Maestro': 'Hiciste más de 50 calificaciones. Sos uno de los calificadores más activos.',
+      'Legendario': 'Hiciste más de 100 calificaciones. ¡Sos una leyenda de Calificalo!',
       'Comunicador': 'El 80% de tus calificaciones incluyen comentario. ¡Tus opiniones ayudan mucho!',
       'Generoso': 'Tu promedio de calificación supera las 4.5 estrellas.',
     };
