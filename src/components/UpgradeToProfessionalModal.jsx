@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Briefcase, X, Loader2, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
 import * as api from '../services/api';
-import { PROFESSIONS, getProfessionLabel } from '../constants/professions';
+import { getProfessionLabel } from '../constants/professions';
+import ProfessionSelector from '../components/ProfessionSelector';
 import { formatDate, clearAllAppData } from '../utils/storage';
 
 function UpgradeToProfessionalModal({ onClose, onSuccess }) {
@@ -21,13 +22,13 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
     try {
       const data = await api.getCurrentRole();
       setRoleInfo(data);
-      
+
       if (!data.canSwitchRole) {
         setStep(3);
       }
     } catch (err) {
       console.error('Error checking role restriction:', err);
-      
+
       if (err.response?.status === 401) {
         clearAllAppData();
         window.location.href = '/client-login';
@@ -61,22 +62,22 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
       });
 
       setStep(4);
-      
+
       setTimeout(() => {
         localStorage.removeItem('client');
         localStorage.setItem('userType', 'PROFESSIONAL');
         onSuccess(response.token);
       }, 1500);
-      
+
     } catch (err) {
       console.error('Error upgrading to professional:', err);
-      
+
       if (err.response?.status === 401) {
         clearAllAppData();
         window.location.href = '/client-login';
         return;
       }
-      
+
       if (err.response?.data?.message?.includes('6 meses')) {
         setError(err.response.data.message);
         setStep(3);
@@ -104,9 +105,8 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
       <div className="bg-white rounded-3xl p-8 max-w-md w-full animate-scaleIn">
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              step === 3 ? 'bg-orange-100' : step === 4 ? 'bg-green-100' : 'bg-blue-100'
-            }`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${step === 3 ? 'bg-orange-100' : step === 4 ? 'bg-green-100' : 'bg-blue-100'
+              }`}>
               {step === 3 ? (
                 <AlertTriangle className="w-6 h-6 text-orange-600" />
               ) : step === 4 ? (
@@ -137,21 +137,11 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
             </p>
 
             <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2 text-base">
-                Tipo de profesión *
-              </label>
-              <select
+              <ProfessionSelector
                 value={professionType}
-                onChange={(e) => setProfessionType(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-blue-500 focus:outline-none transition-all text-base"
-              >
-                <option value="">Seleccioná una opción</option>
-                {PROFESSIONS.map((prof) => (
-                  <option key={prof.value} value={prof.value}>
-                    {prof.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setProfessionType(val)}
+                focusColor="blue"
+              />
             </div>
 
             <div className="mb-6">

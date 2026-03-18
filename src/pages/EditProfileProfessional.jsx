@@ -8,7 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { clearAllAppData, validatePhone } from '../utils/storage';
-import { PROFESSIONS } from '../constants/professions';
+import ProfessionSelector from '../components/ProfessionSelector';
 import { BACKEND_URL } from '../config';
 import LocationSelector from '../components/LocationSelector';
 import ProfilePictureUpload from '../components/ProfilePictureUpload';
@@ -220,16 +220,12 @@ function EditProfileProfessional() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
-                <Briefcase className="w-5 h-5 mr-2 text-purple-600" />Tipo de profesión *
-              </label>
-              <select value={professionType} onChange={(e) => setProfessionType(e.target.value)} required
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base">
-                <option value="">Seleccioná una opción</option>
-                {PROFESSIONS.map((prof) => (
-                  <option key={prof.value} value={prof.value}>{prof.label}</option>
-                ))}
-              </select>
+              <ProfessionSelector
+                value={professionType}
+                onChange={(val) => setProfessionType(val)}
+                required
+                focusColor="purple"
+              />
             </div>
 
             <div className="mb-4">
