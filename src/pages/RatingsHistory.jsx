@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Star, Loader2, X } from 'lucide-react';
 import RatingDetailModal from '../components/RatingDetailModal';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
@@ -179,6 +178,7 @@ function RatingsHistory() {
           rating={selectedRating}
           onClose={() => setSelectedRating(null)}
           renderStars={renderStars}
+          canReport={!workHistoryIdFilter}
         />
       )}
     </div>

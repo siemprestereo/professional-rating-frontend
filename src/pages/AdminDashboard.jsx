@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock
+  MessageSquare, Clock, XCircle
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -60,6 +60,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [ratings, setRatings] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
@@ -67,21 +68,22 @@ function AdminDashboard() {
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL');
 
-  // Filtros de ratings
   const [ratingSearch, setRatingSearch] = useState('');
-  const [ratingScoreFilter, setRatingScoreFilter] = useState(0); // 0 = todos
-  const [ratingCommentFilter, setRatingCommentFilter] = useState('ALL'); // ALL, WITH, WITHOUT
-  const [ratingTimeFilter, setRatingTimeFilter] = useState('ALL'); // ALL, 1h, 1d, 1w, 1m
-  const [ratingSortOrder, setRatingSortOrder] = useState('DESC'); // DESC, ASC
+  const [ratingScoreFilter, setRatingScoreFilter] = useState(0);
+  const [ratingCommentFilter, setRatingCommentFilter] = useState('ALL');
+  const [ratingTimeFilter, setRatingTimeFilter] = useState('ALL');
+  const [ratingSortOrder, setRatingSortOrder] = useState('DESC');
 
   const [confirmSuspend, setConfirmSuspend] = useState(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
   const [confirmDeleteRating, setConfirmDeleteRating] = useState(null);
+  const [confirmResolveReport, setConfirmResolveReport] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ratings') fetchRatings();
+    if (activeTab === 'reports') fetchReports();
   }, [activeTab]);
 
   const fetchStats = async () => {
@@ -119,6 +121,20 @@ function AdminDashboard() {
       const res = await fetch(`${BACKEND_URL}/api/admin/ratings`, { headers: authHeader() });
       if (!res.ok) throw new Error('Error cargando calificaciones');
       setRatings(await res.json());
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReports = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/reports/admin/pending`, { headers: authHeader() });
+      if (!res.ok) throw new Error('Error cargando denuncias');
+      setReports(await res.json());
     } catch (e) {
       setError(e.message);
     } finally {
@@ -183,6 +199,28 @@ function AdminDashboard() {
     }
   };
 
+  const handleResolveReport = async () => {
+    if (!confirmResolveReport) return;
+    setActionLoading(confirmResolveReport.id);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/reports/admin/${confirmResolveReport.id}/resolve`, {
+        method: 'PATCH',
+        headers: authHeader(),
+        body: JSON.stringify({
+          status: confirmResolveReport.action,
+          adminNotes: confirmResolveReport.notes || ''
+        })
+      });
+      if (!res.ok) throw new Error('Error al resolver denuncia');
+      setReports(prev => prev.filter(r => r.id !== confirmResolveReport.id));
+      setConfirmResolveReport(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleLogout = () => {
     clearAuthData();
     navigate('/professional-login');
@@ -192,8 +230,7 @@ function AdminDashboard() {
     const matchesSearch =
       user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearch.toLowerCase());
-    const matchesRole =
-      userRoleFilter === 'ALL' || user.activeRole === userRoleFilter;
+    const matchesRole = userRoleFilter === 'ALL' || user.activeRole === userRoleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -241,24 +278,33 @@ function AdminDashboard() {
     setRatingSortOrder('DESC');
   };
 
+  const REASON_LABELS = {
+    FAKE_REVIEW: 'Reseña falsa',
+    OFFENSIVE_CONTENT: 'Contenido ofensivo',
+    WRONG_PERSON: 'Persona equivocada',
+    BLACKMAIL: 'Extorsión o amenaza',
+    OTHER: 'Otro motivo',
+  };
+
   const tabs = [
-    { id: 'stats', label: 'Estadísticas', icon: BarChart2 },
-    { id: 'users', label: 'Usuarios', icon: Users },
-    { id: 'ratings', label: 'Calificaciones', icon: Star }
+    { id: 'stats',   label: 'Stats',       icon: BarChart2 },
+    { id: 'users',   label: 'Usuarios',    icon: Users },
+    { id: 'ratings', label: 'Calif.',      icon: Star },
+    { id: 'reports', label: 'Denuncias',   icon: ShieldAlert },
   ];
 
   const roleFilters = [
-    { id: 'ALL', label: 'Todos' },
+    { id: 'ALL',          label: 'Todos' },
     { id: 'PROFESSIONAL', label: 'Profesionales' },
-    { id: 'CLIENT', label: 'Clientes' }
+    { id: 'CLIENT',       label: 'Clientes' }
   ];
 
   const timeFilters = [
     { id: 'ALL', label: 'Todas' },
-    { id: '1h', label: '1 hora' },
-    { id: '1d', label: '1 día' },
-    { id: '1w', label: '1 semana' },
-    { id: '1m', label: '1 mes' },
+    { id: '1h',  label: '1 hora' },
+    { id: '1d',  label: '1 día' },
+    { id: '1w',  label: '1 semana' },
+    { id: '1m',  label: '1 mes' },
   ];
 
   return (
@@ -287,7 +333,7 @@ function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center py-3 text-xs font-semibold transition-colors gap-1 ${
+              className={`flex-1 flex flex-col items-center py-3 text-xs font-semibold transition-colors gap-1 relative ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500'
@@ -295,6 +341,11 @@ function AdminDashboard() {
             >
               <Icon className="w-5 h-5" />
               {tab.label}
+              {tab.id === 'reports' && reports.length > 0 && activeTab !== 'reports' && (
+                <span className="absolute top-1.5 right-3 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {reports.length}
+                </span>
+              )}
             </button>
           );
         })}
@@ -327,12 +378,12 @@ function AdminDashboard() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Usuarios totales', value: stats.totalUsers, color: 'blue' },
-                { label: 'Profesionales', value: stats.totalProfessionals, color: 'purple' },
-                { label: 'Clientes', value: stats.totalClients, color: 'green' },
-                { label: 'Suspendidos', value: stats.suspendedUsers, color: 'red' },
-                { label: 'Calificaciones', value: stats.totalRatings, color: 'yellow' },
-                { label: 'Promedio score', value: stats.averageScore?.toFixed(2), color: 'indigo' }
+                { label: 'Usuarios totales',  value: stats.totalUsers,                color: 'blue' },
+                { label: 'Profesionales',     value: stats.totalProfessionals,        color: 'purple' },
+                { label: 'Clientes',          value: stats.totalClients,              color: 'green' },
+                { label: 'Suspendidos',       value: stats.suspendedUsers,            color: 'red' },
+                { label: 'Calificaciones',    value: stats.totalRatings,              color: 'yellow' },
+                { label: 'Promedio score',    value: stats.averageScore?.toFixed(2),  color: 'indigo' }
               ].map(item => (
                 <div key={item.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">{item.label}</p>
@@ -489,8 +540,6 @@ function AdminDashboard() {
         {/* ── RATINGS ── */}
         {!loading && activeTab === 'ratings' && (
           <div className="space-y-3">
-
-            {/* Buscador */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -502,7 +551,6 @@ function AdminDashboard() {
               />
             </div>
 
-            {/* Filtro por puntaje */}
             <div className="flex gap-1.5">
               {[0, 1, 2, 3, 4, 5].map(score => (
                 <button
@@ -519,11 +567,10 @@ function AdminDashboard() {
               ))}
             </div>
 
-            {/* Filtro por comentario */}
             <div className="flex gap-2">
               {[
-                { id: 'ALL', label: 'Todos' },
-                { id: 'WITH', label: 'Con comentario' },
+                { id: 'ALL',     label: 'Todos' },
+                { id: 'WITH',    label: 'Con comentario' },
                 { id: 'WITHOUT', label: 'Sin comentario' }
               ].map(f => (
                 <button
@@ -541,7 +588,6 @@ function AdminDashboard() {
               ))}
             </div>
 
-            {/* Filtro por tiempo */}
             <div className="flex gap-1.5">
               {timeFilters.map(f => (
                 <button
@@ -559,7 +605,6 @@ function AdminDashboard() {
               ))}
             </div>
 
-            {/* Ordenar + contador + reset */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <p className="text-sm text-gray-500">
@@ -626,6 +671,98 @@ function AdminDashboard() {
             ))}
           </div>
         )}
+
+        {/* ── REPORTS ── */}
+        {!loading && activeTab === 'reports' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                {reports.length} denuncia{reports.length !== 1 ? 's' : ''} pendiente{reports.length !== 1 ? 's' : ''}
+              </p>
+              <button onClick={fetchReports} className="flex items-center gap-1 text-sm text-blue-600">
+                <RefreshCw className="w-4 h-4" /> Actualizar
+              </button>
+            </div>
+
+            {reports.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+                <p className="text-gray-500 text-sm font-medium">No hay denuncias pendientes</p>
+              </div>
+            )}
+
+            {reports.map(report => (
+              <div key={report.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3">
+
+                {/* Encabezado */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                        {REASON_LABELS[report.reason] ?? report.reason}
+                      </span>
+                      <span className="text-xs text-gray-400">#{report.id}</span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Denunciante:{' '}
+                      <span className="font-medium text-gray-700">
+                        {report.reporterName || report.professionalName || `ID ${report.reporterId}`}
+                      </span>
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-400 flex-shrink-0">
+                    {new Date(report.createdAt).toLocaleDateString('es-AR')}
+                  </span>
+                </div>
+
+                {/* Calificación denunciada */}
+                <div className="bg-gray-50 rounded-xl p-3 text-xs space-y-1">
+                  <p className="text-gray-400 font-medium uppercase tracking-wide text-[10px] mb-1">Calificación denunciada</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-500 font-bold">{'★'.repeat(report.ratingScore)}</span>
+                    <span className="text-gray-500">
+                      por <span className="font-medium text-gray-700">{report.clientName || 'Anónimo'}</span>
+                      {' → '}
+                      <span className="font-medium text-gray-700">{report.professionalName}</span>
+                    </span>
+                  </div>
+                  {report.ratingComment && (
+                    <p className="text-gray-600 italic">"{report.ratingComment}"</p>
+                  )}
+                </div>
+
+                {/* Descripción del denunciante */}
+                {report.description && (
+                  <div className="text-xs text-gray-600 bg-orange-50 rounded-xl px-3 py-2">
+                    <p className="font-medium text-orange-700 mb-0.5">Descripción:</p>
+                    <p>"{report.description}"</p>
+                  </div>
+                )}
+
+                {/* Acciones */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => setConfirmResolveReport({ id: report.id, action: 'APPROVED' })}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Eliminar calificación
+                  </button>
+                  <button
+                    onClick={() => setConfirmResolveReport({ id: report.id, action: 'REJECTED' })}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    Rechazar denuncia
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
 
       {/* Modal — Suspender / Reactivar */}
@@ -670,6 +807,24 @@ function AdminDashboard() {
           loading={actionLoading === confirmDeleteRating}
         />
       )}
+
+      {/* Modal — Resolver denuncia */}
+      {confirmResolveReport && (
+        <ConfirmModal
+          title={confirmResolveReport.action === 'APPROVED' ? 'Eliminar calificación' : 'Rechazar denuncia'}
+          message={
+            confirmResolveReport.action === 'APPROVED'
+              ? 'La calificación será eliminada permanentemente. Esta acción no se puede deshacer.'
+              : 'La denuncia será rechazada y la calificación se mantendrá visible.'
+          }
+          confirmLabel={confirmResolveReport.action === 'APPROVED' ? 'Eliminar' : 'Rechazar'}
+          confirmColor={confirmResolveReport.action === 'APPROVED' ? 'red' : 'yellow'}
+          onConfirm={handleResolveReport}
+          onCancel={() => setConfirmResolveReport(null)}
+          loading={actionLoading === confirmResolveReport.id}
+        />
+      )}
+
     </div>
   );
 }
