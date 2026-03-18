@@ -20,6 +20,7 @@ function ClientDashboard() {
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -183,6 +184,20 @@ function ClientDashboard() {
     setTopBadges(badges.slice(0, 3));
   }, []);
 
+  const getBadgeDescription = useCallback((badgeName) => {
+    const descriptions = {
+      'Primera': 'Diste tu primera calificación. ¡Bienvenido a la comunidad!',
+      'Activo': 'Ya calificaste a 5 profesionales. ¡Seguís construyendo la comunidad!',
+      'Experimentado': 'Con 10 calificaciones ya sos un calificador experimentado.',
+      'Experto': '25 calificaciones. Tu opinión tiene mucho peso en la plataforma.',
+      'Maestro': '50 calificaciones. Sos uno de los calificadores más activos.',
+      'Legendario': '100 calificaciones. ¡Sos una leyenda de Calificalo!',
+      'Comunicador': 'El 80% de tus calificaciones incluyen comentario. ¡Tus opiniones ayudan mucho!',
+      'Generoso': 'Tu promedio de calificación supera las 4.5 estrellas.',
+    };
+    return descriptions[badgeName] || '';
+  }, []);
+
   const handleLogout = useCallback(() => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('client');
@@ -279,6 +294,49 @@ function ClientDashboard() {
         </div>
       )}
 
+      {/* Modal badge */}
+      {showBadgeModal && topBadges.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-6"
+          onClick={() => setShowBadgeModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 max-w-sm w-full animate-scaleIn"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <span className="text-5xl">{topBadges[0].icon}</span>
+              <h2 className="text-xl font-semibold text-gray-800 mt-2">{topBadges[0].name}</h2>
+            </div>
+
+            <p className="text-gray-600 text-base text-center leading-relaxed mb-4">
+              {getBadgeDescription(topBadges[0].name)}
+            </p>
+
+            {topBadges.length > 1 && (
+              <div className="border-t border-gray-100 pt-4 mb-4">
+                <p className="text-xs text-gray-400 text-center mb-3">También tenés</p>
+                <div className="flex justify-center gap-3">
+                  {topBadges.slice(1).map(badge => (
+                    <div key={badge.name} className="flex flex-col items-center gap-1">
+                      <span className="text-2xl">{badge.icon}</span>
+                      <span className="text-xs text-gray-500">{badge.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowBadgeModal(false)}
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-br from-green-500 to-teal-600 px-4 pt-6 pb-24 animate-slideDown">
         <div className="flex justify-between items-center mb-6">
@@ -346,10 +404,13 @@ function ClientDashboard() {
           </div>
           <h2 className="text-xl roboto-light text-white mb-2 animate-slideUp">{client.name || 'Usuario'}</h2>
           {topBadges.length > 0 && (
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full animate-slideUp delay-100">
+            <button
+              onClick={() => setShowBadgeModal(true)}
+              className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full animate-slideUp delay-100 active:scale-95 transition-transform"
+            >
               <span className="text-2xl">{topBadges[0].icon}</span>
               <span className="text-white text-sm font-semibold">{topBadges[0].name}</span>
-            </div>
+            </button>
           )}
         </div>
       </div>
