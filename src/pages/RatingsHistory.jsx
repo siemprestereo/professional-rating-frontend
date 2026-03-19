@@ -4,6 +4,7 @@ import RatingDetailModal from '../components/RatingDetailModal';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { BACKEND_URL } from '../config';
+import { Star, Loader2 } from 'lucide-react';
 
 function RatingsHistory() {
   const navigate = useNavigate();
