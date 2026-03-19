@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, MapPin, Briefcase, Calendar, MessageSquare, Flag, AlertTriangle } from 'lucide-react';
+import { BACKEND_URL } from '../config';
 
 const REPORT_REASONS = [
   { value: 'FAKE_REVIEW', label: 'Reseña falsa o fraudulenta' },
@@ -27,7 +28,7 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/reports/ratings/${rating.id}`, {
+     const res = await fetch(`${BACKEND_URL}/api/reports/ratings/${rating.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
