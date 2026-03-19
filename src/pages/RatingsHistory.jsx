@@ -4,7 +4,7 @@ import RatingDetailModal from '../components/RatingDetailModal';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { BACKEND_URL } from '../config';
-import { Star, Loader2, Clock } from 'lucide-react';
+import { Star, Loader2, Clock, ShieldOff } from 'lucide-react';
 
 function RatingsHistory() {
   const navigate = useNavigate();
@@ -152,10 +152,17 @@ function RatingsHistory() {
                   </span>
                 </div>
 
-                {rating.hasPendingReport && (
+                {rating.reportStatus === 'PENDING' && (
                   <div className="mb-2">
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                       <Clock className="w-3 h-3" /> Bajo revisión
+                    </span>
+                  </div>
+                )}
+                {rating.reportStatus === 'REJECTED' && (
+                  <div className="mb-2">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <ShieldOff className="w-3 h-3" /> Denuncia rechazada
                     </span>
                   </div>
                 )}
