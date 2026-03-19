@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MapPin, Briefcase, Calendar, MessageSquare, Flag, AlertTriangle } from 'lucide-react';
+import { X, MapPin, Briefcase, Calendar, MessageSquare, Flag, AlertTriangle, Clock } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 
 const REPORT_REASONS = [
@@ -11,7 +11,7 @@ const REPORT_REASONS = [
 ];
 
 function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) {
-  const [view, setView] = useState('detail'); // 'detail' | 'report' | 'success'
+  const [view, setView] = useState('detail');
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
 
     try {
       const token = localStorage.getItem('authToken');
-     const res = await fetch(`${BACKEND_URL}/api/reports/ratings/${rating.id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/reports/ratings/${rating.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,6 +77,13 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
               <div className="text-center">
                 <div className="flex justify-center gap-1 mb-2">{renderStars(rating.score)}</div>
                 <p className="text-3xl font-bold text-gray-800">{rating.score}.0</p>
+                {rating.hasPendingReport && (
+                  <div className="flex justify-center mt-2">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full">
+                      <Clock className="w-4 h-4" /> Calificación bajo revisión
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-gray-50 rounded-2xl p-4">
@@ -136,7 +143,7 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
               >
                 Cerrar
               </button>
-              {canReport && (
+              {canReport && !rating.hasPendingReport && (
                 <button
                   onClick={() => setView('report')}
                   className="w-full flex items-center justify-center gap-2 text-red-500 border border-red-200 py-3 rounded-2xl hover:bg-red-50 transition-colors text-sm font-medium"

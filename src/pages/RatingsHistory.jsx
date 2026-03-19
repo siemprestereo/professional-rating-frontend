@@ -4,7 +4,7 @@ import RatingDetailModal from '../components/RatingDetailModal';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { BACKEND_URL } from '../config';
-import { Star, Loader2 } from 'lucide-react';
+import { Star, Loader2, Clock } from 'lucide-react';
 
 function RatingsHistory() {
   const navigate = useNavigate();
@@ -151,6 +151,15 @@ function RatingsHistory() {
                     {new Date(rating.createdAt).toLocaleDateString('es-AR')}
                   </span>
                 </div>
+
+                {rating.hasPendingReport && (
+                  <div className="mb-2">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                      <Clock className="w-3 h-3" /> Bajo revisión
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 break-words">
