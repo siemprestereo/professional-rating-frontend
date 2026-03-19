@@ -11,6 +11,7 @@ const REPORT_REASONS = [
 ];
 
 function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) {
+  console.log('rating.reportStatus:', rating.reportStatus);
   const [view, setView] = useState('detail');
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
