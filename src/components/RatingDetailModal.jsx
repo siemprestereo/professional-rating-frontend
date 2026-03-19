@@ -56,9 +56,8 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
       <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scaleIn shadow-2xl ring-4 ring-purple-200/50">
 
         {/* Header */}
-        <div className={`sticky top-0 px-6 py-4 rounded-t-3xl bg-gradient-to-br ${
-          view === 'report' ? 'from-orange-400 to-red-500' : 'from-blue-500 to-purple-600'
-        }`}>
+        <div className={`sticky top-0 px-6 py-4 rounded-t-3xl bg-gradient-to-br ${view === 'report' ? 'from-orange-400 to-red-500' : 'from-blue-500 to-purple-600'
+          }`}>
           <div className="flex justify-between items-center">
             <h2 className="text-white text-xl roboto-light">
               {view === 'detail' && 'Detalle de Calificación'}
@@ -144,7 +143,7 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
               >
                 Cerrar
               </button>
-              {canReport && !rating.hasPendingReport && (
+              {canReport && !rating.reportStatus && (
                 <button
                   onClick={() => setView('report')}
                   className="w-full flex items-center justify-center gap-2 text-red-500 border border-red-200 py-3 rounded-2xl hover:bg-red-50 transition-colors text-sm font-medium"
@@ -152,6 +151,11 @@ function RatingDetailModal({ rating, onClose, renderStars, canReport = false }) 
                   <Flag className="w-4 h-4" />
                   Denunciar esta calificación
                 </button>
+              )}
+              {canReport && rating.reportStatus === 'REJECTED' && (
+                <p className="text-center text-xs text-gray-400 italic px-2">
+                  La denuncia de esta calificación fue revisada y rechazada.
+                </p>
               )}
             </div>
           </>
