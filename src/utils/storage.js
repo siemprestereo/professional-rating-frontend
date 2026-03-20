@@ -14,8 +14,6 @@ export const clearAllAppData = () => {
   ];
   
   keysToRemove.forEach(key => localStorage.removeItem(key));
-  
-  console.log('✅ Todos los datos de la aplicación fueron limpiados');
 };
 
 /**

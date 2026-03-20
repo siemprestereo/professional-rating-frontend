@@ -33,7 +33,6 @@ function RatingForm({ professionalIdFromToken }) {
   const loadProfessional = async () => {
     try {
       const data = await api.getProfessionalProfile(professionalId);
-      console.log('👤 Professional data:', data);
 
       // Mapear professionalName a name para compatibilidad
       const mappedData = {
@@ -41,12 +40,10 @@ function RatingForm({ professionalIdFromToken }) {
         name: data.professionalName || data.name
       };
 
-      console.log('📋 Work history:', mappedData.workHistory);
       setProfessional(mappedData);
 
       // Auto-seleccionar si solo hay 1 trabajo activo
       const activeJobs = mappedData.workHistory?.filter(w => w.isActive) || [];
-      console.log('✅ Active jobs:', activeJobs);
 
       if (activeJobs.length === 1) {
         setSelectedWorkplace(activeJobs[0]);
@@ -80,9 +77,6 @@ function RatingForm({ professionalIdFromToken }) {
       // Determinar qué trabajo usar
       const workplaceToUse = selectedWorkplace || activeJobs[0];
 
-      console.log('🔍 workplaceToUse:', workplaceToUse);
-      console.log('🔍 activeJobs:', activeJobs);
-
       if (!workplaceToUse || !workplaceToUse.workHistoryId) {
         setToast({
           type: 'error',
@@ -98,8 +92,6 @@ function RatingForm({ professionalIdFromToken }) {
         score: score,
         comment: comment.trim() || null
       };
-
-      console.log('📤 ratingData completo:', JSON.stringify(ratingData, null, 2));
 
       await api.createRating(ratingData);
 
