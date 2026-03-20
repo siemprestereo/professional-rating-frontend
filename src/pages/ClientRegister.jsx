@@ -78,8 +78,8 @@ function ClientRegister() {
       return;
     }
 
-    if (password.length < 8) {
-      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres' });
+    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setToast({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres, letras y números' });
       return;
     }
 
@@ -199,7 +199,7 @@ function ClientRegister() {
               <input
                 type={showPassword ? "text" : "password"} value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres" autoComplete="new-password" required minLength={6}
+                placeholder="Mínimo 8 caracteres con letras y números" autoComplete="new-password" required minLength={8}
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-2.5 sm:py-3 pr-12 focus:border-green-500 focus:outline-none transition-all text-sm sm:text-base"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
