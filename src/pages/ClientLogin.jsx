@@ -264,7 +264,7 @@ function ClientLogin() {
 
             <button
               type="button"
-              onClick={() => {}}
+              onClick={() => navigate('/forgot-password')}
               className="w-full text-green-600 font-semibold hover:text-green-700 transition-colors text-sm sm:text-base"
             >
               ¿Olvidaste tu contraseña?

@@ -29,6 +29,9 @@ import NetworkStatus from './components/NetworkStatus';
 import AcceptTerms from './pages/AcceptTerms';
 import TermsPage from './pages/TermsPage';
 import AdminDashboard from './pages/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   return (
@@ -51,6 +54,9 @@ function App() {
           <Route path="/professional-register" element={<ProfessionalRegister />} />
           <Route path="/client-login" element={<ClientLogin />} />
           <Route path="/client-register" element={<ClientRegister />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
           <Route path="/ratings-history" element={<RatingsHistory />} />
 

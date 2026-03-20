@@ -241,7 +241,7 @@ function ProfessionalLogin() {
 
           <button
             type="button"
-            onClick={() => console.log('Recuperar contraseña')}
+            onClick={() => navigate('/forgot-password')}
             className="w-full text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm sm:text-base"
           >
             ¿Olvidaste tu contraseña?
