@@ -101,10 +101,6 @@ function RatingForm({ professionalIdFromToken }) {
         navigate('/client-dashboard');
       }, 2000);
     } catch (error) {
-      console.error('❌ Error completo:', error);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
-
       // Mensaje más específico según el tipo de error
       if (error.response?.status === 401) {
         setErrorModal({

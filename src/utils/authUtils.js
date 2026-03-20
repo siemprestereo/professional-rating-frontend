@@ -72,20 +72,27 @@ export const formatName = (input) => {
  * @param {function} navigate - Función navigate de React Router
  * @param {boolean} useWindowLocation - Si true, usa window.location.href (para recarga completa)
  */
+const isSafeRedirectPath = (path) => {
+  if (!path || typeof path !== 'string') return false;
+  // Solo permite paths relativos (empiezan con /)
+  return path.startsWith('/') && !path.startsWith('//');
+};
+
 export const handlePostLoginRedirect = (defaultPath, navigate, useWindowLocation = true) => {
-  const redirectPath = localStorage.getItem('redirectAfterLogin');
-  
+  const rawRedirectPath = localStorage.getItem('redirectAfterLogin');
+  const redirectPath = isSafeRedirectPath(rawRedirectPath) ? rawRedirectPath : null;
+
   if (redirectPath) {
     localStorage.removeItem('redirectAfterLogin');
-    
+
     if (useWindowLocation) {
-      window.location.href = `https://www.calificalo.com.ar${redirectPath}`;
+      window.location.href = `${window.location.origin}${redirectPath}`;
     } else {
       navigate(redirectPath, { replace: true });
     }
   } else {
     if (useWindowLocation) {
-      window.location.href = `https://www.calificalo.com.ar${defaultPath}`;
+      window.location.href = `${window.location.origin}${defaultPath}`;
     } else {
       navigate(defaultPath, { replace: true });
     }
