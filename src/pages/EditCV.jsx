@@ -493,12 +493,13 @@ function EditCV() {
               </div>
             </div>
             <div className="mb-3">
-              <label className="flex items-center cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer w-fit">
                 <input type="checkbox" checked={job.currentlyWorking}
                   onChange={(e) => updateJob(index, 'currentlyWorking', e.target.checked)}
                   disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed" />
-                <span className="ml-2 text-base text-gray-700">Aún trabajo aquí</span>
+                  className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 rounded-full relative transition-colors duration-200 peer-checked:bg-purple-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+                <span className="text-base font-medium text-gray-700 peer-disabled:opacity-50">Aún trabajo aquí</span>
               </label>
             </div>
             <textarea placeholder="Descripción" value={job.description} onChange={(e) => updateJob(index, 'description', e.target.value)}
