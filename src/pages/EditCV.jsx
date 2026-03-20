@@ -501,7 +501,7 @@ function EditCV() {
                 </div>
                 {job.currentlyWorking ? (
                   <div className="w-full border-2 border-purple-200 bg-purple-50 rounded-xl px-3 py-2 text-purple-700 font-medium text-base">
-                    Presente
+                    Sin finalizar
                   </div>
                 ) : (
                   <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
