@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle
+  MessageSquare, Clock, XCircle, Mail, Send, User
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -78,6 +78,18 @@ function AdminDashboard() {
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
   const [confirmDeleteRating, setConfirmDeleteRating] = useState(null);
   const [confirmResolveReport, setConfirmResolveReport] = useState(null);
+
+  // Email
+  const [emailMode, setEmailMode] = useState('broadcast'); // 'broadcast' | 'individual'
+  const [emailReplyTo, setEmailReplyTo] = useState('hola@calificalo.com.ar');
+  const [emailTargetRole, setEmailTargetRole] = useState('ALL');
+  const [emailToAddress, setEmailToAddress] = useState('');
+  const [emailToName, setEmailToName] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState(null); // { type: 'success'|'error', message }
+  const [confirmBroadcast, setConfirmBroadcast] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
@@ -291,7 +303,55 @@ function AdminDashboard() {
     { id: 'users',   label: 'Usuarios',    icon: Users },
     { id: 'ratings', label: 'Calif.',      icon: Star },
     { id: 'reports', label: 'Denuncias',   icon: ShieldAlert },
+    { id: 'emails',  label: 'Emails',      icon: Mail },
   ];
+
+  const EMAIL_ALIASES = [
+    { value: 'hola@calificalo.com.ar',        label: 'hola@ — General' },
+    { value: 'soporte@calificalo.com.ar',      label: 'soporte@ — Soporte' },
+    { value: 'noresponder@calificalo.com.ar',  label: 'noresponder@ — Transaccional' },
+  ];
+
+  const handleSendIndividual = async () => {
+    setEmailSending(true);
+    setEmailResult(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/email/individual`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ toEmail: emailToAddress, toName: emailToName, subject: emailSubject, message: emailBody, replyTo: emailReplyTo })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar');
+      setEmailResult({ type: 'success', message: 'Email enviado correctamente.' });
+      setEmailToAddress(''); setEmailToName(''); setEmailSubject(''); setEmailBody('');
+    } catch (e) {
+      setEmailResult({ type: 'error', message: e.message });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    setConfirmBroadcast(false);
+    setEmailSending(true);
+    setEmailResult(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/email/broadcast`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ targetRole: emailTargetRole, subject: emailSubject, message: emailBody, replyTo: emailReplyTo })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar');
+      setEmailResult({ type: 'success', message: `Envío iniciado a ${data.recipients} destinatario${data.recipients !== 1 ? 's' : ''}.` });
+      setEmailSubject(''); setEmailBody('');
+    } catch (e) {
+      setEmailResult({ type: 'error', message: e.message });
+    } finally {
+      setEmailSending(false);
+    }
+  };
 
   const roleFilters = [
     { id: 'ALL',          label: 'Todos' },
@@ -763,7 +823,138 @@ function AdminDashboard() {
           </div>
         )}
 
+        {/* ===== TAB EMAILS ===== */}
+        {activeTab === 'emails' && (
+          <div className="space-y-4">
+
+            {/* Modo toggle */}
+            <div className="flex bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => { setEmailMode('broadcast'); setEmailResult(null); }}
+                className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${emailMode === 'broadcast' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                <Users className="w-4 h-4" /> Masivo
+              </button>
+              <button
+                onClick={() => { setEmailMode('individual'); setEmailResult(null); }}
+                className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${emailMode === 'individual' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                <User className="w-4 h-4" /> Individual
+              </button>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+
+              {/* Destinatarios (masivo) */}
+              {emailMode === 'broadcast' && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Destinatarios</label>
+                  <div className="flex gap-2">
+                    {[{v:'ALL',l:'Todos'},{v:'PROFESSIONAL',l:'Profesionales'},{v:'CLIENT',l:'Clientes'}].map(opt => (
+                      <button key={opt.v} onClick={() => setEmailTargetRole(opt.v)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${emailTargetRole === opt.v ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:border-blue-400'}`}>
+                        {opt.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Destinatario (individual) */}
+              {emailMode === 'individual' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Destinatario</label>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={emailToAddress}
+                    onChange={e => setEmailToAddress(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Nombre (opcional)"
+                    value={emailToName}
+                    onChange={e => setEmailToName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+              )}
+
+              {/* Remitente */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Remitente</label>
+                <select
+                  value={emailReplyTo}
+                  onChange={e => setEmailReplyTo(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 bg-white"
+                >
+                  {EMAIL_ALIASES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                </select>
+              </div>
+
+              {/* Asunto */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Asunto</label>
+                <input
+                  type="text"
+                  placeholder="Asunto del email"
+                  value={emailSubject}
+                  onChange={e => setEmailSubject(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400"
+                />
+              </div>
+
+              {/* Mensaje */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mensaje</label>
+                <textarea
+                  placeholder="Escribí el mensaje aquí..."
+                  value={emailBody}
+                  onChange={e => setEmailBody(e.target.value)}
+                  rows={6}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 resize-none"
+                />
+              </div>
+
+              {/* Resultado */}
+              {emailResult && (
+                <div className={`rounded-lg px-4 py-3 text-sm font-medium ${emailResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                  {emailResult.message}
+                </div>
+              )}
+
+              {/* Botón enviar */}
+              <button
+                onClick={() => {
+                  setEmailResult(null);
+                  if (emailMode === 'broadcast') setConfirmBroadcast(true);
+                  else handleSendIndividual();
+                }}
+                disabled={emailSending || !emailSubject.trim() || !emailBody.trim() || (emailMode === 'individual' && !emailToAddress.trim())}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:bg-blue-700 transition-colors"
+              >
+                {emailSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {emailMode === 'broadcast' ? 'Enviar a todos' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
+
+      {/* Modal — Confirmar broadcast */}
+      {confirmBroadcast && (
+        <ConfirmModal
+          title="Enviar email masivo"
+          message={`Se enviará el email a todos los ${emailTargetRole === 'ALL' ? 'usuarios' : emailTargetRole === 'PROFESSIONAL' ? 'profesionales' : 'clientes'} activos. ¿Confirmás?`}
+          confirmLabel="Enviar"
+          confirmColor="yellow"
+          onConfirm={handleSendBroadcast}
+          onCancel={() => setConfirmBroadcast(false)}
+          loading={emailSending}
+        />
+      )}
 
       {/* Modal — Suspender / Reactivar */}
       {confirmSuspend && (
