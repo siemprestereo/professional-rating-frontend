@@ -55,6 +55,8 @@ function ClientRegister() {
         const destination = !data.data?.termsAccepted ? '/accept-terms' : '/client-dashboard';
         setToast({ type: 'success', message: '¡Registro exitoso! Redirigiendo...' });
         setTimeout(() => navigate(destination, { replace: true }), 300);
+      }).catch(() => {
+        setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
       });
     }
   }, [searchParams, navigate]);

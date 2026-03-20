@@ -53,6 +53,8 @@ function ProfessionalLogin() {
         } else {
           handlePostLoginRedirect('/client-dashboard', navigate, true);
         }
+      }).catch(() => {
+        setToast({ type: 'error', message: 'Error al procesar autenticación. Intentá nuevamente.' });
       });
     }
   }, [searchParams, navigate]);
