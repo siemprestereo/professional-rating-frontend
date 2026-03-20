@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Search, Briefcase } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search, Briefcase, Lightbulb } from 'lucide-react';
+import { suggestProfession } from '../services/api';
 import { PROFESSION_CATEGORIES, getProfessionLabel } from '../constants/professions';
 
 /**
@@ -16,10 +17,14 @@ function ProfessionSelector({
   required = false,
   focusColor = 'purple',
   placeholder = 'Seleccioná una profesión',
+  professionalName = '',
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [suggestionStatus, setSuggestionStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
   const containerRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -96,6 +101,21 @@ function ProfessionSelector({
   const handleToggle = () => {
     setOpen(prev => !prev);
     setSearch('');
+    setShowSuggestion(false);
+    setSuggestionText('');
+    setSuggestionStatus(null);
+  };
+
+  const handleSuggest = async () => {
+    if (!suggestionText.trim()) return;
+    setSuggestionStatus('sending');
+    try {
+      await suggestProfession(suggestionText.trim(), professionalName);
+      setSuggestionStatus('sent');
+      setSuggestionText('');
+    } catch {
+      setSuggestionStatus('error');
+    }
   };
 
   // Filtrar categorías y profesiones según búsqueda
@@ -195,6 +215,52 @@ function ProfessionSelector({
               </li>
             )}
           </ul>
+
+          {/* Sugerir profesión */}
+          <div className="border-t border-gray-100">
+            {!showSuggestion ? (
+              <button
+                type="button"
+                onClick={() => { setShowSuggestion(true); setSuggestionStatus(null); }}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 transition-colors"
+              >
+                <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                ¿No está tu profesión? Sugerila
+              </button>
+            ) : (
+              <div className="px-4 py-3">
+                {suggestionStatus === 'sent' ? (
+                  <p className="text-sm text-green-600 font-medium text-center py-1">¡Gracias! La revisamos pronto.</p>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-500 mb-2">¿Qué profesión falta?</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={suggestionText}
+                        onChange={(e) => setSuggestionText(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSuggest()}
+                        placeholder="Ej: Fotógrafo"
+                        maxLength={100}
+                        className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSuggest}
+                        disabled={suggestionStatus === 'sending' || !suggestionText.trim()}
+                        className="px-3 py-2 bg-purple-600 text-white text-sm rounded-lg disabled:opacity-50 active:bg-purple-700 transition-colors"
+                      >
+                        {suggestionStatus === 'sending' ? '...' : 'Enviar'}
+                      </button>
+                    </div>
+                    {suggestionStatus === 'error' && (
+                      <p className="text-xs text-red-500 mt-1">No se pudo enviar, intentá de nuevo.</p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

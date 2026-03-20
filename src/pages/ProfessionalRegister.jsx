@@ -199,6 +199,7 @@ function ProfessionalRegister() {
               onChange={(val) => setProfessionType(val)}
               required
               focusColor="blue"
+              professionalName={name}
             />
           </div>
 

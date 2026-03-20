@@ -109,6 +109,11 @@ export const getCurrentRole = async () => {
   return response.data;
 };
 
+export const suggestProfession = async (suggestion, professionalName) => {
+  const response = await apiClient.post('/suggestions/profession', { suggestion, professionalName });
+  return response.data;
+};
+
 // ========== DEFAULT EXPORT ==========
 export default {
   getCurrentUser,

@@ -225,6 +225,7 @@ function EditProfileProfessional() {
                 onChange={(val) => setProfessionType(val)}
                 required
                 focusColor="purple"
+                professionalName={name}
               />
             </div>
 
