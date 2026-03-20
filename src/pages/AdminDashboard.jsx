@@ -571,6 +571,21 @@ function AdminDashboard() {
                     )}
 
                     <button
+                      onClick={() => {
+                        setEmailMode('individual');
+                        setEmailToAddress(user.email);
+                        setEmailToName(user.name);
+                        setEmailSubject('');
+                        setEmailBody('');
+                        setEmailResult(null);
+                        setActiveTab('emails');
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                    >
+                      <Mail className="w-4 h-4" /> Enviar email
+                    </button>
+
+                    <button
                       onClick={() => setConfirmSuspend({ id: user.id, name: user.name, suspended: user.suspended })}
                       className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors ${
                         user.suspended
