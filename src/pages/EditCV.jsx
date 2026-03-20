@@ -488,19 +488,25 @@ function EditCV() {
                 <input type="date" value={job.startDate} onChange={(e) => updateJob(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} disabled={job.currentlyWorking} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium text-gray-600 ml-1">Fecha de finalización</label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={job.currentlyWorking}
+                      onChange={(e) => updateJob(index, 'currentlyWorking', e.target.checked)}
+                      disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
+                      className="sr-only peer" />
+                    <div className="w-9 h-5 bg-gray-200 rounded-full relative transition-colors duration-200 peer-checked:bg-purple-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    <span className="text-sm text-gray-500 peer-disabled:opacity-50">Aún trabajo aquí</span>
+                  </label>
+                </div>
+                {job.currentlyWorking ? (
+                  <div className="w-full border-2 border-purple-200 bg-purple-50 rounded-xl px-3 py-2 text-purple-700 font-medium text-base">
+                    Presente
+                  </div>
+                ) : (
+                  <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                )}
               </div>
-            </div>
-            <div className="mb-3">
-              <label className="flex items-center gap-3 cursor-pointer w-fit">
-                <input type="checkbox" checked={job.currentlyWorking}
-                  onChange={(e) => updateJob(index, 'currentlyWorking', e.target.checked)}
-                  disabled={countActiveJobs() >= 3 && !job.currentlyWorking}
-                  className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 rounded-full relative transition-colors duration-200 peer-checked:bg-purple-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
-                <span className="text-base font-medium text-gray-700 peer-disabled:opacity-50">Aún trabajo aquí</span>
-              </label>
             </div>
             <textarea placeholder="Descripción" value={job.description} onChange={(e) => updateJob(index, 'description', e.target.value)}
               className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
