@@ -14,19 +14,20 @@ const QRCodeCard = memo(({
 
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
 
-                {qrCode && (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onClose(); }}
-                        className="absolute top-2 right-2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all duration-200 hover:scale-110 z-10 active:scale-95"
-                        aria-label="Cerrar QR"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                )}
-
                 <div className="relative z-10">
+                    {qrCode && (
+                        <div className="flex justify-end mb-1">
+                            <button
+                                onPointerUp={(e) => { e.stopPropagation(); onClose(); }}
+                                className="bg-white/20 active:bg-white/40 text-white rounded-full p-3 transition-colors duration-150"
+                                aria-label="Cerrar QR"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
                     <h3 className="text-xl md:text-2xl roboto-light text-white mb-2 drop-shadow-md">
                         Código QR para Calificaciones
                     </h3>
