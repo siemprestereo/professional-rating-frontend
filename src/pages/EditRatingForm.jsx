@@ -26,7 +26,12 @@ function EditRatingForm() {
   const loadRating = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/ratings/client/${JSON.parse(localStorage.getItem('client')).id}`, {
+      const clientData = JSON.parse(localStorage.getItem('client') || 'null');
+      if (!clientData?.id) {
+        navigate('/client-login');
+        return;
+      }
+      const response = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
