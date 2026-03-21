@@ -132,10 +132,10 @@ export const getLoginErrorMessage = async (response) => {
   try {
     const data = await response.json();
     
-    if (response.status === 401) {
-      return 'Email o contraseña incorrectos';
+    if (response.status === 401 || response.status === 404) {
+      return 'No fue posible iniciar sesión, probá verificando mail, contraseña o rol (Cliente/Profesional)';
     }
-    
+
     if (response.status === 403) {
       if (data.message?.includes('pending') || data.message?.includes('validation')) {
         return 'Tu cuenta está pendiente de validación. Revisá tu email.';
@@ -143,16 +143,12 @@ export const getLoginErrorMessage = async (response) => {
       if (data.message?.includes('suspended') || data.message?.includes('blocked')) {
         return 'Tu cuenta ha sido suspendida. Contactá a soporte.';
       }
-      return data.message || 'Acceso denegado';
+      return 'No fue posible iniciar sesión, probá verificando mail, contraseña o rol (Cliente/Profesional)';
     }
-    
-    if (response.status === 404) {
-      return 'Email no registrado';
-    }
-    
-    return data.message || 'Error al iniciar sesión';
-    
+
+    return data.message || 'No fue posible iniciar sesión, probá verificando mail, contraseña o rol (Cliente/Profesional)';
+
   } catch (error) {
-    return 'Email o contraseña incorrectos';
+    return 'No fue posible iniciar sesión, probá verificando mail, contraseña o rol (Cliente/Profesional)';
   }
 };
