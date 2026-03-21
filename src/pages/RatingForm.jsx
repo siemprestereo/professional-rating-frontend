@@ -21,6 +21,7 @@ function RatingForm({ professionalIdFromToken }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [commentModerated, setCommentModerated] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -93,8 +94,9 @@ function RatingForm({ professionalIdFromToken }) {
         comment: comment.trim() || null
       };
 
-      await api.createRating(ratingData);
+      const result = await api.createRating(ratingData);
 
+      if (result?.commentModerated) setCommentModerated(true);
       setSuccess(true);
 
       setTimeout(() => {
@@ -146,9 +148,14 @@ function RatingForm({ professionalIdFromToken }) {
           <h2 className="text-3xl roboto-light text-gray-800 mb-2 animate-slideUp">
             ¡Gracias por tu opinión!
           </h2>
-          <p className="text-gray-600 mb-6 animate-slideUp delay-100 text-base">
+          <p className="text-gray-600 mb-4 animate-slideUp delay-100 text-base">
             Tu calificación ayuda a {professional?.name?.split(' ')[0] || 'este profesional'} a mejorar su servicio
           </p>
+          {commentModerated && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-sm text-amber-800 animate-slideUp">
+              Tu comentario fue removido automáticamente por contener lenguaje no permitido.
+            </div>
+          )}
           <div className="animate-pulse text-gray-500">
             Redirigiendo...
           </div>

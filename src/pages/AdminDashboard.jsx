@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle, Mail, Send, User
+  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -91,11 +91,18 @@ function AdminDashboard() {
   const [emailResult, setEmailResult] = useState(null); // { type: 'success'|'error', message }
   const [confirmBroadcast, setConfirmBroadcast] = useState(false);
 
+  // Moderación
+  const [bannedWords, setBannedWords] = useState([]);
+  const [newWord, setNewWord] = useState('');
+  const [wordActionLoading, setWordActionLoading] = useState(false);
+  const [wordError, setWordError] = useState('');
+
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ratings') fetchRatings();
     if (activeTab === 'reports') fetchReports();
+    if (activeTab === 'moderation') fetchBannedWords();
   }, [activeTab]);
 
   const fetchStats = async () => {
@@ -298,12 +305,57 @@ function AdminDashboard() {
     OTHER: 'Otro motivo',
   };
 
+  const fetchBannedWords = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/banned-words`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      setBannedWords(await res.json());
+    } catch {
+      setWordError('Error cargando palabras');
+    }
+  };
+
+  const handleAddWord = async () => {
+    const word = newWord.trim().toLowerCase();
+    if (!word) return;
+    setWordActionLoading(true);
+    setWordError('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/banned-words`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify({ word })
+      });
+      const data = await res.json();
+      if (!res.ok) { setWordError(data.error || 'Error'); return; }
+      setBannedWords(prev => [...prev, data].sort((a, b) => a.word.localeCompare(b.word)));
+      setNewWord('');
+    } catch {
+      setWordError('Error al agregar');
+    } finally {
+      setWordActionLoading(false);
+    }
+  };
+
+  const handleDeleteWord = async (id) => {
+    setWordActionLoading(id);
+    try {
+      await fetch(`${BACKEND_URL}/api/admin/banned-words/${id}`, { method: 'DELETE', headers: authHeader() });
+      setBannedWords(prev => prev.filter(w => w.id !== id));
+    } catch {
+      setWordError('Error al eliminar');
+    } finally {
+      setWordActionLoading(false);
+    }
+  };
+
   const tabs = [
-    { id: 'stats',   label: 'Stats',       icon: BarChart2 },
-    { id: 'users',   label: 'Usuarios',    icon: Users },
-    { id: 'ratings', label: 'Calif.',      icon: Star },
-    { id: 'reports', label: 'Denuncias',   icon: ShieldAlert },
-    { id: 'emails',  label: 'Emails',      icon: Mail },
+    { id: 'stats',      label: 'Stats',      icon: BarChart2 },
+    { id: 'users',      label: 'Usuarios',   icon: Users },
+    { id: 'ratings',    label: 'Calif.',     icon: Star },
+    { id: 'reports',    label: 'Denuncias',  icon: ShieldAlert },
+    { id: 'emails',     label: 'Emails',     icon: Mail },
+    { id: 'moderation', label: 'Moderación', icon: Shield },
   ];
 
   const EMAIL_ALIASES = [
@@ -952,6 +1004,62 @@ function AdminDashboard() {
                 {emailSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {emailMode === 'broadcast' ? 'Enviar a todos' : 'Enviar'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* ===== TAB MODERACIÓN ===== */}
+        {activeTab === 'moderation' && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-800 mb-1">Palabras prohibidas</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Los comentarios que contengan estas palabras serán removidos automáticamente al enviarse. El puntaje se guarda igual.
+              </p>
+
+              {/* Agregar palabra */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newWord}
+                  onChange={e => { setNewWord(e.target.value); setWordError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleAddWord()}
+                  placeholder="Nueva palabra..."
+                  maxLength={100}
+                  className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                />
+                <button
+                  onClick={handleAddWord}
+                  disabled={wordActionLoading === true || !newWord.trim()}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-1 disabled:opacity-50 hover:bg-purple-700 transition-colors"
+                >
+                  {wordActionLoading === true ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Agregar
+                </button>
+              </div>
+
+              {wordError && <p className="text-red-500 text-xs mb-3">{wordError}</p>}
+
+              {/* Lista */}
+              <div className="flex flex-wrap gap-2">
+                {bannedWords.sort((a, b) => a.word.localeCompare(b.word)).map(w => (
+                  <div key={w.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 text-sm">
+                    <span className="text-gray-700">{w.word}</span>
+                    <button
+                      onClick={() => handleDeleteWord(w.id)}
+                      disabled={wordActionLoading === w.id}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      {wordActionLoading === w.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <XCircle className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                ))}
+                {bannedWords.length === 0 && (
+                  <p className="text-sm text-gray-400">No hay palabras configuradas.</p>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -114,6 +114,21 @@ export const suggestProfession = async (suggestion, professionalName) => {
   return response.data;
 };
 
+// ========== BANNED WORDS (admin) ==========
+export const getBannedWords = async () => {
+  const response = await apiClient.get('/admin/banned-words');
+  return response.data;
+};
+
+export const addBannedWord = async (word) => {
+  const response = await apiClient.post('/admin/banned-words', { word });
+  return response.data;
+};
+
+export const deleteBannedWord = async (id) => {
+  await apiClient.delete(`/admin/banned-words/${id}`);
+};
+
 // ========== DEFAULT EXPORT ==========
 export default {
   getCurrentUser,
