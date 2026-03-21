@@ -96,6 +96,8 @@ function AdminDashboard() {
   const [newWord, setNewWord] = useState('');
   const [wordActionLoading, setWordActionLoading] = useState(false);
   const [wordError, setWordError] = useState('');
+  const [wordListOpen, setWordListOpen] = useState(false);
+  const [wordSearch, setWordSearch] = useState('');
 
   useEffect(() => {
     if (activeTab === 'stats') fetchStats();
@@ -1040,26 +1042,51 @@ function AdminDashboard() {
 
               {wordError && <p className="text-red-500 text-xs mb-3">{wordError}</p>}
 
-              {/* Lista */}
-              <div className="flex flex-wrap gap-2">
-                {bannedWords.sort((a, b) => a.word.localeCompare(b.word)).map(w => (
-                  <div key={w.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 text-sm">
-                    <span className="text-gray-700">{w.word}</span>
-                    <button
-                      onClick={() => handleDeleteWord(w.id)}
-                      disabled={wordActionLoading === w.id}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      {wordActionLoading === w.id
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : <XCircle className="w-3.5 h-3.5" />}
-                    </button>
+              {/* Header colapsable */}
+              <button
+                onClick={() => setWordListOpen(o => !o)}
+                className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <span>Lista de palabras ({bannedWords.length})</span>
+                {wordListOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {/* Lista colapsable */}
+              {wordListOpen && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    value={wordSearch}
+                    onChange={e => setWordSearch(e.target.value)}
+                    placeholder="Buscar palabra..."
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none mb-3"
+                  />
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+                    {bannedWords
+                      .filter(w => w.word.includes(wordSearch.toLowerCase().trim()))
+                      .sort((a, b) => a.word.localeCompare(b.word))
+                      .map(w => (
+                        <div key={w.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 text-sm">
+                          <span className="text-gray-700">{w.word}</span>
+                          <button
+                            onClick={() => handleDeleteWord(w.id)}
+                            disabled={wordActionLoading === w.id}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            {wordActionLoading === w.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <XCircle className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      ))}
+                    {bannedWords.filter(w => w.word.includes(wordSearch.toLowerCase().trim())).length === 0 && (
+                      <p className="text-sm text-gray-400">
+                        {wordSearch ? 'Sin resultados.' : 'No hay palabras configuradas.'}
+                      </p>
+                    )}
                   </div>
-                ))}
-                {bannedWords.length === 0 && (
-                  <p className="text-sm text-gray-400">No hay palabras configuradas.</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
