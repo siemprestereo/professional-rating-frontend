@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, User, ClipboardList, TrendingUp, ChevronDown, FileText, Search, X } from 'lucide-react';
+import { Star, LogOut, User, ClipboardList, TrendingUp, ChevronDown, FileText, Search, X, HelpCircle } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import LoadingScreen from '../components/LoadingScreen';
@@ -24,6 +24,7 @@ function ProfessionalDashboard() {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const dropdownRef = useRef(null);
 
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -394,6 +395,10 @@ function ProfessionalDashboard() {
                     <FileText className="w-5 h-5 text-purple-600" />
                     <span className="font-medium text-sm sm:text-base">Mi CV</span>
                   </button>
+                  <button onClick={() => { setShowUserMenu(false); setShowHelpModal(true); }} className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3">
+                    <HelpCircle className="w-5 h-5 text-purple-600" />
+                    <span className="font-medium text-sm sm:text-base">Ayuda y soporte</span>
+                  </button>
                   <div className="border-t border-gray-200 my-2"></div>
                   <button onClick={handleLogout} className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
                     <LogOut className="w-5 h-5" />
@@ -536,6 +541,53 @@ function ProfessionalDashboard() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {errorModal && <ErrorModal title={errorModal.title} message={errorModal.message} onClose={() => setErrorModal(null)} />}
+
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowHelpModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-scaleIn max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-800">Ayuda y soporte</h2>
+              </div>
+              <button onClick={() => setShowHelpModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <h3 className="text-base font-bold text-gray-700">Preguntas frecuentes</h3>
+
+              {[
+                { q: '¿Cómo recibo calificaciones?', a: 'Compartí tu QR con tus clientes. Ellos lo escanean, inician sesión y pueden calificarte.' },
+                { q: '¿Cómo genero mi QR?', a: 'Desde el dashboard, tocá el botón "Generar QR". Podés descargarlo y compartirlo.' },
+                { q: '¿Quién puede ver mi perfil?', a: 'Cualquier persona puede ver tu perfil público y tus calificaciones.' },
+                { q: '¿Cómo edito mi CV?', a: 'Desde el menú superior, ingresá a "Mi CV" para agregar experiencia, educación y zonas de trabajo.' },
+                { q: '¿Cómo cambio mi foto de perfil?', a: 'Tocá tu foto (o la inicial) en el dashboard para editarla.' },
+                { q: '¿Puedo eliminar una calificación?', a: 'No podés eliminar calificaciones recibidas. Si creés que hay una calificación inapropiada, contactá a soporte.' },
+              ].map((item, i) => (
+                <div key={i} className="border border-gray-200 rounded-xl p-4">
+                  <p className="font-semibold text-gray-800 text-sm mb-1">{item.q}</p>
+                  <p className="text-gray-600 text-sm">{item.a}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-gray-600 text-sm mb-3">¿No encontraste lo que buscabas? Escribinos:</p>
+              <a
+                href="mailto:soporte@calificalo.com.ar?subject=Consulta%20de%20Profesional"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"
+              >
+                <HelpCircle className="w-5 h-5" />
+                Escribir a soporte
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

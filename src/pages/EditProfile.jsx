@@ -168,7 +168,7 @@ function EditProfile() {
                 className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all" />
             </div>
             <div className="mb-6">
-              <LocationSelector value={location} onChange={setLocation} focusColor="green" />
+              <LocationSelector value={location} onChange={setLocation} focusColor="green" label="Lugar de residencia" />
             </div>
             <button type="submit" disabled={saving}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg disabled:opacity-50 hover:scale-105 transition-all">

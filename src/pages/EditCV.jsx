@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Plus, Save, GraduationCap, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Save, GraduationCap, ChevronDown, ChevronRight, Lock, AlertTriangle, Trash2, Award } from 'lucide-react';
 import Toast from '../components/Toast';
 import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import SearchableSelect from '../components/SearchableSelect';
+import ProfessionSelector from '../components/ProfessionSelector';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
@@ -24,6 +25,9 @@ function EditCV() {
   const [deletingEducationIds, setDeletingEducationIds] = useState(new Set());
 
   const [description, setDescription] = useState('');
+  const [professionType, setProfessionType] = useState('');
+  const [professionalTitle, setProfessionalTitle] = useState('');
+  const [savingProfession, setSavingProfession] = useState(false);
   const [freelanceJobs, setFreelanceJobs] = useState([]);
   const [employeeJobs, setEmployeeJobs] = useState([]);
   const [education, setEducation] = useState([]);
@@ -79,6 +83,9 @@ function EditCV() {
         navigate('/professional-login');
         return;
       }
+
+      setProfessionType(professional.professionType || '');
+      setProfessionalTitle(professional.professionalTitle || '');
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${BACKEND_URL}/api/cv/me/full`, {
@@ -349,6 +356,37 @@ function EditCV() {
     }
   };
 
+  const handleSaveProfession = async () => {
+    if (!professionType) {
+      setToast({ type: 'error', message: 'Por favor seleccioná tu tipo de profesión' });
+      return;
+    }
+    setSavingProfession(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ professionalTitle, professionType })
+      });
+      if (response.ok) {
+        const updatedData = await response.json();
+        setProfessionType(updatedData.professionType || '');
+        setProfessionalTitle(updatedData.professionalTitle || '');
+        const stored = JSON.parse(localStorage.getItem('professional') || '{}');
+        localStorage.setItem('professional', JSON.stringify({ ...stored, professionType: updatedData.professionType, professionalTitle: updatedData.professionalTitle }));
+        setToast({ type: 'success', message: 'Información profesional guardada' });
+      } else {
+        const e = await response.json();
+        setToast({ type: 'error', message: e.error || 'Error al guardar' });
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Error de conexión' });
+    } finally {
+      setSavingProfession(false);
+    }
+  };
+
   const addFreelanceJob = () => {
     setFreelanceJobs(prev => [...prev, { company: '', position: '', startDate: '', endDate: '', currentlyWorking: false, isFreelance: true, description: '', referenceName: '', referencePhone: '', hasRatings: false, totalRatings: 0 }]);
     setExpandedFreelance(freelanceJobs.length);
@@ -554,6 +592,38 @@ function EditCV() {
           <textarea placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
             value={description} onChange={(e) => setDescription(e.target.value)}
             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none text-base" rows="4" />
+        </div>
+
+        {/* INFORMACIÓN PROFESIONAL */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <h2 className="text-2xl roboto-light text-gray-800 mb-4 flex items-center">
+            <span className="text-2xl mr-2">💼</span>Información profesional
+          </h2>
+          <div className="mb-4">
+            <ProfessionSelector
+              value={professionType}
+              onChange={(val) => setProfessionType(val)}
+              required
+              focusColor="purple"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
+              <Award className="w-5 h-5 mr-2 text-purple-600" />Título Profesional
+            </label>
+            <input
+              type="text"
+              value={professionalTitle}
+              onChange={(e) => setProfessionalTitle(e.target.value)}
+              placeholder="Ej: Mesero Senior, Electricista Matriculado..."
+              className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base"
+              maxLength="100"
+            />
+          </div>
+          <button onClick={handleSaveProfession} disabled={savingProfession}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg disabled:opacity-50 hover:scale-105 transition-all flex items-center justify-center text-base">
+            {savingProfession ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Guardando...</> : <><Save className="w-5 h-5 mr-2" />Guardar información profesional</>}
+          </button>
         </div>
 
         {/* ZONAS DE TRABAJO */}

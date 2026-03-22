@@ -36,7 +36,7 @@ function AcceptTerms() {
       }
 
       // Redirección
-      const targetPath = userType === 'PROFESSIONAL' ? '/professional-dashboard' : '/client-dashboard';
+      const targetPath = userType === 'PROFESSIONAL' ? '/edit-cv' : '/client-dashboard';
       navigate(targetPath, { replace: true });
 
     } catch {

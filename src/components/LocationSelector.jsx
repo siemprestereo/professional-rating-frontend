@@ -10,7 +10,7 @@ import SearchableSelect from './SearchableSelect';
  * - required: boolean
  * - focusColor: "purple" | "blue" | "green"
  */
-function LocationSelector({ value = '', onChange, required = false, focusColor = 'purple' }) {
+function LocationSelector({ value = '', onChange, required = false, focusColor = 'purple', label = 'Provincia' }) {
   const {
     provincias,
     segundoNivel,
@@ -81,7 +81,7 @@ function LocationSelector({ value = '', onChange, required = false, focusColor =
       <div>
         <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
           <MapPin className="w-5 h-5 mr-2 text-purple-600" />
-          Provincia {required && '*'}
+          {label} {required && '*'}
         </label>
         <div className="relative">
           <select

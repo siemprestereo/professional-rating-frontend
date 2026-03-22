@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Mail, Phone, Save, Trash2, Award, UserCheck, Briefcase } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Save, Trash2, UserCheck } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
@@ -8,7 +8,6 @@ import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { clearAllAppData, validatePhone } from '../utils/storage';
-import ProfessionSelector from '../components/ProfessionSelector';
 import { BACKEND_URL } from '../config';
 import LocationSelector from '../components/LocationSelector';
 import ProfilePictureUpload from '../components/ProfilePictureUpload';
@@ -23,8 +22,6 @@ function EditProfileProfessional() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
-  const [professionalTitle, setProfessionalTitle] = useState('');
-  const [professionType, setProfessionType] = useState('');
   const [isAlreadyClient, setIsAlreadyClient] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,8 +54,6 @@ function EditProfileProfessional() {
       setEmail(localData.email || '');
       setPhone(localData.phone || '');
       setLocation(localData.location || '');
-      setProfessionalTitle(localData.professionalTitle || '');
-      setProfessionType(localData.professionType || '');
 
       try {
         const [profileResponse, roleResponse] = await Promise.all([
@@ -77,8 +72,6 @@ function EditProfileProfessional() {
           setEmail(serverData.email || '');
           setPhone(serverData.phone || '');
           setLocation(serverData.location || '');
-          setProfessionalTitle(serverData.professionalTitle || '');
-          setProfessionType(serverData.professionType || '');
           localStorage.setItem('professional', JSON.stringify(serverData));
         }
 
@@ -112,10 +105,6 @@ function EditProfileProfessional() {
       setToast({ type: 'error', message: 'El formato del teléfono no es válido. Ej: +54 11 1234-5678' });
       return;
     }
-    if (!professionType) {
-      setToast({ type: 'error', message: 'Por favor seleccioná tu tipo de profesión' });
-      return;
-    }
 
     setSaving(true);
     try {
@@ -123,7 +112,7 @@ function EditProfileProfessional() {
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone, location, professionalTitle, professionType })
+        body: JSON.stringify({ phone, location })
       });
 
       if (!response.ok) {
@@ -137,8 +126,6 @@ function EditProfileProfessional() {
       setEmail(updatedData.email || '');
       setPhone(updatedData.phone || '');
       setLocation(updatedData.location || '');
-      setProfessionalTitle(updatedData.professionalTitle || '');
-      setProfessionType(updatedData.professionType || '');
       localStorage.setItem('professional', JSON.stringify(updatedData));
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
     } catch (err) {
@@ -195,7 +182,7 @@ function EditProfileProfessional() {
               }}
             />
             <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp mt-3">Editar Perfil</h1>
-            <p className="text-white/90 text-lg animate-slideUp delay-100">Actualizá tus datos profesionales</p>
+            <p className="text-white/90 text-lg animate-slideUp delay-100">Actualizá tu información personal</p>
           </div>
         </div>
       </div>
@@ -220,25 +207,6 @@ function EditProfileProfessional() {
             </div>
 
             <div className="mb-4">
-              <ProfessionSelector
-                value={professionType}
-                onChange={(val) => setProfessionType(val)}
-                required
-                focusColor="purple"
-                professionalName={name}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
-                <Award className="w-5 h-5 mr-2 text-purple-600" />Título Profesional
-              </label>
-              <input type="text" value={professionalTitle} onChange={(e) => setProfessionalTitle(e.target.value)}
-                placeholder="Ej: Mesero Senior, Electricista Matriculado..."
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all text-base" maxLength="100" />
-            </div>
-
-            <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
                 <Phone className="w-5 h-5 mr-2 text-purple-600" />Teléfono
               </label>
@@ -248,7 +216,7 @@ function EditProfileProfessional() {
             </div>
 
             <div className="mb-6">
-              <LocationSelector value={location} onChange={setLocation} focusColor="purple" />
+              <LocationSelector value={location} onChange={setLocation} focusColor="purple" label="Lugar de residencia" />
             </div>
 
             <button type="submit" disabled={saving}

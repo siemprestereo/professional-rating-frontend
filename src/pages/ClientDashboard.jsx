@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart, Edit2, Trash2, Clock, X } from 'lucide-react';
+import { Star, LogOut, Calendar, MessageSquare, User, BarChart3, Search, ChevronDown, Heart, Edit2, Trash2, Clock, X, HelpCircle } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Toast from '../components/Toast';
@@ -21,6 +21,7 @@ function ClientDashboard() {
   const [toast, setToast] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -377,6 +378,14 @@ function ClientDashboard() {
                     <span className="font-medium text-sm sm:text-base">Mis estadísticas</span>
                   </button>
 
+                  <button
+                    onClick={() => { setShowUserMenu(false); setShowHelpModal(true); }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-teal-50 transition-colors flex items-center gap-3"
+                  >
+                    <HelpCircle className="w-5 h-5 text-teal-600" />
+                    <span className="font-medium text-sm sm:text-base">Ayuda y soporte</span>
+                  </button>
+
                   <div className="border-t border-gray-200 my-2"></div>
 
                   <button
@@ -567,6 +576,53 @@ function ClientDashboard() {
       />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowHelpModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-scaleIn max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-800">Ayuda y soporte</h2>
+              </div>
+              <button onClick={() => setShowHelpModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <h3 className="text-base font-bold text-gray-700">Preguntas frecuentes</h3>
+
+              {[
+                { q: '¿Cómo califico a un profesional?', a: 'Escaneá el QR del profesional o buscalo en la plataforma. Ingresá al perfil y tocá "Calificar".' },
+                { q: '¿Puedo editar una calificación?', a: 'Sí, podés editar o eliminar tus calificaciones desde el listado en tu dashboard.' },
+                { q: '¿Quién puede ver mis calificaciones?', a: 'Tus calificaciones son públicas y aparecen en el perfil del profesional que calificaste.' },
+                { q: '¿Cómo busco un profesional?', a: 'Usá el buscador en la parte superior del dashboard para encontrar profesionales por nombre o profesión.' },
+                { q: '¿Cómo escaneo un QR?', a: 'Usá la cámara de tu celular o la app de escaneo predeterminada. El QR te llevará directamente al perfil del profesional.' },
+                { q: '¿Cómo cambio mi foto de perfil?', a: 'Tocá tu foto (o la inicial) en el dashboard para editarla.' },
+              ].map((item, i) => (
+                <div key={i} className="border border-gray-200 rounded-xl p-4">
+                  <p className="font-semibold text-gray-800 text-sm mb-1">{item.q}</p>
+                  <p className="text-gray-600 text-sm">{item.a}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-gray-600 text-sm mb-3">¿No encontraste lo que buscabas? Escribinos:</p>
+              <a
+                href="mailto:soporte@calificalo.com.ar?subject=Consulta%20de%20Cliente"
+                className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-3 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"
+              >
+                <HelpCircle className="w-5 h-5" />
+                Escribir a soporte
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
