@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
@@ -57,6 +57,15 @@ function ConfirmModal({ title, message, confirmLabel, confirmColor = 'red', onCo
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('stats');
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -196,9 +205,11 @@ function AdminDashboard() {
         headers: authHeader()
       });
       if (!res.ok) throw new Error('Error al modificar usuario');
+      const wasSuspended = confirmSuspend.suspended;
       setUsers(prev =>
         prev.map(u => u.id === confirmSuspend.id ? { ...u, suspended: !u.suspended } : u)
       );
+      showToast(wasSuspended ? 'Cuenta reactivada' : 'Cuenta suspendida');
       setConfirmSuspend(null);
     } catch (e) {
       setError(e.message);
@@ -216,9 +227,11 @@ function AdminDashboard() {
         headers: authHeader()
       });
       if (!res.ok) throw new Error('Error al eliminar usuario');
+      const deletedName = confirmDeleteUser.name;
       setUsers(prev => prev.filter(u => u.id !== confirmDeleteUser.id));
       setExpandedUser(null);
       setConfirmDeleteUser(null);
+      showToast(`Usuario "${deletedName}" eliminado`);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -1513,6 +1526,18 @@ function AdminDashboard() {
           onCancel={() => setConfirmResolveReport(null)}
           loading={actionLoading === confirmResolveReport.id}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-lg text-sm font-semibold flex items-center gap-2 pointer-events-none transition-all ${
+          toast.type === 'success'
+            ? 'bg-gray-900 text-white'
+            : 'bg-red-600 text-white'
+        }`}>
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+          {toast.message}
+        </div>
       )}
 
     </div>
