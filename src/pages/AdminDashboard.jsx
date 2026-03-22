@@ -4,8 +4,9 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox
+  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox, UserX
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
 
@@ -96,6 +97,23 @@ function AdminDashboard() {
   const [emailHistory, setEmailHistory] = useState([]);
   const [emailHistoryLoading, setEmailHistoryLoading] = useState(false);
 
+  // Activity & Trends
+  const [activityData, setActivityData] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+
+  // User ratings (lazy per user)
+  const [userRatings, setUserRatings] = useState({});
+  const [userRatingsLoading, setUserRatingsLoading] = useState(new Set());
+  const [expandedUserRatings, setExpandedUserRatings] = useState(null);
+
+  // Resolved reports
+  const [resolvedReports, setResolvedReports] = useState([]);
+  const [resolvedReportsLoading, setResolvedReportsLoading] = useState(false);
+  const [showResolvedReports, setShowResolvedReports] = useState(false);
+
+  // Users extra filters
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
+
   // Moderación
   const [bannedWords, setBannedWords] = useState([]);
   const [newWord, setNewWord] = useState('');
@@ -105,7 +123,7 @@ function AdminDashboard() {
   const [wordSearch, setWordSearch] = useState('');
 
   useEffect(() => {
-    if (activeTab === 'stats') fetchStats();
+    if (activeTab === 'stats') { fetchStats(); fetchActivity(); fetchTrends(); }
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ratings') fetchRatings();
     if (activeTab === 'reports') fetchReports();
@@ -276,7 +294,8 @@ function AdminDashboard() {
       user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       user.email.toLowerCase().includes(userSearch.toLowerCase());
     const matchesRole = userRoleFilter === 'ALL' || user.activeRole === userRoleFilter;
-    return matchesSearch && matchesRole;
+    const matchesVerified = !showUnverifiedOnly || !user.emailVerified;
+    return matchesSearch && matchesRole && matchesVerified;
   });
 
   const getTimeThreshold = () => {
@@ -351,6 +370,49 @@ function AdminDashboard() {
       setBannedWords(await res.json());
     } catch {
       setWordError('Error cargando palabras');
+    }
+  };
+
+  const fetchActivity = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/stats/activity`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      setActivityData(await res.json());
+    } catch { /* silent */ }
+  };
+
+  const fetchTrends = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/stats/trends`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      setTrendData(await res.json());
+    } catch { /* silent */ }
+  };
+
+  const fetchUserRatings = async (userId) => {
+    if (userRatings[userId] !== undefined) return;
+    setUserRatingsLoading(prev => new Set(prev).add(userId));
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}/ratings`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setUserRatings(prev => ({ ...prev, [userId]: data }));
+    } catch {
+      setUserRatings(prev => ({ ...prev, [userId]: [] }));
+    } finally {
+      setUserRatingsLoading(prev => { const s = new Set(prev); s.delete(userId); return s; });
+    }
+  };
+
+  const fetchResolvedReports = async () => {
+    setResolvedReportsLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/reports/admin`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      const all = await res.json();
+      setResolvedReports(all.filter(r => r.status !== 'PENDING'));
+    } catch { /* silent */ } finally {
+      setResolvedReportsLoading(false);
     }
   };
 
@@ -544,6 +606,69 @@ function AdminDashboard() {
                 </div>
               ))}
             </div>
+
+            {/* Tendencia */}
+            {trendData.length > 0 && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <h3 className="text-sm font-bold text-gray-700 mb-4">Tendencia — últimas 8 semanas</h3>
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={trendData} margin={{ top: 5, right: 5, left: -22, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="week" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="registrations" name="Registros" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="ratings" name="Calificaciones" fill="#f59e0b" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Actividad reciente */}
+            {activityData && (
+              <div className="space-y-3">
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Últimas registraciones</h3>
+                  <div className="space-y-2.5">
+                    {activityData.recentUsers.map(u => (
+                      <div key={u.id} className="flex items-center justify-between text-xs gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-800 truncate">{u.name}</p>
+                          <p className="text-gray-400 truncate">{u.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            u.activeRole === 'PROFESSIONAL' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {u.activeRole === 'PROFESSIONAL' ? 'Prof.' : 'Cliente'}
+                          </span>
+                          <span className="text-gray-400">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-AR') : '—'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3">Últimas calificaciones</h3>
+                  <div className="space-y-2.5">
+                    {activityData.recentRatings.map(r => (
+                      <div key={r.id} className="flex items-center justify-between text-xs gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-800 truncate">{r.professionalName}</p>
+                          <p className="text-gray-400 truncate">por {r.clientName}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-yellow-500 font-bold">{'★'.repeat(r.score)}</span>
+                          <span className="text-gray-400">{new Date(r.createdAt).toLocaleDateString('es-AR')}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -575,6 +700,16 @@ function AdminDashboard() {
                   {filter.label}
                 </button>
               ))}
+              <button
+                onClick={() => setShowUnverifiedOnly(p => !p)}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 ${
+                  showUnverifiedOnly
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:border-orange-300'
+                }`}
+              >
+                <UserX className="w-3.5 h-3.5" /> Sin verificar
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
@@ -622,6 +757,9 @@ function AdminDashboard() {
                       <span>ID: {user.id}</span>
                       <span>Email verificado: {user.emailVerified ? '✅' : '❌'}</span>
                       <span>Auth: {user.authProvider}</span>
+                      {user.createdAt && (
+                        <span>Registro: {new Date(user.createdAt).toLocaleDateString('es-AR')}</span>
+                      )}
                     </div>
 
                     {user.activeRole === 'PROFESSIONAL' ? (
@@ -698,6 +836,52 @@ function AdminDashboard() {
                     >
                       <Trash2 className="w-4 h-4" /> Eliminar cuenta
                     </button>
+
+                    {/* Calificaciones del usuario */}
+                    <div className="border-t border-gray-100 pt-2">
+                      <button
+                        onClick={() => {
+                          if (expandedUserRatings === user.id) {
+                            setExpandedUserRatings(null);
+                          } else {
+                            setExpandedUserRatings(user.id);
+                            fetchUserRatings(user.id);
+                          }
+                        }}
+                        className="w-full flex items-center justify-between py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-800"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Star className="w-3.5 h-3.5 text-yellow-500" />
+                          Calificaciones ({user.totalRatings})
+                        </span>
+                        {expandedUserRatings === user.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+
+                      {expandedUserRatings === user.id && (
+                        <div className="mt-2 space-y-1.5">
+                          {userRatingsLoading.has(user.id) ? (
+                            <div className="flex justify-center py-3">
+                              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                            </div>
+                          ) : userRatings[user.id]?.length === 0 ? (
+                            <p className="text-xs text-gray-400 text-center py-2">Sin calificaciones</p>
+                          ) : userRatings[user.id]?.map(r => (
+                            <div key={r.id} className="bg-gray-50 rounded-xl px-3 py-2 text-xs">
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <span className="text-yellow-500 font-bold">{'★'.repeat(r.score)}</span>
+                                <span className="text-gray-400">{new Date(r.createdAt).toLocaleDateString('es-AR')}</span>
+                              </div>
+                              <p className="text-gray-600 truncate">
+                                {user.activeRole === 'PROFESSIONAL'
+                                  ? `por ${r.clientName}`
+                                  : `a ${r.professionalName}`}
+                              </p>
+                              {r.comment && <p className="text-gray-500 italic truncate mt-0.5">"{r.comment}"</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -940,6 +1124,54 @@ function AdminDashboard() {
                 </div>
               </div>
             ))}
+
+            {/* Denuncias resueltas */}
+            <div className="border-t border-gray-100 pt-2">
+              <button
+                onClick={() => {
+                  const next = !showResolvedReports;
+                  setShowResolvedReports(next);
+                  if (next && resolvedReports.length === 0) fetchResolvedReports();
+                }}
+                className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <span>Denuncias resueltas {resolvedReports.length > 0 ? `(${resolvedReports.length})` : ''}</span>
+                {showResolvedReports ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {showResolvedReports && (
+                <div className="space-y-2 mt-1">
+                  {resolvedReportsLoading ? (
+                    <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-gray-400" /></div>
+                  ) : resolvedReports.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-4">No hay denuncias resueltas aún.</p>
+                  ) : resolvedReports.map(report => (
+                    <div key={report.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                          {REASON_LABELS[report.reason] ?? report.reason}
+                        </span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          report.status === 'APPROVED'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {report.status === 'APPROVED' ? 'Aprobada' : 'Rechazada'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        <span className="font-medium text-gray-700">{report.reporterName}</span>
+                        {' · '}
+                        {new Date(report.resolvedAt || report.createdAt).toLocaleDateString('es-AR')}
+                      </p>
+                      {report.adminNotes && (
+                        <p className="text-xs text-gray-400 italic">"{report.adminNotes}"</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
