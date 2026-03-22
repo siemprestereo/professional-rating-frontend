@@ -46,9 +46,10 @@ function ProfessionalLogin() {
         });
 
         if (data.userType === 'PROFESSIONAL') {
+          const destination = data.data?.termsAccepted === false ? '/accept-terms' : '/professional-dashboard';
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
           setTimeout(() => {
-            handlePostLoginRedirect('/professional-dashboard', navigate, true);
+            handlePostLoginRedirect(destination, navigate, true);
           }, 300);
         } else {
           handlePostLoginRedirect('/client-dashboard', navigate, true);
