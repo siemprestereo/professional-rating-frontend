@@ -24,56 +24,30 @@ function ProfessionSelector({
   const [search, setSearch] = useState('');
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [suggestionText, setSuggestionText] = useState('');
-  const [suggestionStatus, setSuggestionStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
+  const [suggestionStatus, setSuggestionStatus] = useState(null);
   const [professions, setProfessions] = useState([]);
   const [loadingProfessions, setLoadingProfessions] = useState(false);
   const containerRef = useRef(null);
   const searchRef = useRef(null);
 
-  const accentBg = {
-    purple: 'bg-purple-50',
-    blue: 'bg-blue-50',
-    green: 'bg-green-50',
-  }[focusColor] || 'bg-purple-50';
+  const accentBg = { purple: 'bg-purple-50', blue: 'bg-blue-50', green: 'bg-green-50' }[focusColor] || 'bg-purple-50';
+  const accentText = { purple: 'text-purple-600', blue: 'text-blue-600', green: 'text-green-600' }[focusColor] || 'text-purple-600';
+  const accentBorder = { purple: 'border-purple-500', blue: 'border-blue-500', green: 'border-green-500' }[focusColor] || 'border-purple-500';
+  const focusBorder = { purple: 'focus:border-purple-500', blue: 'focus:border-blue-500', green: 'focus:border-green-500' }[focusColor] || 'focus:border-purple-500';
 
-  const accentText = {
-    purple: 'text-purple-600',
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-  }[focusColor] || 'text-purple-600';
-
-  const accentBorder = {
-    purple: 'border-purple-500',
-    blue: 'border-blue-500',
-    green: 'border-green-500',
-  }[focusColor] || 'border-purple-500';
-
-  const focusBorder = {
-    purple: 'focus:border-purple-500',
-    blue: 'focus:border-blue-500',
-    green: 'focus:border-green-500',
-  }[focusColor] || 'focus:border-purple-500';
-
-  // Load professions from API on mount
   useEffect(() => {
     const load = async () => {
       setLoadingProfessions(true);
       try {
         const res = await fetch(BACKEND_URL + '/api/professions');
-        if (res.ok) {
-          const data = await res.json();
-          setProfessions(data.filter(p => p.active));
-        }
-      } catch {
-        // silent
-      } finally {
+        if (res.ok) setProfessions(await res.json());
+      } catch { /* silent */ } finally {
         setLoadingProfessions(false);
       }
     };
     load();
   }, []);
 
-  // Cerrar al hacer click afuera
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -85,18 +59,11 @@ function ProfessionSelector({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Focus en búsqueda al abrir
   useEffect(() => {
-    if (open && searchRef.current) {
-      setTimeout(() => searchRef.current?.focus(), 50);
-    }
+    if (open && searchRef.current) setTimeout(() => searchRef.current?.focus(), 50);
   }, [open]);
 
-  const handleSelect = (profCode) => {
-    onChange(profCode);
-    setOpen(false);
-    setSearch('');
-  };
+  const handleSelect = (profCode) => { onChange(profCode); setOpen(false); setSearch(''); };
 
   const handleToggle = () => {
     setOpen(prev => !prev);
@@ -118,33 +85,36 @@ function ProfessionSelector({
     }
   };
 
-  // Filter professions by search
-  const filteredProfessions = search.trim()
-    ? professions.filter(p =>
-        p.displayName.toLowerCase().includes(search.toLowerCase())
-      )
+  const filtered = search.trim()
+    ? professions.filter(p => p.displayName.toLowerCase().includes(search.toLowerCase()))
     : professions;
 
-  const selectedLabel = value
-    ? (professions.find(p => p.code === value)?.displayName || value)
-    : '';
+  // Group by category
+  const grouped = filtered.reduce((acc, p) => {
+    const cat = p.category || 'Otras';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(p);
+    return acc;
+  }, {});
+  const categories = Object.keys(grouped).sort((a, b) =>
+    a === 'Otras' ? 1 : b === 'Otras' ? -1 : a.localeCompare(b, 'es')
+  );
+
+  const selectedLabel = value ? (professions.find(p => p.code === value)?.displayName || value) : '';
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Label */}
       <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
         <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
         Profesión {required && '*'}
       </label>
 
-      {/* Botón principal */}
       <button
         type="button"
         onClick={handleToggle}
         className={`w-full border-2 rounded-2xl px-4 py-3 text-left transition-all text-base flex items-center justify-between bg-white
           ${open ? accentBorder : 'border-gray-200 hover:border-gray-300'}
-          ${selectedLabel ? 'text-gray-800' : 'text-gray-400'}
-        `}
+          ${selectedLabel ? 'text-gray-800' : 'text-gray-400'}`}
       >
         <span className="truncate">{selectedLabel || placeholder}</span>
         {loadingProfessions
@@ -153,11 +123,8 @@ function ProfessionSelector({
         }
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-
-          {/* Búsqueda */}
           <div className="p-2 border-b border-gray-100">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -172,24 +139,34 @@ function ProfessionSelector({
             </div>
           </div>
 
-          {/* Lista de profesiones */}
           <ul className="max-h-72 overflow-y-auto">
             {loadingProfessions ? (
               <li className="px-4 py-6 flex items-center justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
               </li>
-            ) : filteredProfessions.length > 0 ? (
-              filteredProfessions.map(prof => (
-                <li
-                  key={prof.code}
-                  onClick={() => handleSelect(prof.code)}
-                  className={`px-4 py-2.5 text-sm cursor-pointer transition-colors
-                    ${prof.code === value
-                      ? `${accentBg} ${accentText} font-semibold`
-                      : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                  {prof.displayName}
+            ) : categories.length > 0 ? (
+              categories.map(cat => (
+                <li key={cat}>
+                  {/* Category header — only show if more than one category or searching */}
+                  {(categories.length > 1 || search.trim()) && (
+                    <div className="px-4 pt-2.5 pb-1 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                      {cat}
+                    </div>
+                  )}
+                  {grouped[cat].map(prof => (
+                    <div
+                      key={prof.code}
+                      onClick={() => handleSelect(prof.code)}
+                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors
+                        ${categories.length > 1 ? 'pl-5' : ''}
+                        ${prof.code === value
+                          ? `${accentBg} ${accentText} font-semibold`
+                          : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      {prof.displayName}
+                    </div>
+                  ))}
                 </li>
               ))
             ) : (
@@ -199,7 +176,6 @@ function ProfessionSelector({
             )}
           </ul>
 
-          {/* Sugerir profesión */}
           <div className="border-t border-gray-100">
             {!showSuggestion ? (
               <button

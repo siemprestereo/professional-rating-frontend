@@ -9,6 +9,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
+import ProfessionSelector from '../components/ProfessionSelector';
 
 const getToken = () => localStorage.getItem('authToken');
 
@@ -141,6 +142,9 @@ function AdminDashboard() {
   const [professionsLoading, setProfessionsLoading] = useState(false);
   const [addingProfession, setAddingProfession] = useState(false);
   const [newProfessionName, setNewProfessionName] = useState('');
+  const [newProfessionCategory, setNewProfessionCategory] = useState('');
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
   // Accept suggestion
   const [acceptingSuggestion, setAcceptingSuggestion] = useState(null); // {msgId, name} | null
@@ -515,15 +519,18 @@ function AdminDashboard() {
 
   const handleAddProfession = async () => {
     if (!newProfessionName.trim()) return;
+    const category = newProfessionCategory === '__new__' ? newCategoryInput.trim() : newProfessionCategory.trim();
     setAddingProfession(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/professions`, {
         method: 'POST',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ displayName: newProfessionName.trim() })
+        body: JSON.stringify({ displayName: newProfessionName.trim(), category: category || null })
       });
       if (res.ok) {
         setNewProfessionName('');
+        setNewProfessionCategory('');
+        setNewCategoryInput('');
         await fetchProfessions();
       }
     } finally {
@@ -1672,58 +1679,127 @@ function AdminDashboard() {
         )}
 
         {/* ===== TAB CONFIG ===== */}
-        {activeTab === 'config' && (
-          <div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">Lista de profesiones</h3>
-              <p className="text-sm text-gray-500 mb-5">Profesiones disponibles para los profesionales al registrarse.</p>
+        {activeTab === 'config' && (() => {
+          // Derive unique categories from current profession list
+          const existingCategories = [...new Set(professions.map(p => p.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
 
-              {/* Add new profession */}
-              <div className="flex gap-2 mb-6">
-                <input
-                  type="text"
-                  value={newProfessionName}
-                  onChange={e => setNewProfessionName(e.target.value)}
-                  placeholder="Nombre de la nueva profesión..."
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-                  onKeyDown={e => e.key === 'Enter' && handleAddProfession()}
-                />
-                <button
-                  onClick={handleAddProfession}
-                  disabled={addingProfession || !newProfessionName.trim()}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
-                >
-                  {addingProfession ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  Agregar
-                </button>
+          // Group professions by category for display
+          const grouped = professions.reduce((acc, p) => {
+            const cat = p.category || 'Sin categoría';
+            if (!acc[cat]) acc[cat] = [];
+            acc[cat].push(p);
+            return acc;
+          }, {});
+          const cats = Object.keys(grouped).sort((a, b) =>
+            a === 'Sin categoría' ? 1 : b === 'Sin categoría' ? -1 : a.localeCompare(b, 'es')
+          );
+
+          return (
+            <div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">Lista de profesiones</h3>
+                <p className="text-sm text-gray-500 mb-5">Profesiones disponibles para los profesionales al registrarse.</p>
+
+                {/* Add new profession form */}
+                <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-3">
+                  <p className="text-sm font-semibold text-gray-700">Agregar nueva profesión</p>
+                  <input
+                    type="text"
+                    value={newProfessionName}
+                    onChange={e => setNewProfessionName(e.target.value)}
+                    placeholder="Nombre de la profesión..."
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white"
+                    onKeyDown={e => e.key === 'Enter' && handleAddProfession()}
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={newProfessionCategory}
+                      onChange={e => { setNewProfessionCategory(e.target.value); setNewCategoryInput(''); }}
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white text-gray-700"
+                    >
+                      <option value="">Sin categoría</option>
+                      {existingCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__new__">+ Nueva categoría...</option>
+                    </select>
+                    {newProfessionCategory === '__new__' && (
+                      <input
+                        type="text"
+                        value={newCategoryInput}
+                        onChange={e => setNewCategoryInput(e.target.value)}
+                        placeholder="Nombre de la categoría"
+                        className="flex-1 border border-blue-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white"
+                      />
+                    )}
+                  </div>
+                  <button
+                    onClick={handleAddProfession}
+                    disabled={addingProfession || !newProfessionName.trim() || (newProfessionCategory === '__new__' && !newCategoryInput.trim())}
+                    className="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {addingProfession ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Agregar profesión
+                  </button>
+                </div>
+
+                {/* Profession list grouped by category */}
+                {professionsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cats.map(cat => (
+                      <div key={cat}>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{cat}</p>
+                        <div className="space-y-1.5">
+                          {grouped[cat].map(p => (
+                            <div key={p.id} className={`flex items-center justify-between px-4 py-2.5 rounded-xl border ${p.active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                              <div>
+                                <span className={`font-medium text-sm ${p.active ? 'text-gray-800' : 'text-gray-400'}`}>{p.displayName}</span>
+                                <span className="text-xs text-gray-400 ml-2 font-mono">{p.code}</span>
+                              </div>
+                              <button
+                                onClick={() => handleToggleProfession(p.id)}
+                                className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${p.active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                              >
+                                {p.active ? 'Desactivar' : 'Activar'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Profession list */}
-              {professionsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              {/* Preview */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Vista previa del selector</h3>
+                    <p className="text-sm text-gray-500">Así ven los profesionales el listado al registrarse.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPreview(p => !p)}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  >
+                    {showPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {showPreview ? 'Ocultar' : 'Ver'}
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {professions.map(p => (
-                    <div key={p.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${p.active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
-                      <div>
-                        <span className={`font-medium text-sm ${p.active ? 'text-gray-800' : 'text-gray-400'}`}>{p.displayName}</span>
-                        <span className="text-xs text-gray-400 ml-2 font-mono">{p.code}</span>
-                      </div>
-                      <button
-                        onClick={() => handleToggleProfession(p.id)}
-                        className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${p.active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
-                      >
-                        {p.active ? 'Desactivar' : 'Activar'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                {showPreview && (
+                  <div className="max-w-sm">
+                    <ProfessionSelector value="" onChange={() => {}} focusColor="blue" />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
+
 
       </div>
 
