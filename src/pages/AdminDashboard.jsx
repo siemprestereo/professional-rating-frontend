@@ -77,6 +77,7 @@ function AdminDashboard() {
   const [confirmSuspend, setConfirmSuspend] = useState(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
   const [confirmDeleteRating, setConfirmDeleteRating] = useState(null);
+  const [confirmClearComment, setConfirmClearComment] = useState(null);
   const [confirmResolveReport, setConfirmResolveReport] = useState(null);
 
   // Email
@@ -218,6 +219,24 @@ function AdminDashboard() {
       if (!res.ok) throw new Error('Error al eliminar calificación');
       setRatings(prev => prev.filter(r => r.id !== confirmDeleteRating));
       setConfirmDeleteRating(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleClearComment = async () => {
+    if (!confirmClearComment) return;
+    setActionLoading(confirmClearComment);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/ratings/${confirmClearComment}/clear-comment`, {
+        method: 'PATCH',
+        headers: authHeader()
+      });
+      if (!res.ok) throw new Error('Error al borrar comentario');
+      setRatings(prev => prev.map(r => r.id === confirmClearComment ? { ...r, comment: null } : r));
+      setConfirmClearComment(null);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -809,12 +828,24 @@ function AdminDashboard() {
                       <p className="text-xs text-gray-600 mt-1 italic">"{rating.comment}"</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => setConfirmDeleteRating(rating.id)}
-                    className="flex-shrink-0 text-red-400 hover:text-red-600 transition-colors p-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {rating.comment && (
+                      <button
+                        onClick={() => setConfirmClearComment(rating.id)}
+                        title="Borrar solo el comentario"
+                        className="text-orange-400 hover:text-orange-600 transition-colors p-1"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setConfirmDeleteRating(rating.id)}
+                      title="Eliminar calificación completa"
+                      className="text-red-400 hover:text-red-600 transition-colors p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1219,6 +1250,19 @@ function AdminDashboard() {
           onConfirm={handleDeleteRating}
           onCancel={() => setConfirmDeleteRating(null)}
           loading={actionLoading === confirmDeleteRating}
+        />
+      )}
+
+      {/* Modal — Borrar comentario */}
+      {confirmClearComment && (
+        <ConfirmModal
+          title="Borrar comentario"
+          message="Se eliminará el comentario de esta calificación. La puntuación se mantendrá intacta."
+          confirmLabel="Borrar comentario"
+          confirmColor="yellow"
+          onConfirm={handleClearComment}
+          onCancel={() => setConfirmClearComment(null)}
+          loading={actionLoading === confirmClearComment}
         />
       )}
 
