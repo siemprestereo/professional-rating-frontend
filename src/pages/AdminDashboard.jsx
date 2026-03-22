@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox, UserX
+  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox, UserX, Settings
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BACKEND_URL } from '../config';
@@ -136,6 +136,16 @@ function AdminDashboard() {
   const [wordListOpen, setWordListOpen] = useState(false);
   const [wordSearch, setWordSearch] = useState('');
 
+  // Professions (config tab)
+  const [professions, setProfessions] = useState([]);
+  const [professionsLoading, setProfessionsLoading] = useState(false);
+  const [addingProfession, setAddingProfession] = useState(false);
+  const [newProfessionName, setNewProfessionName] = useState('');
+
+  // Accept suggestion
+  const [acceptingSuggestion, setAcceptingSuggestion] = useState(null); // {msgId, name} | null
+  const [suggestionAccepting, setSuggestionAccepting] = useState(false);
+
   useEffect(() => {
     fetchUnreadCount();
   }, []);
@@ -144,8 +154,8 @@ function AdminDashboard() {
     if (activeTab === 'stats') { fetchStats(); fetchActivity(); fetchTrends(); }
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ratings') fetchRatings();
-    if (activeTab === 'reports') fetchReports();
-    if (activeTab === 'moderation') fetchBannedWords();
+    if (activeTab === 'reports') { fetchReports(); fetchBannedWords(); }
+    if (activeTab === 'config') fetchProfessions();
     if (activeTab === 'emails' && emailMode === 'history') fetchEmailHistory();
     if (activeTab === 'emails' && emailMode === 'messages') fetchInboxMessages();
   }, [activeTab]);
@@ -416,6 +426,16 @@ function AdminDashboard() {
     }
   };
 
+  const fetchProfessions = async () => {
+    setProfessionsLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/professions`, { headers: authHeader() });
+      if (res.ok) setProfessions(await res.json());
+    } finally {
+      setProfessionsLoading(false);
+    }
+  };
+
   const fetchActivity = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/stats/activity`, { headers: authHeader() });
@@ -493,13 +513,64 @@ function AdminDashboard() {
     }
   };
 
+  const handleAddProfession = async () => {
+    if (!newProfessionName.trim()) return;
+    setAddingProfession(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/professions`, {
+        method: 'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: newProfessionName.trim() })
+      });
+      if (res.ok) {
+        setNewProfessionName('');
+        await fetchProfessions();
+      }
+    } finally {
+      setAddingProfession(false);
+    }
+  };
+
+  const handleToggleProfession = async (id) => {
+    const res = await fetch(`${BACKEND_URL}/api/admin/professions/${id}/toggle`, {
+      method: 'PATCH',
+      headers: authHeader()
+    });
+    if (res.ok) {
+      setProfessions(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    }
+  };
+
+  const handleAcceptSuggestion = async () => {
+    if (!acceptingSuggestion?.name?.trim()) return;
+    setSuggestionAccepting(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/messages/${acceptingSuggestion.msgId}/accept-suggestion`, {
+        method: 'POST',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: acceptingSuggestion.name.trim() })
+      });
+      if (res.ok) {
+        setInboxMessages(prev => prev.map(m => m.id === acceptingSuggestion.msgId
+          ? { ...m, status: 'RESOLVED', read: true }
+          : m
+        ));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        setAcceptingSuggestion(null);
+        fetchProfessions(); // refresh profession list if config tab is open
+      }
+    } finally {
+      setSuggestionAccepting(false);
+    }
+  };
+
   const tabs = [
-    { id: 'stats',      label: 'Stats',      icon: BarChart2 },
-    { id: 'users',      label: 'Usuarios',   icon: Users },
-    { id: 'ratings',    label: 'Calif.',     icon: Star },
-    { id: 'reports',    label: 'Denuncias',  icon: ShieldAlert },
-    { id: 'emails',     label: 'Emails',     icon: Mail },
-    { id: 'moderation', label: 'Moderación', icon: Shield },
+    { id: 'stats',   label: 'Stats',    icon: BarChart2 },
+    { id: 'users',   label: 'Usuarios', icon: Users },
+    { id: 'ratings', label: 'Calif.',   icon: Star },
+    { id: 'reports', label: 'Denuncias',icon: ShieldAlert },
+    { id: 'emails',  label: 'Emails',   icon: Mail },
+    { id: 'config',  label: 'Config.',  icon: Settings },
   ];
 
   const EMAIL_ALIASES = [
@@ -1215,6 +1286,88 @@ function AdminDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Moderación — Palabras prohibidas */}
+            <div className="border-t-2 border-gray-200 my-6 pt-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-gray-500" />
+                Moderación — Palabras prohibidas
+              </h3>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-500 mb-4">
+                  Los comentarios que contengan estas palabras serán removidos automáticamente al enviarse. El puntaje se guarda igual.
+                </p>
+
+                {/* Agregar palabra */}
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newWord}
+                    onChange={e => { setNewWord(e.target.value); setWordError(''); }}
+                    onKeyDown={e => e.key === 'Enter' && handleAddWord()}
+                    placeholder="Nueva palabra..."
+                    maxLength={100}
+                    className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleAddWord}
+                    disabled={wordActionLoading === true || !newWord.trim()}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-1 disabled:opacity-50 hover:bg-purple-700 transition-colors"
+                  >
+                    {wordActionLoading === true ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Agregar
+                  </button>
+                </div>
+
+                {wordError && <p className="text-red-500 text-xs mb-3">{wordError}</p>}
+
+                {/* Header colapsable */}
+                <button
+                  onClick={() => setWordListOpen(o => !o)}
+                  className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  <span>Lista de palabras ({bannedWords.length})</span>
+                  {wordListOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+
+                {/* Lista colapsable */}
+                {wordListOpen && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      value={wordSearch}
+                      onChange={e => setWordSearch(e.target.value)}
+                      placeholder="Buscar palabra..."
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none mb-3"
+                    />
+                    <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+                      {bannedWords
+                        .filter(w => w.word.includes(wordSearch.toLowerCase().trim()))
+                        .sort((a, b) => a.word.localeCompare(b.word))
+                        .map(w => (
+                          <div key={w.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 text-sm">
+                            <span className="text-gray-700">{w.word}</span>
+                            <button
+                              onClick={() => handleDeleteWord(w.id)}
+                              disabled={wordActionLoading === w.id}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              {wordActionLoading === w.id
+                                ? <Loader2 className="w-3 h-3 animate-spin" />
+                                : <XCircle className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        ))}
+                      {bannedWords.filter(w => w.word.includes(wordSearch.toLowerCase().trim())).length === 0 && (
+                        <p className="text-sm text-gray-400">
+                          {wordSearch ? 'Sin resultados.' : 'No hay palabras configuradas.'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -1379,6 +1532,39 @@ function AdminDashboard() {
                             </button>
                           )}
                         </div>
+
+                        {/* Accept suggestion button */}
+                        <div onClick={e => e.stopPropagation()}>
+                          {msg.type === 'SUGGESTION' && msg.status === 'OPEN' && (
+                            acceptingSuggestion?.msgId === msg.id ? (
+                              <div className="mt-3 flex gap-2">
+                                <input
+                                  type="text"
+                                  value={acceptingSuggestion.name}
+                                  onChange={e => setAcceptingSuggestion(prev => ({...prev, name: e.target.value}))}
+                                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-green-400"
+                                  placeholder="Nombre de la profesión..."
+                                />
+                                <button
+                                  onClick={handleAcceptSuggestion}
+                                  disabled={suggestionAccepting}
+                                  className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
+                                >
+                                  {suggestionAccepting ? <Loader2 className="w-3 h-3 animate-spin" /> : '✓'}
+                                  Agregar
+                                </button>
+                                <button onClick={() => setAcceptingSuggestion(null)} className="text-gray-400 hover:text-gray-600 px-2">✕</button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setAcceptingSuggestion({ msgId: msg.id, name: msg.message })}
+                                className="mt-2 text-xs font-semibold text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                ✓ Agregar a la lista de profesiones
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1485,81 +1671,54 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ===== TAB MODERACIÓN ===== */}
-        {activeTab === 'moderation' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-800 mb-1">Palabras prohibidas</h3>
-              <p className="text-xs text-gray-500 mb-4">
-                Los comentarios que contengan estas palabras serán removidos automáticamente al enviarse. El puntaje se guarda igual.
-              </p>
+        {/* ===== TAB CONFIG ===== */}
+        {activeTab === 'config' && (
+          <div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-1">Lista de profesiones</h3>
+              <p className="text-sm text-gray-500 mb-5">Profesiones disponibles para los profesionales al registrarse.</p>
 
-              {/* Agregar palabra */}
-              <div className="flex gap-2 mb-4">
+              {/* Add new profession */}
+              <div className="flex gap-2 mb-6">
                 <input
                   type="text"
-                  value={newWord}
-                  onChange={e => { setNewWord(e.target.value); setWordError(''); }}
-                  onKeyDown={e => e.key === 'Enter' && handleAddWord()}
-                  placeholder="Nueva palabra..."
-                  maxLength={100}
-                  className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none"
+                  value={newProfessionName}
+                  onChange={e => setNewProfessionName(e.target.value)}
+                  placeholder="Nombre de la nueva profesión..."
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                  onKeyDown={e => e.key === 'Enter' && handleAddProfession()}
                 />
                 <button
-                  onClick={handleAddWord}
-                  disabled={wordActionLoading === true || !newWord.trim()}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-1 disabled:opacity-50 hover:bg-purple-700 transition-colors"
+                  onClick={handleAddProfession}
+                  disabled={addingProfession || !newProfessionName.trim()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
-                  {wordActionLoading === true ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  {addingProfession ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                   Agregar
                 </button>
               </div>
 
-              {wordError && <p className="text-red-500 text-xs mb-3">{wordError}</p>}
-
-              {/* Header colapsable */}
-              <button
-                onClick={() => setWordListOpen(o => !o)}
-                className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                <span>Lista de palabras ({bannedWords.length})</span>
-                {wordListOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-
-              {/* Lista colapsable */}
-              {wordListOpen && (
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    value={wordSearch}
-                    onChange={e => setWordSearch(e.target.value)}
-                    placeholder="Buscar palabra..."
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-purple-500 focus:outline-none mb-3"
-                  />
-                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
-                    {bannedWords
-                      .filter(w => w.word.includes(wordSearch.toLowerCase().trim()))
-                      .sort((a, b) => a.word.localeCompare(b.word))
-                      .map(w => (
-                        <div key={w.id} className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 text-sm">
-                          <span className="text-gray-700">{w.word}</span>
-                          <button
-                            onClick={() => handleDeleteWord(w.id)}
-                            disabled={wordActionLoading === w.id}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
-                          >
-                            {wordActionLoading === w.id
-                              ? <Loader2 className="w-3 h-3 animate-spin" />
-                              : <XCircle className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      ))}
-                    {bannedWords.filter(w => w.word.includes(wordSearch.toLowerCase().trim())).length === 0 && (
-                      <p className="text-sm text-gray-400">
-                        {wordSearch ? 'Sin resultados.' : 'No hay palabras configuradas.'}
-                      </p>
-                    )}
-                  </div>
+              {/* Profession list */}
+              {professionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {professions.map(p => (
+                    <div key={p.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${p.active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                      <div>
+                        <span className={`font-medium text-sm ${p.active ? 'text-gray-800' : 'text-gray-400'}`}>{p.displayName}</span>
+                        <span className="text-xs text-gray-400 ml-2 font-mono">{p.code}</span>
+                      </div>
+                      <button
+                        onClick={() => handleToggleProfession(p.id)}
+                        className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${p.active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                      >
+                        {p.active ? 'Desactivar' : 'Activar'}
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

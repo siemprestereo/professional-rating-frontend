@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Search, Briefcase, Lightbulb } from 'lucide-react';
+import { ChevronDown, Search, Briefcase, Lightbulb, Loader2 } from 'lucide-react';
 import { suggestProfession } from '../services/api';
-import { PROFESSION_CATEGORIES, getProfessionLabel } from '../constants/professions';
+import { BACKEND_URL } from '../config';
 
 /**
  * Props:
- * - value: string con el value de la profesión (ej: 'ELECTRICIAN')
- * - onChange: función que recibe el value seleccionado
+ * - value: string con el code de la profesión (ej: 'ELECTRICIAN')
+ * - onChange: función que recibe el code seleccionado
  * - required: boolean
  * - focusColor: "purple" | "blue" | "green"
  * - placeholder: string
+ * - professionalName: string
  */
 function ProfessionSelector({
   value = '',
@@ -21,10 +22,11 @@ function ProfessionSelector({
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [expandedCategories, setExpandedCategories] = useState({});
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [suggestionText, setSuggestionText] = useState('');
   const [suggestionStatus, setSuggestionStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
+  const [professions, setProfessions] = useState([]);
+  const [loadingProfessions, setLoadingProfessions] = useState(false);
   const containerRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -52,6 +54,25 @@ function ProfessionSelector({
     green: 'focus:border-green-500',
   }[focusColor] || 'focus:border-purple-500';
 
+  // Load professions from API on mount
+  useEffect(() => {
+    const load = async () => {
+      setLoadingProfessions(true);
+      try {
+        const res = await fetch(BACKEND_URL + '/api/professions');
+        if (res.ok) {
+          const data = await res.json();
+          setProfessions(data.filter(p => p.active));
+        }
+      } catch {
+        // silent
+      } finally {
+        setLoadingProfessions(false);
+      }
+    };
+    load();
+  }, []);
+
   // Cerrar al hacer click afuera
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -71,29 +92,8 @@ function ProfessionSelector({
     }
   }, [open]);
 
-  // Al buscar, expandir automáticamente las categorías con resultados
-  useEffect(() => {
-    if (search.trim()) {
-      const expanded = {};
-      PROFESSION_CATEGORIES.forEach(cat => {
-        const hasMatch = cat.professions.some(p =>
-          p.label.toLowerCase().includes(search.toLowerCase())
-        );
-        if (hasMatch) expanded[cat.id] = true;
-      });
-      setExpandedCategories(expanded);
-    }
-  }, [search]);
-
-  const toggleCategory = (catId) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [catId]: !prev[catId],
-    }));
-  };
-
-  const handleSelect = (profValue) => {
-    onChange(profValue);
+  const handleSelect = (profCode) => {
+    onChange(profCode);
     setOpen(false);
     setSearch('');
   };
@@ -118,19 +118,16 @@ function ProfessionSelector({
     }
   };
 
-  // Filtrar categorías y profesiones según búsqueda
-  const filteredCategories = PROFESSION_CATEGORIES
-    .map(cat => ({
-      ...cat,
-      professions: search.trim()
-        ? cat.professions.filter(p =>
-            p.label.toLowerCase().includes(search.toLowerCase())
-          )
-        : cat.professions,
-    }))
-    .filter(cat => cat.professions.length > 0);
+  // Filter professions by search
+  const filteredProfessions = search.trim()
+    ? professions.filter(p =>
+        p.displayName.toLowerCase().includes(search.toLowerCase())
+      )
+    : professions;
 
-  const selectedLabel = value ? getProfessionLabel(value) : '';
+  const selectedLabel = value
+    ? (professions.find(p => p.code === value)?.displayName || value)
+    : '';
 
   return (
     <div ref={containerRef} className="relative">
@@ -150,7 +147,10 @@ function ProfessionSelector({
         `}
       >
         <span className="truncate">{selectedLabel || placeholder}</span>
-        <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        {loadingProfessions
+          ? <Loader2 className="w-4 h-4 text-gray-400 flex-shrink-0 animate-spin" />
+          : <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        }
       </button>
 
       {/* Dropdown */}
@@ -172,41 +172,24 @@ function ProfessionSelector({
             </div>
           </div>
 
-          {/* Lista con categorías */}
+          {/* Lista de profesiones */}
           <ul className="max-h-72 overflow-y-auto">
-            {filteredCategories.length > 0 ? (
-              filteredCategories.map(cat => (
-                <li key={cat.id}>
-                  {/* Header de categoría */}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(cat.id)}
-                    className="w-full flex items-center justify-between px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
-                  >
-                    <span>{cat.label}</span>
-                    <ChevronRight
-                      className={`w-3.5 h-3.5 transition-transform ${expandedCategories[cat.id] ? 'rotate-90' : ''}`}
-                    />
-                  </button>
-
-                  {/* Profesiones de la categoría */}
-                  {expandedCategories[cat.id] && (
-                    <ul>
-                      {cat.professions.map(prof => (
-                        <li
-                          key={prof.value}
-                          onClick={() => handleSelect(prof.value)}
-                          className={`pl-8 pr-4 py-2.5 text-sm cursor-pointer transition-colors
-                            ${prof.value === value
-                              ? `${accentBg} ${accentText} font-semibold`
-                              : 'text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                          {prof.label}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+            {loadingProfessions ? (
+              <li className="px-4 py-6 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              </li>
+            ) : filteredProfessions.length > 0 ? (
+              filteredProfessions.map(prof => (
+                <li
+                  key={prof.code}
+                  onClick={() => handleSelect(prof.code)}
+                  className={`px-4 py-2.5 text-sm cursor-pointer transition-colors
+                    ${prof.code === value
+                      ? `${accentBg} ${accentText} font-semibold`
+                      : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  {prof.displayName}
                 </li>
               ))
             ) : (
