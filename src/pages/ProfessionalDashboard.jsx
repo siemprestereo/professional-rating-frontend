@@ -25,6 +25,9 @@ function ProfessionalDashboard() {
   const dropdownRef = useRef(null);
 
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
 
@@ -543,7 +546,7 @@ function ProfessionalDashboard() {
       {errorModal && <ErrorModal title={errorModal.title} message={errorModal.message} onClose={() => setErrorModal(null)} />}
 
       {showHelpModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => setShowHelpModal(false)}>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => { setShowHelpModal(false); setSupportMessage(''); setSupportSent(false); }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-scaleIn max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
@@ -552,7 +555,7 @@ function ProfessionalDashboard() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">Ayuda y soporte</h2>
               </div>
-              <button onClick={() => setShowHelpModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => { setShowHelpModal(false); setSupportMessage(''); setSupportSent(false); }} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -577,13 +580,49 @@ function ProfessionalDashboard() {
 
             <div className="border-t border-gray-200 pt-4">
               <p className="text-gray-600 text-sm mb-3">¿No encontraste lo que buscabas? Escribinos:</p>
-              <a
-                href="mailto:soporte@calificalo.com.ar?subject=Consulta%20de%20Profesional"
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"
-              >
-                <HelpCircle className="w-5 h-5" />
-                Escribir a soporte
-              </a>
+              {supportSent ? (
+                <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-3 text-green-700 text-sm font-medium text-center">
+                  ¡Mensaje enviado! Te responderemos a tu email registrado.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <textarea
+                    value={supportMessage}
+                    onChange={e => setSupportMessage(e.target.value)}
+                    placeholder="Describí tu consulta o problema..."
+                    rows={4}
+                    className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 resize-none"
+                  />
+                  <button
+                    disabled={supportSending || !supportMessage.trim()}
+                    onClick={async () => {
+                      setSupportSending(true);
+                      try {
+                        const token = localStorage.getItem('authToken');
+                        const res = await fetch(`${BACKEND_URL}/api/contact/support`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ message: supportMessage, senderName: professional?.name })
+                        });
+                        if (res.ok) {
+                          setSupportSent(true);
+                          setSupportMessage('');
+                        }
+                      } finally {
+                        setSupportSending(false);
+                      }
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 text-base disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {supportSending ? (
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <HelpCircle className="w-5 h-5" />
+                    )}
+                    Enviar mensaje
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

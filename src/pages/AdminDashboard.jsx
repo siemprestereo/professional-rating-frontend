@@ -106,6 +106,11 @@ function AdminDashboard() {
   const [emailHistory, setEmailHistory] = useState([]);
   const [emailHistoryLoading, setEmailHistoryLoading] = useState(false);
 
+  // Inbox messages
+  const [inboxMessages, setInboxMessages] = useState([]);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Activity & Trends
   const [activityData, setActivityData] = useState(null);
   const [trendData, setTrendData] = useState([]);
@@ -132,12 +137,17 @@ function AdminDashboard() {
   const [wordSearch, setWordSearch] = useState('');
 
   useEffect(() => {
+    fetchUnreadCount();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'stats') { fetchStats(); fetchActivity(); fetchTrends(); }
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ratings') fetchRatings();
     if (activeTab === 'reports') fetchReports();
     if (activeTab === 'moderation') fetchBannedWords();
     if (activeTab === 'emails' && emailMode === 'history') fetchEmailHistory();
+    if (activeTab === 'emails' && emailMode === 'messages') fetchInboxMessages();
   }, [activeTab]);
 
   const fetchStats = async () => {
@@ -374,6 +384,26 @@ function AdminDashboard() {
     } finally {
       setEmailHistoryLoading(false);
     }
+  };
+
+  const fetchInboxMessages = async () => {
+    setInboxLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/messages`, { headers: authHeader() });
+      if (res.ok) setInboxMessages(await res.json());
+    } finally {
+      setInboxLoading(false);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/messages/unread-count`, { headers: authHeader() });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count);
+      }
+    } catch {}
   };
 
   const fetchBannedWords = async () => {
@@ -1212,6 +1242,18 @@ function AdminDashboard() {
               >
                 <Inbox className="w-4 h-4" /> Enviados
               </button>
+              <button
+                onClick={() => { setEmailMode('messages'); setEmailResult(null); fetchInboxMessages(); }}
+                className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${emailMode === 'messages' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                <Mail className="w-4 h-4" />
+                Recibidos
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* ===== HISTORIAL ===== */}
@@ -1260,8 +1302,92 @@ function AdminDashboard() {
               </div>
             )}
 
+            {/* ===== RECIBIDOS (inbox) ===== */}
+            {emailMode === 'messages' && (
+              <div>
+                {inboxLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                  </div>
+                ) : inboxMessages.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <Inbox className="w-10 h-10 mb-2 opacity-40 mx-auto" />
+                    <p className="text-sm">No hay mensajes recibidos</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {inboxMessages.map(msg => (
+                      <div
+                        key={msg.id}
+                        onClick={async () => {
+                          if (!msg.read) {
+                            await fetch(`${BACKEND_URL}/api/admin/messages/${msg.id}/read`, { method: 'PATCH', headers: authHeader() });
+                            setInboxMessages(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m));
+                            setUnreadCount(prev => Math.max(0, prev - 1));
+                          }
+                        }}
+                        className={`rounded-2xl border p-4 space-y-2 cursor-pointer transition-colors ${msg.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${msg.read ? 'bg-gray-300' : 'bg-blue-500'}`} />
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${msg.type === 'SUGGESTION' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {msg.type === 'SUGGESTION' ? 'Sugerencia' : 'Soporte'}
+                            </span>
+                            {msg.status === 'RESOLVED' && (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex-shrink-0">
+                                Resuelto
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {new Date(msg.createdAt).toLocaleDateString('es-AR')}
+                          </span>
+                        </div>
+
+                        <div className="text-sm">
+                          <span className="font-semibold text-gray-800">{msg.senderName}</span>
+                          {msg.senderEmail && (
+                            <span className="text-gray-400 text-xs ml-2">{msg.senderEmail}</span>
+                          )}
+                        </div>
+
+                        <p className="text-sm text-gray-700 leading-relaxed">{msg.message}</p>
+
+                        <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                          {!msg.read && (
+                            <button
+                              onClick={async () => {
+                                await fetch(`${BACKEND_URL}/api/admin/messages/${msg.id}/read`, { method: 'PATCH', headers: authHeader() });
+                                setInboxMessages(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m));
+                                setUnreadCount(prev => Math.max(0, prev - 1));
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Marcar leído
+                            </button>
+                          )}
+                          {msg.status === 'OPEN' && (
+                            <button
+                              onClick={async () => {
+                                await fetch(`${BACKEND_URL}/api/admin/messages/${msg.id}/resolve`, { method: 'PATCH', headers: authHeader() });
+                                setInboxMessages(prev => prev.map(m => m.id === msg.id ? { ...m, status: 'RESOLVED' } : m));
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Marcar resuelto
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ===== FORMULARIO (broadcast / individual) ===== */}
-            <div className={`bg-white rounded-xl border border-gray-200 p-4 space-y-4 ${emailMode === 'history' ? 'hidden' : ''}`}>
+            <div className={`bg-white rounded-xl border border-gray-200 p-4 space-y-4 ${emailMode === 'history' || emailMode === 'messages' ? 'hidden' : ''}`}>
 
               {/* Destinatarios (masivo) */}
               {emailMode === 'broadcast' && (
