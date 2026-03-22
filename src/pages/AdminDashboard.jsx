@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus
+  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox
 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 import { clearAuthData } from '../utils/authUtils';
@@ -91,6 +91,10 @@ function AdminDashboard() {
   const [emailResult, setEmailResult] = useState(null); // { type: 'success'|'error', message }
   const [confirmBroadcast, setConfirmBroadcast] = useState(false);
 
+  // Email history
+  const [emailHistory, setEmailHistory] = useState([]);
+  const [emailHistoryLoading, setEmailHistoryLoading] = useState(false);
+
   // Moderación
   const [bannedWords, setBannedWords] = useState([]);
   const [newWord, setNewWord] = useState('');
@@ -105,6 +109,7 @@ function AdminDashboard() {
     if (activeTab === 'ratings') fetchRatings();
     if (activeTab === 'reports') fetchReports();
     if (activeTab === 'moderation') fetchBannedWords();
+    if (activeTab === 'emails' && emailMode === 'history') fetchEmailHistory();
   }, [activeTab]);
 
   const fetchStats = async () => {
@@ -307,6 +312,19 @@ function AdminDashboard() {
     OTHER: 'Otro motivo',
   };
 
+  const fetchEmailHistory = async () => {
+    setEmailHistoryLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/email/log`, { headers: authHeader() });
+      if (!res.ok) throw new Error();
+      setEmailHistory(await res.json());
+    } catch {
+      // silent
+    } finally {
+      setEmailHistoryLoading(false);
+    }
+  };
+
   const fetchBannedWords = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/banned-words`, { headers: authHeader() });
@@ -377,8 +395,9 @@ function AdminDashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al enviar');
-      setEmailResult({ type: 'success', message: 'Email enviado correctamente.' });
       setEmailToAddress(''); setEmailToName(''); setEmailSubject(''); setEmailBody('');
+      setEmailMode('history');
+      fetchEmailHistory();
     } catch (e) {
       setEmailResult({ type: 'error', message: e.message });
     } finally {
@@ -398,8 +417,9 @@ function AdminDashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al enviar');
-      setEmailResult({ type: 'success', message: `Envío iniciado a ${data.recipients} destinatario${data.recipients !== 1 ? 's' : ''}.` });
       setEmailSubject(''); setEmailBody('');
+      setEmailMode('history');
+      fetchEmailHistory();
     } catch (e) {
       setEmailResult({ type: 'error', message: e.message });
     } finally {
@@ -910,9 +930,62 @@ function AdminDashboard() {
               >
                 <User className="w-4 h-4" /> Individual
               </button>
+              <button
+                onClick={() => { setEmailMode('history'); fetchEmailHistory(); }}
+                className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${emailMode === 'history' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                <Inbox className="w-4 h-4" /> Enviados
+              </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+            {/* ===== HISTORIAL ===== */}
+            {emailMode === 'history' && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {emailHistoryLoading ? (
+                  <div className="flex items-center justify-center py-12 text-gray-400">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando...
+                  </div>
+                ) : emailHistory.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                    <Inbox className="w-10 h-10 mb-2 opacity-40" />
+                    <p className="text-sm">No hay emails enviados aún.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {emailHistory.map(entry => (
+                      <li key={entry.id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <span className="font-semibold text-gray-800 text-sm leading-tight">{entry.subject}</span>
+                          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
+                            entry.type === 'BROADCAST'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {entry.type === 'BROADCAST'
+                              ? `Masivo · ${entry.recipientsCount} dest.`
+                              : 'Individual'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-1.5">
+                          {entry.type === 'BROADCAST'
+                            ? <>Rol: <span className="font-medium">{entry.targetRole}</span></>
+                            : <><span className="font-medium">{entry.recipientName || entry.recipientEmail}</span>{entry.recipientName && <span className="text-gray-400"> · {entry.recipientEmail}</span>}</>
+                          }
+                          {' · '}de <span className="font-medium">{entry.senderAlias}</span>
+                        </p>
+                        <p className="text-xs text-gray-400 line-clamp-2">{entry.bodyPreview}</p>
+                        <p className="text-xs text-gray-300 mt-1.5">
+                          {new Date(entry.sentAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* ===== FORMULARIO (broadcast / individual) ===== */}
+            <div className={`bg-white rounded-xl border border-gray-200 p-4 space-y-4 ${emailMode === 'history' ? 'hidden' : ''}`}>
 
               {/* Destinatarios (masivo) */}
               {emailMode === 'broadcast' && (
