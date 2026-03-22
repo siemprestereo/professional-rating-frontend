@@ -96,15 +96,13 @@ function ClientRegister() {
 
       if (!response.ok) {
         const data = await response.json();
+        if (response.status === 409) {
+          throw new Error('Si este email no está registrado, recibirás un mail de confirmación.');
+        }
         throw new Error(data.error || 'Error al registrarse');
       }
 
       const data = await response.json();
-
-      await fetch(`${BACKEND_URL}/api/auth/accept-terms`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${data.token}` }
-      });
 
       saveAuthData('CLIENT', data.token, {
         id: data.id,
