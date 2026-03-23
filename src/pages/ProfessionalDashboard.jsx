@@ -565,11 +565,11 @@ function ProfessionalDashboard() {
 
               {[
                 { q: '¿Cómo recibo calificaciones?', a: 'Compartí tu QR con tus clientes. Ellos lo escanean, inician sesión y pueden calificarte.' },
-                { q: '¿Cómo genero mi QR?', a: 'Desde el dashboard, tocá el botón "Generar QR". Podés descargarlo y compartirlo.' },
+                { q: '¿Cómo genero mi QR?', a: 'Desde el panel principal, tocá el botón "Generar QR"' },
                 { q: '¿Quién puede ver mi perfil?', a: 'Cualquier persona puede ver tu perfil público y tus calificaciones.' },
-                { q: '¿Cómo edito mi CV?', a: 'Desde el menú superior, ingresá a "Mi CV" para agregar experiencia, educación y zonas de trabajo.' },
-                { q: '¿Cómo cambio mi foto de perfil?', a: 'Tocá tu foto (o la inicial) en el dashboard para editarla.' },
-                { q: '¿Puedo eliminar una calificación?', a: 'No podés eliminar calificaciones recibidas. Si creés que hay una calificación inapropiada, contactá a soporte.' },
+                { q: '¿Cómo edito mi CV?', a: 'Desde el menú superior o en la pantalla principal, ingresá a "Mi CV" -> "Editar CV" para agregar experiencia, educación y zonas de trabajo.' },
+                { q: '¿Cómo cambio mi foto de perfil?', a: 'Tocá tu foto en "Mi perfil" para editarla.' },
+                { q: '¿Puedo eliminar una calificación?', a: 'No podés eliminar calificaciones recibidas. Si creés que hay una calificación inapropiada, podés denunciarla y pasará a revisión.' },
               ].map((item, i) => (
                 <div key={i} className="border border-gray-200 rounded-xl p-4">
                   <p className="font-semibold text-gray-800 text-sm mb-1">{item.q}</p>
