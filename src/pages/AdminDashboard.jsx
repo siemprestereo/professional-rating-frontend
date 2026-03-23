@@ -145,6 +145,8 @@ function AdminDashboard() {
   const [newProfessionCategory, setNewProfessionCategory] = useState('');
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedProfIds, setSelectedProfIds] = useState(new Set());
+  const [editingProf, setEditingProf] = useState(null); // {id, displayName, category}
 
   // Accept suggestion
   const [acceptingSuggestion, setAcceptingSuggestion] = useState(null); // {msgId, name} | null
@@ -545,6 +547,37 @@ function AdminDashboard() {
     });
     if (res.ok) {
       setProfessions(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    }
+  };
+
+  const toggleProfSelection = (id) => {
+    setSelectedProfIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!window.confirm(`¿Borrar ${selectedProfIds.size} profesión(es)?`)) return;
+    await Promise.all([...selectedProfIds].map(id =>
+      fetch(`${BACKEND_URL}/api/admin/professions/${id}`, { method: 'DELETE', headers: authHeader() })
+    ));
+    setSelectedProfIds(new Set());
+    fetchProfessions();
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProf || !editingProf.displayName.trim()) return;
+    const res = await fetch(`${BACKEND_URL}/api/admin/professions/${editingProf.id}`, {
+      method: 'PUT',
+      headers: { ...authHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ displayName: editingProf.displayName, category: editingProf.category || null })
+    });
+    if (res.ok) {
+      setEditingProf(null);
+      setSelectedProfIds(new Set());
+      fetchProfessions();
     }
   };
 
@@ -1749,29 +1782,80 @@ function AdminDashboard() {
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {cats.map(cat => (
-                      <div key={cat}>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{cat}</p>
-                        <div className="space-y-1.5">
-                          {grouped[cat].map(p => (
-                            <div key={p.id} className={`flex items-center justify-between px-4 py-2.5 rounded-xl border ${p.active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
-                              <div>
-                                <span className={`font-medium text-sm ${p.active ? 'text-gray-800' : 'text-gray-400'}`}>{p.displayName}</span>
-                                <span className="text-xs text-gray-400 ml-2 font-mono">{p.code}</span>
-                              </div>
-                              <button
-                                onClick={() => handleToggleProfession(p.id)}
-                                className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors ${p.active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
-                              >
-                                {p.active ? 'Desactivar' : 'Activar'}
-                              </button>
-                            </div>
+                  <>
+                    {/* Toolbar */}
+                    {selectedProfIds.size > 0 && !editingProf && (
+                      <div className="flex items-center gap-2 mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                        <span className="text-sm text-blue-700 font-medium flex-1">{selectedProfIds.size} seleccionada(s)</span>
+                        {selectedProfIds.size === 1 && (
+                          <button
+                            onClick={() => {
+                              const prof = professions.find(p => p.id === [...selectedProfIds][0]);
+                              setEditingProf({ id: prof.id, displayName: prof.displayName, category: prof.category || '' });
+                            }}
+                            className="px-3 py-1.5 text-sm font-semibold bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+                          >
+                            Editar
+                          </button>
+                        )}
+                        <button
+                          onClick={handleDeleteSelected}
+                          className="px-3 py-1.5 text-sm font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          Borrar
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Edit form */}
+                    {editingProf && (
+                      <div className="mb-3 p-3 bg-yellow-50 rounded-xl border border-yellow-200 space-y-2">
+                        <p className="text-xs font-semibold text-yellow-700">Editar profesión</p>
+                        <input
+                          type="text"
+                          value={editingProf.displayName}
+                          onChange={e => setEditingProf(prev => ({ ...prev, displayName: e.target.value }))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white"
+                        />
+                        <select
+                          value={editingProf.category}
+                          onChange={e => setEditingProf(prev => ({ ...prev, category: e.target.value }))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white text-gray-700"
+                        >
+                          <option value="">Sin categoría</option>
+                          {existingCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
                           ))}
+                        </select>
+                        <div className="flex gap-2">
+                          <button onClick={handleSaveEdit} className="flex-1 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">Guardar</button>
+                          <button onClick={() => setEditingProf(null)} className="flex-1 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+
+                    <div className="space-y-4">
+                      {cats.map(cat => (
+                        <div key={cat}>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">{cat}</p>
+                          <div className="space-y-1.5">
+                            {grouped[cat].map(p => (
+                              <label key={p.id} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border cursor-pointer transition-colors ${selectedProfIds.has(p.id) ? 'border-blue-300 bg-blue-50' : p.active ? 'border-gray-200 bg-white hover:bg-gray-50' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedProfIds.has(p.id)}
+                                  onChange={() => toggleProfSelection(p.id)}
+                                  className="accent-blue-600 w-4 h-4 flex-shrink-0"
+                                />
+                                <span className={`text-sm ${p.active ? 'text-gray-800' : 'text-gray-400'}`}>{p.displayName}</span>
+                                {!p.active && <span className="ml-auto text-xs text-gray-400">Inactiva</span>}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
 
