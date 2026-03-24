@@ -301,13 +301,13 @@ function ProfessionalDashboard() {
 
   const getBadgeDescription = useCallback((totalRatings) => {
     if (totalRatings >= 20) {
-      return '🥇 Sos Veterano, el nivel más alto. ¡Seguí así!';
+      return '¡Nivel máximo alcanzado! ¡Seguí así!';
     } else if (totalRatings >= 5) {
       const remaining = 20 - totalRatings;
-      return `🥈 Sos Experimentado. Te faltan ${remaining} calificación${remaining !== 1 ? 'es' : ''} para alcanzar el nivel Veterano 🥇`;
+      return `Te ${remaining === 1 ? 'falta' : 'faltan'} ${remaining} calificación${remaining !== 1 ? 'es' : ''} para llegar al nivel Veterano 🥇`;
     } else {
       const remaining = 5 - totalRatings;
-      return `🥉 Sos Principiante. Te faltan ${remaining} calificación${remaining !== 1 ? 'es' : ''} para alcanzar el nivel Experimentado 🥈`;
+      return `Te ${remaining === 1 ? 'falta' : 'faltan'} ${remaining} calificación${remaining !== 1 ? 'es' : ''} para llegar al nivel Experimentado 🥈`;
     }
   }, []);
 

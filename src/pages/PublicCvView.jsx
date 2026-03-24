@@ -380,36 +380,24 @@ function PublicCvView() {
       )}
       {showBadgeModal && cvData && (() => {
         const totalRatings = cvData.totalRatings || 0;
-        let nextLevel = null;
-        let ratingsNeeded = 0;
-        if (totalRatings < 5) { nextLevel = '🥈 Experimentado'; ratingsNeeded = 5 - totalRatings; }
-        else if (totalRatings < 20) { nextLevel = '🥇 Veterano'; ratingsNeeded = 20 - totalRatings; }
+        let message;
+        if (totalRatings >= 20) {
+          message = '¡Nivel máximo alcanzado!';
+        } else if (totalRatings >= 5) {
+          const r = 20 - totalRatings;
+          message = `${r === 1 ? 'Falta' : 'Faltan'} ${r} calificación${r !== 1 ? 'es' : ''} para llegar al nivel Veterano 🥇`;
+        } else {
+          const r = 5 - totalRatings;
+          message = `${r === 1 ? 'Falta' : 'Faltan'} ${r} calificación${r !== 1 ? 'es' : ''} para llegar al nivel Experimentado 🥈`;
+        }
         return (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowBadgeModal(false)}>
             <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="text-center mb-4">
                 <span className="text-5xl">{badge.emoji}</span>
                 <h3 className="text-xl font-bold text-gray-800 mt-2">{badge.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">{totalRatings} {totalRatings === 1 ? 'calificación recibida' : 'calificaciones recibidas'}</p>
               </div>
-              <div className="space-y-2 mb-5 text-sm text-gray-600">
-                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings < 5 ? 'bg-amber-50 font-semibold text-amber-800' : 'text-gray-400'}`}>
-                  <span>🥉</span><span>Principiante — 0 a 4 calificaciones</span>
-                </div>
-                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings >= 5 && totalRatings < 20 ? 'bg-gray-100 font-semibold text-gray-800' : 'text-gray-400'}`}>
-                  <span>🥈</span><span>Experimentado — 5 a 19 calificaciones</span>
-                </div>
-                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings >= 20 ? 'bg-yellow-50 font-semibold text-yellow-800' : 'text-gray-400'}`}>
-                  <span>🥇</span><span>Veterano — 20+ calificaciones</span>
-                </div>
-              </div>
-              {nextLevel ? (
-                <p className="text-center text-sm text-purple-600 font-semibold mb-4">
-                  Faltan {ratingsNeeded} {ratingsNeeded === 1 ? 'calificación' : 'calificaciones'} para llegar a {nextLevel}
-                </p>
-              ) : (
-                <p className="text-center text-sm text-yellow-600 font-semibold mb-4">¡Nivel máximo alcanzado!</p>
-              )}
+              <p className="text-center text-base text-gray-700 mb-6">{message}</p>
               <button onClick={() => setShowBadgeModal(false)} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-2xl">
                 Entendido
               </button>
