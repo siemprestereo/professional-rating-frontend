@@ -120,33 +120,33 @@ function LandingPage() {
         </div>
       ) : (
         <>
-          <div className="max-w-6xl mx-auto px-4 pt-6 sm:pt-12 pb-8 sm:pb-10 text-center min-h-screen flex flex-col justify-center">
+          <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-8 pb-4 sm:pb-6 text-center flex flex-col justify-center">
             {/* Logo arriba del título */}
             <div
               onClick={() => window.location.href = 'https://www.calificalo.com.ar/'}
-              className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-4 sm:mb-8 animate-slideDown"
+              className="flex items-center justify-center cursor-pointer hover:scale-105 transition-transform mb-2 sm:mb-4 animate-slideDown"
             >
               <img
                 src="/Logo-calificalo.png"
                 alt="Calificalo"
-                className="h-40 sm:h-48 md:h-56 lg:h-64 w-auto logo-pulse"
+                className="h-28 sm:h-36 md:h-44 lg:h-52 w-auto logo-pulse"
               />
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl roboto-light text-white mb-3 sm:mb-5 animate-slideUp leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl roboto-light text-white mb-2 sm:mb-3 animate-slideUp leading-tight">
               Construí tu reputación
               <br />
               <span className="text-yellow-300 font-bold">profesional</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
+            <p className="text-sm sm:text-base md:text-lg text-white/90 mb-4 sm:mb-6 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
               La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
             </p>
 
-            <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center animate-slideUp delay-200 px-4">
+            <div className="flex flex-col gap-2 sm:gap-3 justify-center items-center animate-slideUp delay-200 px-4">
               <button
                 onClick={() => navigate('/professional-login')}
-                className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-yellow-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <UserPlus className="w-6 h-6 sm:w-7 sm:h-7" />
                 Soy profesional
@@ -154,7 +154,7 @@ function LandingPage() {
 
               <button
                 onClick={() => navigate('/client-login')}
-                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110 whitespace-nowrap"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110 whitespace-nowrap"
               >
                 <span className="text-2xl">⭐</span>
                 Soy cliente y quiero calificar
@@ -162,7 +162,7 @@ function LandingPage() {
 
               <button
                 onClick={handleSearchClick}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold text-lg sm:text-xl shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/50 hover:scale-105 transition-all flex items-center justify-center gap-2 hover:brightness-110"
               >
                 <Search className="w-6 h-6 sm:w-7 sm:h-7" />
                 Buscar profesional
@@ -181,7 +181,7 @@ function LandingPage() {
           </div>
 
           {/* FAQ */}
-          <div className="max-w-2xl mx-auto px-4 pb-12 sm:pb-16">
+          <div className="max-w-2xl mx-auto px-4 pb-6 sm:pb-10">
             <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber más antes de registrarte?</p>
             <div className="flex gap-3 justify-center mb-4">
               <button
