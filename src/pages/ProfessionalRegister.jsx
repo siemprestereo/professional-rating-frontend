@@ -150,7 +150,7 @@ function ProfessionalRegister() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center animate-scaleIn">
             <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl roboto-light text-gray-800 mb-1 sm:mb-2">Registro Profesionales</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent mb-1 sm:mb-2">Registrate</h1>
           <p className="text-sm sm:text-base text-gray-600">Creá tu perfil profesional</p>
         </div>
 

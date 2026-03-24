@@ -550,8 +550,8 @@ function EditCV() {
               className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 mb-3 focus:border-purple-500 focus:outline-none text-base" rows="3" />
             {!isFreelance && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                <input type="text" placeholder="Nombre de referencia (opcional)" value={job.referenceName} onChange={(e) => updateJob(index, 'referenceName', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
-                <input type="tel" placeholder="Teléfono de referencia (opcional)" value={job.referencePhone} onChange={(e) => updateJob(index, 'referencePhone', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                <input type="text" placeholder={job.company ? `Nombre de referencia en ${job.company} (opcional)` : 'Nombre de referencia (opcional)'} value={job.referenceName} onChange={(e) => updateJob(index, 'referenceName', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                <input type="tel" placeholder={job.company ? `Teléfono de referencia en ${job.company} (opcional)` : 'Teléfono de referencia (opcional)'} value={job.referencePhone} onChange={(e) => updateJob(index, 'referencePhone', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
               </div>
             )}
             <button onClick={() => handleSaveWorkExperience(job, isFreelance, index)} disabled={isSaving}
@@ -631,7 +631,7 @@ function EditCV() {
           <h2 className="text-2xl roboto-light text-gray-800 mb-2 flex items-center">
             <span className="text-2xl mr-2">📍</span>Zonas de trabajo
           </h2>
-          <p className="text-sm text-gray-500 mb-4">Indicá en qué zonas ofrecés tus servicios.</p>
+          <p className="text-sm text-gray-500 mb-4">Indicá en qué zonas ofrecés tus servicios. Podés agregar más de una.</p>
 
           <div className="mb-3">
             <label className="block text-gray-700 font-semibold mb-2 text-sm">Provincia</label>
