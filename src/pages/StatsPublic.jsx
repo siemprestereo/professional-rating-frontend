@@ -64,7 +64,13 @@ function StatsPublic() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 mt-4">
-        {professionData && (
+        {(!professionData || Array.isArray(professionData)) && !loading && (
+          <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400">
+            <p className="text-lg font-medium">Todavía no hay calificaciones</p>
+            <p className="text-sm mt-1">Las estadísticas aparecerán cuando el profesional reciba su primera calificación.</p>
+          </div>
+        )}
+        {professionData && professionData.totalRatings !== undefined && (
           <div className="w-full bg-white rounded-2xl shadow-md p-4 mb-4 animate-slideUp">
             <div className="flex items-center justify-around">
               <div className="text-center">
@@ -113,7 +119,7 @@ function StatsPublic() {
           </div>
         )}
 
-        {monthlyData.length > 0 && (
+        {monthlyData.some(m => m.average > 0) && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp delay-100">
             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
               <TrendingUp className="w-6 h-6 mr-2 text-purple-600" />
