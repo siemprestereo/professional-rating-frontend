@@ -66,7 +66,6 @@ function ClientDashboard() {
 
   const loadClientData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
-    const cachedClient = localStorage.getItem('client');
 
     if (!token) {
       navigate('/client-login');
@@ -75,69 +74,41 @@ function ClientDashboard() {
     }
 
     try {
-      if (cachedClient) {
-        const clientData = JSON.parse(cachedClient);
-        setClient(clientData);
-        setLoading(false);
+      const profileResponse = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-        const [profileResponse, ratingsResponse] = await Promise.all([
-          fetch(`${BACKEND_URL}/api/auth/me/client`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-
-        if (profileResponse.ok) {
-          const newClientData = await profileResponse.json();
-          setClient(newClientData);
-          localStorage.setItem('client', JSON.stringify(newClientData));
-        }
-
-        if (ratingsResponse.ok) {
-          const allRatings = await ratingsResponse.json();
-          processRatings(allRatings);
-        } else {
-          setMyRatings([]);
-          setStats({ total: 0, average: 0, categories: 0 });
-        }
-
-        setLoadingRatings(false);
-
-      } else {
-        const clientResponse = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!clientResponse.ok) {
-          if (clientResponse.status === 401) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('client');
-            navigate('/client-login');
-          }
-          throw new Error('Error al cargar datos del cliente');
-        }
-
-        const clientData = await clientResponse.json();
-        setClient(clientData);
-        localStorage.setItem('client', JSON.stringify(clientData));
-        setLoading(false);
-
-        const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (ratingsResponse.ok) {
-          const allRatings = await ratingsResponse.json();
-          processRatings(allRatings);
-        } else {
-          setMyRatings([]);
-          setStats({ total: 0, average: 0, categories: 0 });
-        }
-
-        setLoadingRatings(false);
+      if (!profileResponse.ok) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('client');
+        navigate('/client-login');
+        return;
       }
+
+      const clientData = await profileResponse.json();
+
+      if (!clientData.emailVerified) {
+        navigate('/pending-verification', { state: { email: clientData.email } });
+        return;
+      }
+
+      setClient(clientData);
+      localStorage.setItem('client', JSON.stringify(clientData));
+      setLoading(false);
+
+      const ratingsResponse = await fetch(`${BACKEND_URL}/api/ratings/client/${clientData.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (ratingsResponse.ok) {
+        const allRatings = await ratingsResponse.json();
+        processRatings(allRatings);
+      } else {
+        setMyRatings([]);
+        setStats({ total: 0, average: 0, categories: 0 });
+      }
+
+      setLoadingRatings(false);
 
     } catch (error) {
       navigate('/client-login');

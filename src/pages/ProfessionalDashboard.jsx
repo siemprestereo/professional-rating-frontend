@@ -177,6 +177,12 @@ function ProfessionalDashboard() {
       }
 
       const professionalData = await meResponse.json();
+
+      if (!professionalData.emailVerified) {
+        navigate('/pending-verification', { state: { email: professionalData.email } });
+        return;
+      }
+
       setProfessional(professionalData);
       localStorage.setItem('professional', JSON.stringify(professionalData));
 
