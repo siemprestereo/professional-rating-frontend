@@ -115,51 +115,46 @@ function ProfessionalDashboard() {
     if (!token) return;
 
     try {
-      if (cachedProfessional) {
-        const professionalData = JSON.parse(cachedProfessional);
-        const [meResponse, ratingsResponse, cvResponse] = await Promise.all([
-          fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${BACKEND_URL}/api/ratings/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${BACKEND_URL}/api/cv/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-        ]);
+      const professionalData = cachedProfessional ? JSON.parse(cachedProfessional) : null;
+      const ratingsUrl = professionalData
+        ? `${BACKEND_URL}/api/ratings/professional/${professionalData.id}`
+        : null;
 
-        if (meResponse.ok) {
-          const newProfessionalData = await meResponse.json();
-          setProfessional(newProfessionalData);
-          localStorage.setItem('professional', JSON.stringify(newProfessionalData));
+      const requests = [
+        fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${BACKEND_URL}/api/cv/me/full`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      ];
+      if (ratingsUrl) requests.push(fetch(ratingsUrl, { headers: { 'Authorization': `Bearer ${token}` } }));
+
+      const [meResponse, cvResponse, ratingsResponse] = await Promise.all(requests);
+
+      if (meResponse.status === 401) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('professional');
+        navigate('/professional-login');
+        return;
+      }
+      if (meResponse.ok) {
+        const newProfessionalData = await meResponse.json();
+        setProfessional(newProfessionalData);
+        localStorage.setItem('professional', JSON.stringify(newProfessionalData));
+
+        if (!ratingsUrl) {
+          const rRes = await fetch(`${BACKEND_URL}/api/ratings/professional/${newProfessionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (rRes.ok) setRatings(await rRes.json());
         }
-        if (ratingsResponse.ok) setRatings(await ratingsResponse.json());
-        if (cvResponse.ok) {
-          const cvData = await cvResponse.json();
-          setHasWorkExperiences(cvData.workExperiences?.length > 0);
-        } else {
-          setHasWorkExperiences(false);
-        }
+      }
+      if (ratingsResponse?.ok) setRatings(await ratingsResponse.json());
+      if (cvResponse.ok) {
+        const cvData = await cvResponse.json();
+        setHasWorkExperiences((cvData.workExperiences?.length ?? 0) > 0);
       } else {
-        const meResponse = await fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-        if (meResponse.ok) {
-          const professionalData = await meResponse.json();
-          setProfessional(professionalData);
-          localStorage.setItem('professional', JSON.stringify(professionalData));
-
-          const [ratingsResponse, cvResponse] = await Promise.all([
-            fetch(`${BACKEND_URL}/api/ratings/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${BACKEND_URL}/api/cv/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-          ]);
-
-          if (ratingsResponse.ok) setRatings(await ratingsResponse.json());
-          if (cvResponse.ok) {
-            const cvData = await cvResponse.json();
-            setHasWorkExperiences(cvData.workExperiences?.length > 0);
-          } else {
-            setHasWorkExperiences(false);
-          }
-        }
+        setHasWorkExperiences(false);
       }
     } catch (error) {
       console.error('Error en auto-refresh:', error);
     }
-  }, [BACKEND_URL]);
+  }, [BACKEND_URL, navigate]);
 
   const loadDashboardData = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -177,7 +172,7 @@ function ProfessionalDashboard() {
         const [meResponse, ratingsResponse, cvResponse] = await Promise.all([
           fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch(`${BACKEND_URL}/api/ratings/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${BACKEND_URL}/api/cv/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`${BACKEND_URL}/api/cv/me/full`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         if (meResponse.ok) {
@@ -189,6 +184,8 @@ function ProfessionalDashboard() {
           localStorage.removeItem('professional');
           navigate('/professional-login');
           return;
+        } else {
+          setProfessional(professionalData);
         }
 
         if (ratingsResponse.ok) setRatings(await ratingsResponse.json());
@@ -196,7 +193,7 @@ function ProfessionalDashboard() {
 
         if (cvResponse.ok) {
           const cvData = await cvResponse.json();
-          setHasWorkExperiences(cvData.workExperiences?.length > 0);
+          setHasWorkExperiences((cvData.workExperiences?.length ?? 0) > 0);
         } else {
           setHasWorkExperiences(false);
         }
@@ -211,7 +208,7 @@ function ProfessionalDashboard() {
 
           const [ratingsResponse, cvResponse] = await Promise.all([
             fetch(`${BACKEND_URL}/api/ratings/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${BACKEND_URL}/api/cv/professional/${professionalData.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${BACKEND_URL}/api/cv/me/full`, { headers: { 'Authorization': `Bearer ${token}` } })
           ]);
 
           if (ratingsResponse.ok) setRatings(await ratingsResponse.json());
@@ -219,7 +216,7 @@ function ProfessionalDashboard() {
 
           if (cvResponse.ok) {
             const cvData = await cvResponse.json();
-            setHasWorkExperiences(cvData.workExperiences?.length > 0);
+            setHasWorkExperiences((cvData.workExperiences?.length ?? 0) > 0);
           } else {
             setHasWorkExperiences(false);
           }
