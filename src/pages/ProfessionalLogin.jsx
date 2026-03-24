@@ -245,7 +245,7 @@ function ProfessionalLogin() {
           <button
             type="button"
             onClick={() => navigate('/forgot-password')}
-            className="w-full text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm sm:text-base"
+            className="w-full text-gray-500 hover:text-gray-700 transition-colors text-sm sm:text-base"
           >
             ¿Olvidaste tu contraseña?
           </button>
