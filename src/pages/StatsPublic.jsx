@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TrendingUp, Building2, ChevronRight } from 'lucide-react';
+import { TrendingUp, Building2, ChevronRight, ChevronLeft } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import HomeButton from '../components/HomeButton';
 import { BACKEND_URL } from '../config';
@@ -58,6 +58,9 @@ function StatsPublic() {
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-6">
         <div className="max-w-6xl mx-auto">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-white/80 hover:text-white mb-4 transition-colors">
+            <ChevronLeft className="w-5 h-5" /> Volver
+          </button>
           <h1 className="text-3xl roboto-light text-white mb-2">Estadísticas Profesionales</h1>
           <p className="text-white/90">Métricas, análisis y desempeño</p>
         </div>

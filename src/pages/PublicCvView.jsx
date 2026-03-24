@@ -21,6 +21,7 @@ function PublicCvView() {
   const [toast, setToast] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
 
   const token = localStorage.getItem('authToken');
   const userType = localStorage.getItem('userType');
@@ -139,10 +140,10 @@ function PublicCvView() {
             )}
 
             <div className="flex items-center justify-center gap-3 mb-3">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${badge.bgColor} ${badge.borderColor} border-2`}>
+              <button onClick={() => setShowBadgeModal(true)} className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${badge.bgColor} ${badge.borderColor} border-2 active:scale-95 transition-transform`}>
                 <span className="text-xl">{badge.emoji}</span>
                 <span className={badge.color}>{badge.name}</span>
-              </div>
+              </button>
 
               {isClient && !checkingFavorite && (
                 <button onClick={toggleFavorite}
@@ -377,6 +378,45 @@ function PublicCvView() {
       {showShareModal && (
         <ShareModal professionalId={professionalId} professionalName={cvData.professionalName} onClose={() => setShowShareModal(false)} />
       )}
+      {showBadgeModal && cvData && (() => {
+        const totalRatings = cvData.totalRatings || 0;
+        let nextLevel = null;
+        let ratingsNeeded = 0;
+        if (totalRatings < 5) { nextLevel = '🥈 Experimentado'; ratingsNeeded = 5 - totalRatings; }
+        else if (totalRatings < 20) { nextLevel = '🥇 Veterano'; ratingsNeeded = 20 - totalRatings; }
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowBadgeModal(false)}>
+            <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="text-center mb-4">
+                <span className="text-5xl">{badge.emoji}</span>
+                <h3 className="text-xl font-bold text-gray-800 mt-2">{badge.name}</h3>
+                <p className="text-sm text-gray-500 mt-1">{totalRatings} {totalRatings === 1 ? 'calificación recibida' : 'calificaciones recibidas'}</p>
+              </div>
+              <div className="space-y-2 mb-5 text-sm text-gray-600">
+                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings < 5 ? 'bg-amber-50 font-semibold text-amber-800' : 'text-gray-400'}`}>
+                  <span>🥉</span><span>Principiante — 0 a 4 calificaciones</span>
+                </div>
+                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings >= 5 && totalRatings < 20 ? 'bg-gray-100 font-semibold text-gray-800' : 'text-gray-400'}`}>
+                  <span>🥈</span><span>Experimentado — 5 a 19 calificaciones</span>
+                </div>
+                <div className={`flex items-center gap-2 p-2 rounded-xl ${totalRatings >= 20 ? 'bg-yellow-50 font-semibold text-yellow-800' : 'text-gray-400'}`}>
+                  <span>🥇</span><span>Veterano — 20+ calificaciones</span>
+                </div>
+              </div>
+              {nextLevel ? (
+                <p className="text-center text-sm text-purple-600 font-semibold mb-4">
+                  Faltan {ratingsNeeded} {ratingsNeeded === 1 ? 'calificación' : 'calificaciones'} para llegar a {nextLevel}
+                </p>
+              ) : (
+                <p className="text-center text-sm text-yellow-600 font-semibold mb-4">¡Nivel máximo alcanzado!</p>
+              )}
+              <button onClick={() => setShowBadgeModal(false)} className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-2xl">
+                Entendido
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
