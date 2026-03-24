@@ -1,14 +1,28 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, Download } from 'lucide-react';
+import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { getFirstName } from '../utils/formatName';
+
+function FaqItem({ question, answer }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-white/10 rounded-2xl overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 text-left text-white font-semibold text-sm sm:text-base gap-2">
+        <span>{question}</span>
+        {open ? <ChevronUp className="w-4 h-4 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
+      </button>
+      {open && <p className="px-4 pb-3 text-white/80 text-sm sm:text-base">{answer}</p>}
+    </div>
+  );
+}
 
 function LandingPage() {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [installPrompt, setInstallPrompt] = useState(null);
+  const [faqOpen, setFaqOpen] = useState(null);
 
   useEffect(() => {
     // Obtener información del usuario del token
@@ -164,6 +178,60 @@ function LandingPage() {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="max-w-2xl mx-auto px-4 pb-12 sm:pb-16">
+            <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber más antes de registrarte?</p>
+            <div className="flex gap-3 justify-center mb-4">
+              <button
+                onClick={() => setFaqOpen(faqOpen === 'client' ? null : 'client')}
+                className={`flex-1 sm:flex-none px-6 py-3 rounded-2xl font-bold text-base transition-all ${faqOpen === 'client' ? 'bg-green-500 text-white shadow-lg scale-105' : 'bg-white/20 text-white hover:bg-white/30'}`}
+              >
+                Soy cliente ⭐
+              </button>
+              <button
+                onClick={() => setFaqOpen(faqOpen === 'professional' ? null : 'professional')}
+                className={`flex-1 sm:flex-none px-6 py-3 rounded-2xl font-bold text-base transition-all ${faqOpen === 'professional' ? 'bg-yellow-400 text-purple-900 shadow-lg scale-105' : 'bg-white/20 text-white hover:bg-white/30'}`}
+              >
+                Soy profesional 💼
+              </button>
+            </div>
+
+            {faqOpen === 'client' && (
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 animate-slideUp space-y-3">
+                {[
+                  { q: '¿Qué es Calificalo?', a: 'Una plataforma donde podés calificar a profesionales que te prestaron un servicio, y ayudar a otros a elegir bien.' },
+                  { q: '¿Cómo califico a un profesional?', a: 'Escaneás el código QR que te da el profesional, o buscás su perfil en la plataforma, y dejás tu calificación en segundos.' },
+                  { q: '¿Es gratis registrarse?', a: 'Sí, totalmente gratis. Solo necesitás un email para crear tu cuenta.' },
+                  { q: '¿Puedo ver el perfil y las calificaciones de un profesional sin registrarme?', a: 'Sí, los perfiles y calificaciones son públicos. Solo necesitás cuenta para dejar tu propia calificación.' },
+                  { q: '¿Qué pasa si me arrepiento de una calificación?', a: 'Podés editarla o eliminarla desde tu historial en el dashboard.' },
+                ].map((item, i) => (
+                  <FaqItem key={i} question={item.q} answer={item.a} />
+                ))}
+                <button onClick={() => navigate('/client-login')} className="w-full mt-2 bg-green-500 text-white font-bold py-3 rounded-2xl hover:scale-105 transition-all">
+                  Registrarme como cliente
+                </button>
+              </div>
+            )}
+
+            {faqOpen === 'professional' && (
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 animate-slideUp space-y-3">
+                {[
+                  { q: '¿Cómo recibo calificaciones?', a: 'Al registrarte obtenés un código QR único. Compartilo con tus clientes y ellos pueden calificarte desde su celular.' },
+                  { q: '¿Qué es el CV digital?', a: 'Es tu perfil público en Calificalo: muestra tu experiencia laboral, educación y las calificaciones reales de tus clientes.' },
+                  { q: '¿Las calificaciones son verificadas?', a: 'Sí. Cada calificación queda vinculada a un trabajo específico en tu CV, lo que las hace verificables y confiables.' },
+                  { q: '¿Qué pasa con mis calificaciones si cambio de trabajo?', a: 'Te acompañan. Las calificaciones son tuyas, no del lugar donde trabajás.' },
+                  { q: '¿Es gratis para profesionales?', a: 'Sí, el registro y el uso básico son completamente gratuitos.' },
+                  { q: '¿Cómo comparto mi QR con los clientes?', a: 'Podés mostrar el QR desde la app, descargarlo, o enviarlo por WhatsApp para que tus clientes lo escaneen cuando quieran.' },
+                ].map((item, i) => (
+                  <FaqItem key={i} question={item.q} answer={item.a} />
+                ))}
+                <button onClick={() => navigate('/professional-login')} className="w-full mt-2 bg-yellow-400 text-purple-900 font-bold py-3 rounded-2xl hover:scale-105 transition-all">
+                  Registrarme como profesional
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Features */}
