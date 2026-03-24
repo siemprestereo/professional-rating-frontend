@@ -208,7 +208,7 @@ function ProfessionalRegister() {
           </div>
 
           <div className="mb-3 sm:mb-4">
-            <LocationSelector value={location} onChange={setLocation} focusColor="blue" />
+            <LocationSelector value={location} onChange={setLocation} focusColor="blue" label="Lugar de residencia" />
           </div>
 
           <div className="mb-3 sm:mb-4">
