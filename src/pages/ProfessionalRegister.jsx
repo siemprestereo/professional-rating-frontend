@@ -125,8 +125,7 @@ function ProfessionalRegister() {
         termsAccepted: true
       });
 
-      setToast({ type: 'success', message: '¡Registro exitoso! Completá tu CV...' });
-      setTimeout(() => navigate('/edit-cv'), 300);
+      setTimeout(() => navigate('/pending-verification', { state: { email } }), 300);
     } catch (err) {
       setToast({ type: 'error', message: err.message });
     } finally {

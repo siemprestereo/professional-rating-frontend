@@ -113,8 +113,7 @@ function ClientRegister() {
 
       localStorage.removeItem('qrProfessionalName');
 
-      setToast({ type: 'success', message: '¡Registro exitoso!' });
-      setTimeout(() => handlePostLoginRedirect('/client-dashboard', navigate, true), 300);
+      setTimeout(() => navigate('/pending-verification', { state: { email } }), 300);
 
     } catch (err) {
       setToast({ type: 'error', message: err.message });

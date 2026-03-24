@@ -37,6 +37,7 @@ const SavedProfessionals     = lazy(() => import('./pages/SavedProfessionals'));
 const CompareProfessionals   = lazy(() => import('./pages/CompareProfessionals'));
 const ClientRatingsHistory   = lazy(() => import('./pages/ClientRatingsHistory'));
 const AdminDashboard         = lazy(() => import('./pages/AdminDashboard'));
+const PendingVerification    = lazy(() => import('./pages/PendingVerification'));
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
             <Route path="/ratings-history" element={<RatingsHistory />} />
 

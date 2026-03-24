@@ -35,10 +35,15 @@ function VerifyEmail() {
             <h2 className="text-2xl roboto-light text-gray-800 mb-2">¡Email verificado!</h2>
             <p className="text-sm text-gray-600 mb-6">Tu cuenta está confirmada. Ya podés usar Calificalo al 100%.</p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => {
+                const userType = localStorage.getItem('userType');
+                if (userType === 'PROFESSIONAL') navigate('/edit-cv');
+                else if (userType === 'CLIENT') navigate('/client-dashboard');
+                else navigate('/');
+              }}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl"
             >
-              Ir al inicio
+              Continuar
             </button>
           </>
         )}
