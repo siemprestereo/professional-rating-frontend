@@ -1,9 +1,8 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 
 function PendingVerification() {
   const location = useLocation();
-  const navigate = useNavigate();
   const email = location.state?.email || '';
 
   return (
@@ -20,15 +19,9 @@ function PendingVerification() {
         <p className="text-gray-600 mb-6">
           Hacé clic en el enlace del mail para activar tu cuenta y continuar.
         </p>
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 mb-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800">
           ¿No lo ves? Revisá la carpeta de <strong>spam</strong> o correo no deseado.
         </div>
-        <button
-          onClick={() => navigate('/')}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          Volver al inicio
-        </button>
       </div>
     </div>
   );
