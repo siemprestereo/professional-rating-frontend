@@ -182,7 +182,7 @@ function LandingPage() {
 
           {/* FAQ */}
           <div className="max-w-2xl mx-auto px-4 pb-6 sm:pb-10">
-            <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber más antes de registrarte?</p>
+            <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber cómo funciona? ¿Sos calificador? ¿Sos calificado y brindas un servicio? </p>
             <div className="flex gap-3 justify-center mb-4">
               <button
                 onClick={() => setFaqOpen(faqOpen === 'client' ? null : 'client')}
@@ -201,11 +201,11 @@ function LandingPage() {
             {faqOpen === 'client' && (
               <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 animate-slideUp space-y-3">
                 {[
-                  { q: '¿Qué es Calificalo?', a: 'Una plataforma donde podés calificar a profesionales que te prestaron un servicio, y ayudar a otros a elegir bien.' },
-                  { q: '¿Cómo califico a un profesional?', a: 'Escaneás el código QR que te da el profesional, o buscás su perfil en la plataforma, y dejás tu calificación en segundos.' },
+                  { q: '¿Qué es Calificalo?', a: 'Una plataforma donde podés calificar a profesionales que te prestaron un servicio y ayudar a otros a elegir bien.' },
+                  { q: '¿Cómo califico a un profesional?', a: 'Escaneás el código QR que te muestra el profesional y dejás tu calificación en segundos.' },
                   { q: '¿Es gratis registrarse?', a: 'Sí, totalmente gratis. Solo necesitás un email para crear tu cuenta.' },
-                  { q: '¿Puedo ver el perfil y las calificaciones de un profesional sin registrarme?', a: 'Sí, los perfiles y calificaciones son públicos. Solo necesitás cuenta para dejar tu propia calificación.' },
-                  { q: '¿Qué pasa si me arrepiento de una calificación?', a: 'Podés editarla o eliminarla desde tu historial en el dashboard.' },
+                  { q: '¿Las calificaciones que haga son anónimas?', a: 'El profesional que califiques sólo podrá ver tu nombre, no tu apellido ni tu mail.' },
+                  { q: '¿Qué pasa si me arrepiento de una calificación?', a: 'Tendrás 30 minutos para editarla o borrarla.' },
                 ].map((item, i) => (
                   <FaqItem key={i} question={item.q} answer={item.a} />
                 ))}
@@ -218,12 +218,12 @@ function LandingPage() {
             {faqOpen === 'professional' && (
               <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 animate-slideUp space-y-3">
                 {[
-                  { q: '¿Cómo recibo calificaciones?', a: 'Al registrarte obtenés un código QR único. Compartilo con tus clientes y ellos pueden calificarte desde su celular.' },
-                  { q: '¿Qué es el CV digital?', a: 'Es tu perfil público en Calificalo: muestra tu experiencia laboral, educación y las calificaciones reales de tus clientes.' },
-                  { q: '¿Las calificaciones son verificadas?', a: 'Sí. Cada calificación queda vinculada a un trabajo específico en tu CV, lo que las hace verificables y confiables.' },
+                  { q: '¿Cómo recibo calificaciones?', a: 'Desde el panel principal podés generar un QR y mostrarlo a tu cliente para que pueda calificarte.' },
+                  { q: '¿Cómo es el sistema de puntaje?', a: 'Pueden puntuar tu servicio de 1 a 5 y si lo desean dejar un comentario.' },
+                  { q: '¿Qué es el CV digital?', a: 'Es tu perfil público en Calificalo: muestra tu información laboral y las calificaciones que te brindaron los clientes.' },
                   { q: '¿Qué pasa con mis calificaciones si cambio de trabajo?', a: 'Te acompañan. Las calificaciones son tuyas, no del lugar donde trabajás.' },
                   { q: '¿Es gratis para profesionales?', a: 'Sí, el registro y el uso básico son completamente gratuitos.' },
-                  { q: '¿Cómo comparto mi QR con los clientes?', a: 'Podés mostrar el QR desde la app, descargarlo, o enviarlo por WhatsApp para que tus clientes lo escaneen cuando quieran.' },
+                  { q: '¿Puedo compartir mi CV?', a: 'Sí, tu CV puede ser visto por cualquier persona a la que le compartas el link.' },
                 ].map((item, i) => (
                   <FaqItem key={i} question={item.q} answer={item.a} />
                 ))}
