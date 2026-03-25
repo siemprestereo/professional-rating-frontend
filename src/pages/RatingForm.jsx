@@ -190,6 +190,11 @@ function RatingForm({ professionalIdFromToken }) {
             </div>
             <h1 className="text-2xl roboto-light text-gray-800 animate-slideUp delay-100">
               Calificar a {professional?.name || 'Cargando...'}
+              {selectedWorkplace?.businessName && (
+                <span className="block text-lg text-gray-500 mt-1">
+                  por su trabajo en {selectedWorkplace.businessName}
+                </span>
+              )}
             </h1>
           </div>
 
