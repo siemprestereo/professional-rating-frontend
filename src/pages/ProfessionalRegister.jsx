@@ -222,7 +222,7 @@ function ProfessionalRegister() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 8 caracteres, una mayúscula y un caracter especial (*, +, !)</p>
+            <p className="text-xs text-gray-500 mt-1.5">Debe tener al menos 8 caracteres, letras y números</p>
           </div>
 
           <div className="mb-4 sm:mb-5">
