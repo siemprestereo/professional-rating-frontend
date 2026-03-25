@@ -182,7 +182,7 @@ function LandingPage() {
 
           {/* FAQ */}
           <div className="max-w-2xl mx-auto px-4 pb-6 sm:pb-10">
-            <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber cómo funciona? ¿Sos calificador? ¿Sos calificado y brindas un servicio? </p>
+            <p className="text-white/80 text-center mb-4 text-base sm:text-lg">¿Querés saber cómo funciona? ¿Sos Cliente? ¿Sos Profesional y brindas un servicio? </p>
             <div className="flex gap-3 justify-center mb-4">
               <button
                 onClick={() => setFaqOpen(faqOpen === 'client' ? null : 'client')}
