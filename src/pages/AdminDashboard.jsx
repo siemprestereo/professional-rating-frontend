@@ -970,6 +970,25 @@ function AdminDashboard() {
                       <Mail className="w-4 h-4" /> Enviar email
                     </button>
 
+                    {!user.emailVerified && (
+                      <button
+                        onClick={async () => {
+                          const res = await fetch(`${BACKEND_URL}/api/admin/users/${user.id}/verify-email`, {
+                            method: 'PATCH', headers: authHeader()
+                          });
+                          if (res.ok) {
+                            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, emailVerified: true } : u));
+                            showToast('Email verificado correctamente');
+                          } else {
+                            showToast('Error al verificar email', 'error');
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors"
+                      >
+                        <CheckCircle className="w-4 h-4" /> Verificar email manualmente
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setConfirmSuspend({ id: user.id, name: user.name, suspended: user.suspended })}
                       className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-colors ${
