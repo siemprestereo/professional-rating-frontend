@@ -291,7 +291,8 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
-        <div className="max-w-6xl mx-auto px-4 text-center text-white/70">
+        <div className="max-w-6xl mx-auto px-4 text-center text-white/70 space-y-1">
+          <p className="text-sm sm:text-base">Consultas y sugerencias: <a href="mailto:hola@calificalo.com.ar" className="text-white/90 hover:text-white underline transition-colors">hola@calificalo.com.ar</a></p>
           <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
         </div>
       </footer>
