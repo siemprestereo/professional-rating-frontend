@@ -77,9 +77,9 @@ function NotificationBell() {
 
       {open && (
         <>
-        <div className="fixed inset-0 bg-black/40 z-40 sm:hidden" onClick={() => setOpen(false)} />
-        <div className="fixed inset-0 z-50 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 flex items-end sm:items-start justify-center sm:justify-start pointer-events-none">
-        <div className="w-full sm:w-80 bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden animate-slideUp sm:animate-scaleIn pointer-events-auto">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-2 w-80 z-50">
+          <div className="w-80 bg-white rounded-2xl shadow-2xl overflow-hidden animate-slideUp">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="font-semibold text-gray-800">Notificaciones</h3>
             <div className="flex items-center gap-2">
@@ -119,8 +119,8 @@ function NotificationBell() {
               ))
             )}
           </div>
-        </div>
-        </div>
+          </div>
+          </div>
         </>
       )}
     </div>
