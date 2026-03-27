@@ -586,12 +586,6 @@ function EditCV() {
             >
               ¿Tenés dudas? Ver preguntas frecuentes
             </button>
-            <button
-              onClick={() => setShowFaq(true)}
-              className="mt-3 text-white/80 hover:text-white text-sm underline underline-offset-2 transition-colors"
-            >
-              ¿Tenés dudas? Ver preguntas frecuentes
-            </button>
           </div>
         </div>
       </div>
