@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCheck } from 'lucide-react';
+import { Bell, X, CheckCheck, Trash2 } from 'lucide-react';
 import { BACKEND_URL } from '../config';
 
 function timeAgo(dateStr) {
@@ -61,6 +61,19 @@ function NotificationBell() {
     setUnread(prev => Math.max(0, prev - 1));
   };
 
+  const deleteOne = async (e, id, wasUnread) => {
+    e.stopPropagation();
+    await fetch(`${BACKEND_URL}/api/notifications/${id}`, { method: 'DELETE', headers });
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    if (wasUnread) setUnread(prev => Math.max(0, prev - 1));
+  };
+
+  const deleteAll = async () => {
+    await fetch(`${BACKEND_URL}/api/notifications`, { method: 'DELETE', headers });
+    setNotifications([]);
+    setUnread(0);
+  };
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -88,6 +101,11 @@ function NotificationBell() {
                   <CheckCheck className="w-3.5 h-3.5" /> Marcar todas
                 </button>
               )}
+              {notifications.length > 0 && (
+                <button onClick={deleteAll} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1">
+                  <Trash2 className="w-3.5 h-3.5" /> Borrar todas
+                </button>
+              )}
               <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-4 h-4" />
               </button>
@@ -112,7 +130,12 @@ function NotificationBell() {
                       <p className={`text-sm font-semibold ${!n.isRead ? 'text-blue-800' : 'text-gray-800'}`}>{n.title}</p>
                       <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{n.message}</p>
                     </div>
-                    {!n.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5" />}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {!n.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />}
+                      <button onClick={(e) => deleteOne(e, n.id, !n.isRead)} className="text-gray-300 hover:text-red-400 transition-colors mt-0.5">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-400 mt-1">{timeAgo(n.createdAt)}</p>
                 </div>
