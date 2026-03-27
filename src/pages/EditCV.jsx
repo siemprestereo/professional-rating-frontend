@@ -10,6 +10,7 @@ import ProfessionSelector from '../components/ProfessionSelector';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
+import ProfessionalFaqModal from '../components/ProfessionalFaqModal';
 
 const CABA_ID = '02';
 
@@ -45,6 +46,8 @@ function EditCV() {
 
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
+  const [showFaq, setShowFaq] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
 
   const { provincias, segundoNivel, loadingProvincias, loadingSegundoNivel, fetchSegundoNivel, getSegundoNivelLabel } = useGeoref();
 
@@ -578,6 +581,18 @@ function EditCV() {
           <div className="text-center">
             <h1 className="text-3xl roboto-light text-white mb-2 mt-2 animate-slideUp">Editar CV</h1>
             <p className="text-white/90 text-lg animate-slideUp delay-100">Agregá tu experiencia laboral y educativa</p>
+            <button
+              onClick={() => setShowFaq(true)}
+              className="mt-3 text-white/80 hover:text-white text-sm underline underline-offset-2 transition-colors"
+            >
+              ¿Tenés dudas? Ver preguntas frecuentes
+            </button>
+            <button
+              onClick={() => setShowFaq(true)}
+              className="mt-3 text-white/80 hover:text-white text-sm underline underline-offset-2 transition-colors"
+            >
+              ¿Tenés dudas? Ver preguntas frecuentes
+            </button>
           </div>
         </div>
       </div>
@@ -840,6 +855,8 @@ function EditCV() {
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
+      {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
     </div>
   );
 }
