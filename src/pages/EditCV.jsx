@@ -47,7 +47,6 @@ function EditCV() {
   const [deleteModal, setDeleteModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [showFaq, setShowFaq] = useState(false);
-  const [showFaq, setShowFaq] = useState(false);
 
   const { provincias, segundoNivel, loadingProvincias, loadingSegundoNivel, fetchSegundoNivel, getSegundoNivelLabel } = useGeoref();
 
@@ -855,7 +854,6 @@ function EditCV() {
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
       {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
     </div>
   );
