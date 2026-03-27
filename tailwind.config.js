@@ -44,6 +44,15 @@ export default {
           '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-5px)' },
           '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' },
         },
+        bellRing: {
+          '0%, 60%, 100%': { transform: 'rotate(0deg)' },
+          '65%': { transform: 'rotate(-15deg)' },
+          '70%': { transform: 'rotate(15deg)' },
+          '75%': { transform: 'rotate(-10deg)' },
+          '80%': { transform: 'rotate(10deg)' },
+          '85%': { transform: 'rotate(-5deg)' },
+          '90%': { transform: 'rotate(5deg)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-out forwards',
@@ -55,6 +64,7 @@ export default {
         'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
         pulseGlow: 'pulseGlow 2s ease-in-out infinite',
         shake: 'shake 0.5s ease-in-out',
+        bellRing: 'bellRing 3s ease-in-out infinite',
       },
     },
   },

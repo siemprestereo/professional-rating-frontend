@@ -80,7 +80,7 @@ function NotificationBell() {
         onClick={handleOpen}
         className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
       >
-        <Bell className="w-6 h-6 text-white" />
+        <Bell className={`w-6 h-6 text-white ${unread > 0 ? 'animate-bellRing' : ''}`} />
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
             {unread > 9 ? '9+' : unread}
