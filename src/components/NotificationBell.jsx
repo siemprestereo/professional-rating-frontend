@@ -82,7 +82,7 @@ function NotificationBell() {
       >
         <Bell className={`w-6 h-6 text-white ${unread > 0 ? 'animate-bellRing' : ''}`} />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-badgePulse">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
