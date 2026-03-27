@@ -979,6 +979,20 @@ function AdminDashboard() {
                       <Mail className="w-4 h-4" /> Enviar email
                     </button>
 
+                    <button
+                      onClick={() => {
+                        setNotifTarget('USER');
+                        setNotifUserId(String(user.id));
+                        setNotifTitle('');
+                        setNotifMessage('');
+                        setNotifResult(null);
+                        setActiveTab('notifs');
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
+                    >
+                      <Bell className="w-4 h-4" /> Enviar notificación
+                    </button>
+
                     {!user.emailVerified && (
                       <button
                         onClick={async () => {
