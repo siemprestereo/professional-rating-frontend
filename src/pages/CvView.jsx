@@ -7,6 +7,7 @@ import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { translateProfession } from '../utils/professionalUtils';
 import { BACKEND_URL } from '../config';
+import ProfessionalFaqModal from '../components/ProfessionalFaqModal';
 
 function CvView() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function CvView() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isSearchable, setIsSearchable] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
 
   useEffect(() => {
     loadCv();
@@ -143,6 +145,12 @@ function CvView() {
                 <span className="ml-2 text-white font-semibold text-lg">{(cv.reputationScore || 0).toFixed(1)}</span>
               </div>
               <p className="text-white/90 animate-slideUp delay-200">{cv.totalRatings || 0} calificaciones</p>
+            </button>
+            <button
+              onClick={() => setShowFaq(true)}
+              className="mt-3 text-white/80 hover:text-white text-sm underline underline-offset-2 transition-colors"
+            >
+              ¿Tenés dudas? Ver preguntas frecuentes
             </button>
           </div>
         </div>
@@ -327,6 +335,7 @@ function CvView() {
       {showShareModal && (
         <ShareModal professionalId={cv.professionalId} professionalName={cv.professionalName} onClose={() => setShowShareModal(false)} />
       )}
+      {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
     </div>
   );
 }
