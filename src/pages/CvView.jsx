@@ -209,7 +209,7 @@ function CvView() {
               </div>
               <div className="flex-1">
                 <h3 className="text-base roboto-light text-orange-900 mb-1">⚠️ No podés recibir calificaciones todavía</h3>
-                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo en tu CV.</p>
+                <p className="text-sm text-orange-800">Para que los clientes puedan calificarte, necesitás tener al menos un trabajo activo en tu CV. Agregalo desde Editar CV.</p>
               </div>
             </div>
           </div>
