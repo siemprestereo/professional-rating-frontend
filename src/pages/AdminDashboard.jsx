@@ -4,7 +4,7 @@ import {
   Users, Star, BarChart2, LogOut, ShieldAlert,
   ChevronDown, ChevronUp, Trash2, Ban, CheckCircle,
   Loader2, RefreshCw, Search, AlertTriangle, FileText, TrendingUp,
-  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox, UserX, Settings
+  MessageSquare, Clock, XCircle, Mail, Send, User, Shield, Plus, Inbox, UserX, Settings, Bell
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BACKEND_URL } from '../config';
@@ -111,6 +111,14 @@ function AdminDashboard() {
   const [inboxMessages, setInboxMessages] = useState([]);
   const [inboxLoading, setInboxLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Notifications
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifTarget, setNotifTarget] = useState('ALL');
+  const [notifUserId, setNotifUserId] = useState('');
+  const [notifSending, setNotifSending] = useState(false);
+  const [notifResult, setNotifResult] = useState(null);
 
   // Activity & Trends
   const [activityData, setActivityData] = useState(null);
@@ -611,6 +619,7 @@ function AdminDashboard() {
     { id: 'reports', label: 'Denuncias',icon: ShieldAlert },
     { id: 'emails',  label: 'Emails',   icon: Mail },
     { id: 'config',  label: 'Config.',  icon: Settings },
+    { id: 'notifs',  label: 'Notifs.',  icon: Bell },
   ];
 
   const EMAIL_ALIASES = [
@@ -1993,6 +2002,92 @@ function AdminDashboard() {
       )}
 
       {/* Toast */}
+        {/* ===== TAB NOTIFICACIONES ===== */}
+        {activeTab === 'notifs' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-gray-800">Enviar notificación</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Destinatarios</label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { value: 'ALL', label: 'Todos' },
+                  { value: 'PROFESSIONAL', label: 'Profesionales' },
+                  { value: 'CLIENT', label: 'Clientes' },
+                  { value: 'USER', label: 'Usuario específico' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => { setNotifTarget(opt.value); setNotifUserId(''); }}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${notifTarget === opt.value ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:border-blue-400'}`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {notifTarget === 'USER' && (
+              <input
+                type="number"
+                value={notifUserId}
+                onChange={e => setNotifUserId(e.target.value)}
+                placeholder="ID del usuario"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+              />
+            )}
+
+            <input
+              type="text"
+              value={notifTitle}
+              onChange={e => setNotifTitle(e.target.value)}
+              placeholder="Título"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+            />
+
+            <textarea
+              value={notifMessage}
+              onChange={e => setNotifMessage(e.target.value)}
+              placeholder="Mensaje"
+              rows={3}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400 resize-none"
+            />
+
+            {notifResult && (
+              <div className={`rounded-xl px-4 py-3 text-sm font-medium ${notifResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {notifResult.message}
+              </div>
+            )}
+
+            <button
+              disabled={notifSending || !notifTitle.trim() || !notifMessage.trim() || (notifTarget === 'USER' && !notifUserId)}
+              onClick={async () => {
+                setNotifSending(true);
+                setNotifResult(null);
+                try {
+                  const target = notifTarget === 'USER' ? `USER:${notifUserId}` : notifTarget;
+                  const res = await fetch(`${BACKEND_URL}/api/notifications/admin/send`, {
+                    method: 'POST',
+                    headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: notifTitle, message: notifMessage, target })
+                  });
+                  if (res.ok) {
+                    setNotifResult({ type: 'success', message: 'Notificación enviada correctamente' });
+                    setNotifTitle(''); setNotifMessage(''); setNotifUserId('');
+                  } else {
+                    setNotifResult({ type: 'error', message: 'Error al enviar la notificación' });
+                  }
+                } catch {
+                  setNotifResult({ type: 'error', message: 'Error de conexión' });
+                } finally {
+                  setNotifSending(false);
+                }
+              }}
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            >
+              {notifSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+              Enviar notificación
+            </button>
+          </div>
+        )}
+
       {toast && (
         <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-lg text-sm font-semibold flex items-center gap-2 pointer-events-none transition-all ${
           toast.type === 'success'

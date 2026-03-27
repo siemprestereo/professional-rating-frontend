@@ -7,6 +7,7 @@ import Toast from '../components/Toast';
 import api from '../services/api';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
+import NotificationBell from '../components/NotificationBell';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -323,6 +324,8 @@ function ClientDashboard() {
             Calificalo
           </button>
 
+          <div className="flex items-center gap-2">
+          <NotificationBell />
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -372,6 +375,7 @@ function ClientDashboard() {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
 

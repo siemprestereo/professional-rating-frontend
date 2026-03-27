@@ -9,6 +9,7 @@ import { capitalizeName, getFirstName } from '../utils/formatName';
 import { getProfessionalBadge } from '../utils/professionalBadge';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
+import NotificationBell from '../components/NotificationBell';
 
 function ProfessionalDashboard() {
   const navigate = useNavigate();
@@ -349,6 +350,8 @@ function ProfessionalDashboard() {
             Calificalo
           </button>
 
+          <div className="flex items-center gap-2">
+          <NotificationBell />
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -378,6 +381,7 @@ function ProfessionalDashboard() {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </div>
 
