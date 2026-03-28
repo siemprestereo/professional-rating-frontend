@@ -24,8 +24,15 @@ function RatingForm({ professionalIdFromToken }) {
   const [commentModerated, setCommentModerated] = useState(false);
   const [toast, setToast] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
+  const [isProfessionalBlocked, setIsProfessionalBlocked] = useState(false);
 
   useEffect(() => {
+    const userType = localStorage.getItem('userType');
+    if (userType === 'PROFESSIONAL') {
+      setIsProfessionalBlocked(true);
+      setLoading(false);
+      return;
+    }
     if (professionalId) {
       loadProfessional();
     }
@@ -138,6 +145,28 @@ function RatingForm({ professionalIdFromToken }) {
 
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  if (isProfessionalBlocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4 animate-fadeIn">
+        <div className="bg-white rounded-3xl p-8 text-center max-w-sm w-full animate-scaleIn shadow-2xl">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🚫</span>
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-3">No podés calificar como Profesional</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Solo los clientes pueden calificar a otros profesionales. Para calificar, ingresá con una cuenta de cliente.
+          </p>
+          <button
+            onClick={() => navigate('/professional-dashboard')}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl transition-all hover:scale-105 active:scale-95"
+          >
+            Volver a mi panel
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (success) {
