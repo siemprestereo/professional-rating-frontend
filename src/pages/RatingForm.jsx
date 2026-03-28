@@ -56,10 +56,53 @@ function RatingForm({ professionalIdFromToken }) {
       if (activeJobs.length === 1) {
         setSelectedWorkplace(activeJobs[0]);
       }
+
+      // Si hay una calificación pendiente guardada, restaurarla y auto-submitear
+      const pending = localStorage.getItem('pendingRating');
+      if (pending) {
+        const pendingData = JSON.parse(pending);
+        if (String(pendingData.professionalId) === String(professionalId) && localStorage.getItem('authToken')) {
+          localStorage.removeItem('pendingRating');
+          localStorage.removeItem('redirectAfterLogin');
+          const workplace = mappedData.workHistory?.find(w => w.workHistoryId === pendingData.workHistoryId);
+          if (workplace) setSelectedWorkplace(workplace);
+          setScore(pendingData.score);
+          setComment(pendingData.comment || '');
+          // Auto-submit después de que el estado se actualice
+          setTimeout(() => autoSubmit(pendingData), 100);
+        }
+      }
     } catch (error) {
       console.error('Error loading professional:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const autoSubmit = async (pendingData) => {
+    setSubmitting(true);
+    try {
+      const result = await api.createRating({
+        professionalId: parseInt(pendingData.professionalId),
+        workHistoryId: pendingData.workHistoryId,
+        score: pendingData.score,
+        comment: pendingData.comment || null
+      });
+      if (result?.commentModerated) setCommentModerated(true);
+      setSuccess(true);
+      setTimeout(() => navigate('/client-dashboard'), 2000);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        setErrorModal({
+          title: 'No podrás calificar a este profesional',
+          message: error.response?.data?.message || 'Aún no transcurrieron 6 meses desde la última vez que lo calificaste',
+          onClose: () => { setErrorModal(null); navigate('/client-dashboard'); }
+        });
+      } else {
+        setToast({ type: 'error', message: 'Error al enviar la calificación. Intentá nuevamente.' });
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,7 +160,14 @@ function RatingForm({ professionalIdFromToken }) {
           message: 'Para calificar a este profesional deberás iniciar sesión como Cliente.',
           actionText: 'Iniciar sesión',
           onAction: () => {
-            localStorage.setItem('returnTo', window.location.pathname);
+            const workplaceToUse = selectedWorkplace || (professional?.workHistory?.filter(w => w.isActive) || [])[0];
+            localStorage.setItem('pendingRating', JSON.stringify({
+              professionalId,
+              workHistoryId: workplaceToUse?.workHistoryId,
+              score,
+              comment: comment.trim() || null
+            }));
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
             navigate('/client-login');
           }
         });
