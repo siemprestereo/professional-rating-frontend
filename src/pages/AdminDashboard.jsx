@@ -261,7 +261,10 @@ function AdminDashboard() {
         method: 'DELETE',
         headers: authHeader()
       });
-      if (!res.ok) throw new Error('Error al eliminar usuario');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || errData.cause || 'Error al eliminar usuario');
+      }
       const deletedName = confirmDeleteUser.name;
       setUsers(prev => prev.filter(u => u.id !== confirmDeleteUser.id));
       setExpandedUser(null);
