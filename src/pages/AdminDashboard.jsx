@@ -194,7 +194,8 @@ function AdminDashboard() {
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/users`, { headers: authHeader() });
       if (!res.ok) throw new Error('Error cargando usuarios');
-      setUsers(await res.json());
+      const data = await res.json();
+      setUsers(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (e) {
       setError(e.message);
     } finally {
