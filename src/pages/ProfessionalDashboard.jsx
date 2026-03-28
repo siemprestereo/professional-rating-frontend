@@ -222,7 +222,7 @@ function ProfessionalDashboard() {
 
       if (!response.ok) {
         if (response.status === 409) {
-          setToast({ type: 'warning', message: 'Para poder generar un QR debes agregar un trabajo activo en Editar CV' });
+          setToast({ type: 'warning', message: 'Para poder generar un QR debes agregar un trabajo activo. Agregalo desde Mi CV → Editar CV' });
         } else {
           const errorData = await response.json();
           setToast({ type: 'error', message: `Error al generar QR: ${errorData.message || 'Código ' + response.status}` });
