@@ -724,6 +724,11 @@ function AdminDashboard() {
                   {reports.length}
                 </span>
               )}
+              {tab.id === 'emails' && unreadCount > 0 && activeTab !== 'emails' && (
+                <span className="absolute top-1.5 right-3 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -1589,7 +1594,7 @@ function AdminDashboard() {
 
                         <p className="text-sm text-gray-700 leading-relaxed">{msg.message}</p>
 
-                        <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                        <div className="flex flex-wrap gap-2 pt-1" onClick={e => e.stopPropagation()}>
                           {!msg.read && (
                             <button
                               onClick={async () => {
@@ -1611,6 +1616,34 @@ function AdminDashboard() {
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
                             >
                               <CheckCircle className="w-3.5 h-3.5" /> Marcar resuelto
+                            </button>
+                          )}
+                          {msg.senderEmail && (
+                            <button
+                              onClick={() => {
+                                setEmailToAddress(msg.senderEmail);
+                                setEmailToName(msg.senderName || '');
+                                setEmailSubject('Re: tu mensaje');
+                                setEmailBody('');
+                                setEmailMode('individual');
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
+                            >
+                              <Send className="w-3.5 h-3.5" /> Responder
+                            </button>
+                          )}
+                          {msg.userId && (
+                            <button
+                              onClick={() => {
+                                setNotifTarget('USER');
+                                setNotifUserId(String(msg.userId));
+                                setNotifTitle('');
+                                setNotifMessage('');
+                                setActiveTab('notifs');
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
+                            >
+                              <Bell className="w-3.5 h-3.5" /> Enviar notificación
                             </button>
                           )}
                         </div>
