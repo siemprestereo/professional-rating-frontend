@@ -93,6 +93,11 @@ function ClientDashboard() {
         return;
       }
 
+      if (!clientData.termsAccepted) {
+        navigate('/accept-terms', { replace: true });
+        return;
+      }
+
       setClient(clientData);
       localStorage.setItem('client', JSON.stringify(clientData));
       setLoading(false);

@@ -184,6 +184,11 @@ function ProfessionalDashboard() {
         return;
       }
 
+      if (!professionalData.termsAccepted) {
+        navigate('/accept-terms', { replace: true });
+        return;
+      }
+
       setProfessional(professionalData);
       localStorage.setItem('professional', JSON.stringify(professionalData));
 
