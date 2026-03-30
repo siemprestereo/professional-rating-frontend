@@ -231,13 +231,6 @@ function PublicCvView() {
             </div>
           </div>
 
-          {cvData.description && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-3">Sobre mí</h2>
-              <p className="text-gray-600 break-words whitespace-pre-wrap">{cvData.description}</p>
-            </div>
-          )}
-
           {cvData.zones && cvData.zones.length > 0 && (
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
               <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
@@ -360,21 +353,34 @@ function PublicCvView() {
             </div>
           )}
 
-          {cvData.skills && cvData.skills.trim() && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
-                <span className="text-xl mr-2">🏷️</span>Aptitudes y habilidades
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {cvData.skills.split(',').map(s => s.trim()).filter(Boolean).map((skill, i) => (
-                  <span key={i} className="bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+      </div>
+
+      {/* Sobre mí y Aptitudes — siempre visibles */}
+      <div className="max-w-4xl mx-auto px-4 pb-4">
+        {cvData.description && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+            <h2 className="text-xl roboto-light text-gray-800 mb-3 flex items-center">
+              <span className="text-xl mr-2">👤</span>Sobre mí
+            </h2>
+            <p className="text-gray-600 break-words whitespace-pre-wrap">{cvData.description}</p>
+          </div>
+        )}
+
+        {cvData.skills && cvData.skills.trim() && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+            <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+              <span className="text-xl mr-2">🏷️</span>Aptitudes y habilidades
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {cvData.skills.split(',').map(s => s.trim()).filter(Boolean).map((skill, i) => (
+                <span key={i} className="bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Botón Home fuera del blur — navegación inteligente según userType */}
