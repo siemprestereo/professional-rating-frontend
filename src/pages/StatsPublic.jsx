@@ -101,8 +101,13 @@ function StatsPublic() {
                   onClick={() => navigate(`/ratings-history?workHistoryId=${business.workHistoryId}`)}
                   className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:border-purple-400 border-2 border-transparent transition-all group">
                   <div className="flex-1 text-left">
-                    <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">{business.business}</p>
-                    <p className="text-sm text-gray-600">{business.count} calificaciones</p>
+                    <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
+                      {business.position || business.business}
+                    </p>
+                    {business.position && business.business && (
+                      <p className="text-xs text-gray-500">{business.business}</p>
+                    )}
+                    <p className="text-sm text-gray-600">{business.count} {business.count === 1 ? 'calificación' : 'calificaciones'}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
