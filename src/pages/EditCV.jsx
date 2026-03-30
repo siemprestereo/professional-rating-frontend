@@ -26,6 +26,8 @@ function EditCV() {
   const [deletingEducationIds, setDeletingEducationIds] = useState(new Set());
 
   const [description, setDescription] = useState('');
+  const [skills, setSkills] = useState([]);
+  const [skillInput, setSkillInput] = useState('');
   const [professionType, setProfessionType] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [savingProfession, setSavingProfession] = useState(false);
@@ -98,6 +100,7 @@ function EditCV() {
         const data = await response.json();
         setCv({ id: data.id });
         setDescription(data.description || '');
+        setSkills(data.skills ? data.skills.split(',').map(s => s.trim()).filter(Boolean) : []);
         setZones(data.zones || []);
 
         const allJobs = (data.workExperiences || []).map(exp => ({
@@ -342,7 +345,7 @@ function EditCV() {
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ description })
+        body: JSON.stringify({ description, skills: skills.join(',') })
       });
       if (response.ok) {
         setToast({ type: 'success', message: 'CV actualizado correctamente' });
@@ -600,6 +603,57 @@ function EditCV() {
           <textarea placeholder="Escribí una breve descripción sobre vos, tus habilidades y experiencia..."
             value={description} onChange={(e) => setDescription(e.target.value)}
             className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-purple-500 focus:outline-none text-base" rows="4" />
+        </div>
+
+        {/* APTITUDES / HABILIDADES */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+          <h2 className="text-2xl roboto-light text-gray-800 mb-1 flex items-center">
+            <span className="text-2xl mr-2">🏷️</span>Aptitudes y habilidades
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">Agregá tus habilidades como etiquetas. Se mostrarán en tu CV.</p>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={skillInput}
+              onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
+                  e.preventDefault();
+                  const tag = skillInput.trim().replace(/,$/, '');
+                  if (tag && !skills.includes(tag)) setSkills(prev => [...prev, tag]);
+                  setSkillInput('');
+                }
+              }}
+              placeholder="Ej: Excel, Inglés B2, Liderazgo..."
+              className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base"
+              maxLength={50}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const tag = skillInput.trim().replace(/,$/, '');
+                if (tag && !skills.includes(tag)) setSkills(prev => [...prev, tag]);
+                setSkillInput('');
+              }}
+              disabled={!skillInput.trim()}
+              className="bg-purple-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-purple-700 transition-all disabled:opacity-40 text-base"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
+          {skills.length === 0
+            ? <p className="text-gray-400 text-sm text-center py-2">No hay aptitudes agregadas</p>
+            : (
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
+                    <span>{skill}</span>
+                    <button type="button" onClick={() => setSkills(prev => prev.filter((_, idx) => idx !== i))}
+                      className="text-purple-400 hover:text-red-500 transition-colors text-base leading-none">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
 
         {/* INFORMACIÓN PROFESIONAL */}

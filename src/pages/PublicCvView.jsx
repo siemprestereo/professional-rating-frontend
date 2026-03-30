@@ -359,6 +359,21 @@ function PublicCvView() {
               </div>
             </div>
           )}
+
+          {cvData.skills && cvData.skills.trim() && (
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
+              <h2 className="text-xl roboto-light text-gray-800 mb-4 flex items-center">
+                <span className="text-xl mr-2">🏷️</span>Aptitudes y habilidades
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {cvData.skills.split(',').map(s => s.trim()).filter(Boolean).map((skill, i) => (
+                  <span key={i} className="bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium px-3 py-1.5 rounded-full">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
