@@ -20,7 +20,6 @@ const TermsPage              = lazy(() => import('./pages/TermsPage'));
 const PublicCvView           = lazy(() => import('./pages/PublicCvView'));
 const RatingForm             = lazy(() => import('./pages/RatingForm'));
 const SearchProfessionals    = lazy(() => import('./pages/SearchProfessionals'));
-const SearchComingSoon       = lazy(() => import('./pages/SearchComingSoon'));
 const RatingsHistory         = lazy(() => import('./pages/RatingsHistory'));
 const StatsPublic            = lazy(() => import('./pages/StatsPublic'));
 const ProfessionalProfile    = lazy(() => import('./pages/ProfessionalProfile'));
@@ -56,7 +55,7 @@ function App() {
             <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
             <Route path="/rate/:code" element={<QRResolve />} />
             <Route path="/rate-professional/:professionalId" element={<RatingForm />} />
-            <Route path="/search" element={<SearchComingSoon />} />
+            <Route path="/search" element={<SearchProfessionals />} />
             <Route path="/professional-login" element={<ProfessionalLogin />} />
             <Route path="/professional-register" element={<ProfessionalRegister />} />
             <Route path="/client-login" element={<ClientLogin />} />
