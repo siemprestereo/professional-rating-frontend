@@ -281,9 +281,13 @@ function RatingForm({ professionalIdFromToken }) {
             {/* Selector de lugar de trabajo (si tiene múltiples) */}
             {showWorkplaceSelector && (
               <div className="mb-6 animate-slideUp delay-150">
-                <label className="block text-gray-700 font-semibold mb-2 text-base">
-                  ¿Dónde te atendió?
-                </label>
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-3 mb-3 flex items-center gap-3 shadow-sm">
+                  <span className="text-2xl">📍</span>
+                  <div>
+                    <p className="text-white font-bold text-base leading-tight">¿Dónde te atendió?</p>
+                    <p className="text-white/90 text-xs mt-0.5">Seleccioná el lugar de trabajo antes de calificar</p>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   {activeJobs.map((job) => (
                     <button
