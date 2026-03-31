@@ -135,8 +135,11 @@ function CvView() {
                 }
               </div>
               <h1 className="text-3xl roboto-light text-white mb-2 animate-slideUp">{cv.professionalName}</h1>
+              {cv.professionalTitle && (
+                <p className="text-white font-semibold text-lg mb-1 animate-slideUp">{cv.professionalTitle}</p>
+              )}
               {cv.professionType && (
-                <p className="text-white/90 text-lg mb-4 animate-slideUp">{translateProfession(cv.professionType)}</p>
+                <p className={`text-white/80 text-base mb-4 animate-slideUp ${cv.professionalTitle ? 'text-sm' : 'text-lg'}`}>{translateProfession(cv.professionType)}</p>
               )}
             </button>
             <button onClick={() => navigate('/stats')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">

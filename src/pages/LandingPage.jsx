@@ -29,7 +29,8 @@ function LandingPage() {
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
         let fullName = payload.name || payload.sub || payload.email || 'Usuario';
         fullName = fullName.trim();
         const firstName = getFirstName(fullName.split('@')[0]);

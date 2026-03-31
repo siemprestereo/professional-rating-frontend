@@ -135,8 +135,11 @@ function PublicCvView() {
               }
             </div>
             <h1 className="text-3xl roboto-light text-white mb-2">{cvData.professionalName}</h1>
+            {cvData.professionalTitle && (
+              <p className="text-white font-semibold text-lg mb-1">{cvData.professionalTitle}</p>
+            )}
             {cvData.professionType && (
-              <p className="text-white/90 text-lg mb-3">{getProfessionLabel(cvData.professionType)}</p>
+              <p className={`text-white/80 mb-3 ${cvData.professionalTitle ? 'text-sm' : 'text-lg'}`}>{getProfessionLabel(cvData.professionType)}</p>
             )}
 
             <div className="flex items-center justify-center gap-3 mb-3">
