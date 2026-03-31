@@ -264,9 +264,17 @@ function RatingForm({ professionalIdFromToken }) {
         <div className="bg-white rounded-3xl p-6 max-w-md mx-auto animate-slideUp">
           {/* Avatar y nombre */}
           <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
-              {professional?.name?.charAt(0) || '?'}
-            </div>
+            {professional?.profilePicture ? (
+              <img
+                src={professional.profilePicture}
+                alt={professional.name}
+                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover animate-scaleIn border-2 border-gray-100 shadow"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white animate-scaleIn">
+                {professional?.name?.charAt(0) || '?'}
+              </div>
+            )}
             <h1 className="text-2xl roboto-light text-gray-800 animate-slideUp delay-100">
               Calificar a {professional?.name || 'Cargando...'}
               {selectedWorkplace?.businessName && (
