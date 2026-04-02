@@ -112,8 +112,8 @@ function EditCV() {
           currentlyWorking: exp.isActive || false,
           isFreelance: exp.isFreelance === true,
           description: exp.description || '',
-          referenceName: exp.referenceContact || '',
-          referencePhone: '',
+          referenceName: (exp.referenceContact || '').split(' — ')[0] || '',
+          referencePhone: (exp.referenceContact || '').split(' — ')[1] || '',
           hasRatings: exp.totalRatings > 0,
           totalRatings: exp.totalRatings || 0
         }));
@@ -211,8 +211,7 @@ function EditCV() {
         isActive: job.currentlyWorking,
         isFreelance,
         description: job.description,
-        referenceContact: job.referenceName,
-        referencePhone: job.referencePhone || ''
+        referenceContact: [job.referenceName, job.referencePhone].filter(Boolean).join(' — ')
       };
 
       const response = await fetch(`${BACKEND_URL}/api/cv/${cv.id}/work-experience`, {
