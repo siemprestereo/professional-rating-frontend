@@ -31,6 +31,7 @@ const MyProfile              = lazy(() => import('./pages/MyProfile'));
 const EditProfileProfessional = lazy(() => import('./pages/EditProfileProfessional'));
 const CvView                 = lazy(() => import('./pages/CvView'));
 const GenerarCvPdf           = lazy(() => import('./pages/GenerarCvPdf'));
+const PreviewCvPdf           = lazy(() => import('./pages/PreviewCvPdf'));
 const ClientDashboard        = lazy(() => import('./pages/ClientDashboard'));
 const ClientStats            = lazy(() => import('./pages/ClientStats'));
 const EditProfile            = lazy(() => import('./pages/EditProfile'));
@@ -78,6 +79,7 @@ function App() {
             <Route path="/edit-profile-professional" element={<ProtectedRoute userType="PROFESSIONAL"><EditProfileProfessional /></ProtectedRoute>} />
             <Route path="/cv-view" element={<ProtectedRoute userType="PROFESSIONAL"><CvView /></ProtectedRoute>} />
             <Route path="/generate-pdf" element={<ProtectedRoute userType="PROFESSIONAL"><GenerarCvPdf /></ProtectedRoute>} />
+            <Route path="/preview-pdf" element={<ProtectedRoute userType="PROFESSIONAL"><PreviewCvPdf /></ProtectedRoute>} />
 
             {/* Rutas protegidas — CLIENTES */}
             <Route path="/client-dashboard" element={<ProtectedRoute userType="CLIENT"><ClientDashboard /></ProtectedRoute>} />

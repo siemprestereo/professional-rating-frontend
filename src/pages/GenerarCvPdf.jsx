@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import LoadingScreen from '../components/LoadingScreen';
@@ -105,21 +105,10 @@ function GenerarCvPdf() {
   const [selectedWorkIds, setSelectedWorkIds] = useState([]);
   const [selectedEducationIds, setSelectedEducationIds] = useState([]);
   const [selectedCertIds, setSelectedCertIds] = useState([]);
-  const [previewBlobUrl, setPreviewBlobUrl] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [loadingPreview, setLoadingPreview] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const prevBlobRef = useRef(null);
 
   useEffect(() => {
     loadCvData();
-  }, []);
-
-  // Revoca el blob anterior para no acumular memoria
-  useEffect(() => {
-    return () => {
-      if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current);
-    };
   }, []);
 
   const loadCvData = async () => {
@@ -169,26 +158,8 @@ function GenerarCvPdf() {
     }
   };
 
-  const handlePreview = async (layoutId) => {
-    setLoadingPreview(true);
-    setShowPreview(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${BACKEND_URL}/api/cv/me/preview-pdf?layout=${layoutId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error();
-      const blob = await response.blob();
-      if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current);
-      const url = URL.createObjectURL(blob);
-      prevBlobRef.current = url;
-      setPreviewBlobUrl(url);
-    } catch {
-      setShowPreview(false);
-      alert('No se pudo cargar la vista previa.');
-    } finally {
-      setLoadingPreview(false);
-    }
+  const handlePreview = (layoutId) => {
+    navigate(`/preview-pdf?layout=${layoutId}`);
   };
 
   const handleGenerate = async () => {
@@ -391,60 +362,6 @@ function GenerarCvPdf() {
         </div>
       </div>
 
-      {/* ── Modal de vista previa ── */}
-      {showPreview && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
-            <p className="text-white font-semibold">
-              Vista previa — {LAYOUTS.find(l => l.id === selectedLayout)?.name}
-            </p>
-            <button
-              onClick={() => { setShowPreview(false); setPreviewBlobUrl(null); }}
-              className="text-white p-1"
-              aria-label="Cerrar"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {loadingPreview ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-white">Cargando vista previa...</p>
-              </div>
-            ) : previewBlobUrl ? (
-              <>
-                <iframe
-                  src={previewBlobUrl}
-                  className="w-full h-full hidden md:block"
-                  title="Vista previa del CV"
-                />
-                {/* En mobile los iframes con PDF no siempre funcionan — ofrecemos link directo */}
-                <div className="md:hidden flex flex-col items-center justify-center h-full gap-4 px-6">
-                  <p className="text-white text-center">Tu dispositivo no puede mostrar la vista previa aquí.</p>
-                  <a
-                    href={previewBlobUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white text-indigo-600 font-semibold px-6 py-3 rounded-2xl"
-                  >
-                    Abrir vista previa
-                  </a>
-                </div>
-              </>
-            ) : null}
-          </div>
-          <div className="bg-gray-900 px-4 py-4">
-            <button
-              onClick={() => { setShowPreview(false); setPreviewBlobUrl(null); }}
-              className="w-full py-3 rounded-2xl border border-white/30 text-white font-semibold text-sm hover:bg-white/10 transition-colors"
-            >
-              Volver
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
