@@ -146,6 +146,29 @@ function GenerarCvPdf() {
     setList(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  const isAllSelected =
+    (!cvData?.description || includeDescription) &&
+    (!cvData?.skills || includeSkills) &&
+    selectedWorkIds.length === (cvData?.workExperiences || []).length &&
+    selectedEducationIds.length === (cvData?.education || []).length &&
+    selectedCertIds.length === (cvData?.certifications || []).length;
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setIncludeDescription(false);
+      setIncludeSkills(false);
+      setSelectedWorkIds([]);
+      setSelectedEducationIds([]);
+      setSelectedCertIds([]);
+    } else {
+      setIncludeDescription(true);
+      setIncludeSkills(true);
+      setSelectedWorkIds((cvData?.workExperiences || []).map(w => w.workHistoryId));
+      setSelectedEducationIds((cvData?.education || []).map(e => e.id));
+      setSelectedCertIds((cvData?.certifications || []).map(c => c.id));
+    }
+  };
+
   const handlePreview = async (layoutId) => {
     setLoadingPreview(true);
     setShowPreview(true);
@@ -264,6 +287,15 @@ function GenerarCvPdf() {
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Seleccioná el contenido</h2>
           <div className="space-y-1">
 
+            {/* Seleccionar todos */}
+            <CheckRow
+              label="Seleccionar todos"
+              checked={isAllSelected}
+              onChange={handleSelectAll}
+              bold
+            />
+            <div className="border-b border-gray-200 mb-2" />
+
             {/* Descripción */}
             {cvData?.description && (
               <CheckRow
@@ -369,6 +401,7 @@ function GenerarCvPdf() {
             <button
               onClick={() => { setShowPreview(false); setPreviewBlobUrl(null); }}
               className="text-white p-1"
+              aria-label="Cerrar"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -402,6 +435,14 @@ function GenerarCvPdf() {
               </>
             ) : null}
           </div>
+          <div className="bg-gray-900 px-4 py-4">
+            <button
+              onClick={() => { setShowPreview(false); setPreviewBlobUrl(null); }}
+              className="w-full py-3 rounded-2xl border border-white/30 text-white font-semibold text-sm hover:bg-white/10 transition-colors"
+            >
+              Volver
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -410,7 +451,7 @@ function GenerarCvPdf() {
 
 // ─── Sub-componente CheckRow ───────────────────────────────────────────────────
 
-function CheckRow({ label, sublabel, checked, onChange }) {
+function CheckRow({ label, sublabel, checked, onChange, bold = false }) {
   return (
     <label className="flex items-start gap-3 py-3 border-b border-gray-50 cursor-pointer active:bg-gray-50 rounded-lg px-1 transition-colors">
       <div className="flex-shrink-0 mt-0.5">
@@ -428,7 +469,7 @@ function CheckRow({ label, sublabel, checked, onChange }) {
         </div>
       </div>
       <div className="flex-1 min-w-0" onClick={onChange}>
-        <p className="text-sm text-gray-800 leading-snug">{label}</p>
+        <p className={`text-sm leading-snug ${bold ? 'font-semibold text-gray-900' : 'text-gray-800'}`}>{label}</p>
         {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
       </div>
     </label>
