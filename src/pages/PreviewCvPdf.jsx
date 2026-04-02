@@ -68,32 +68,11 @@ function PreviewCvPdf() {
         )}
 
         {!loading && !error && blobUrl && (
-          <>
-            {/* Desktop / Android: iframe inline */}
-            <iframe
-              src={blobUrl}
-              className="w-full h-full hidden md:block"
-              title="Vista previa del CV"
-            />
-            {/* Mobile: el iframe no funciona en iOS Safari, ofrecemos abrir en el visor del sistema */}
-            <div className="md:hidden flex flex-col items-center justify-center h-full gap-5 px-6">
-              <svg className="w-14 h-14 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-white text-center text-sm leading-relaxed">
-                Tu dispositivo no puede mostrar el PDF aquí.
-                Tocá el botón para abrirlo en el visor de tu teléfono.
-              </p>
-              <a
-                href={blobUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white text-indigo-600 font-semibold px-8 py-3 rounded-2xl text-sm"
-              >
-                Abrir vista previa
-              </a>
-            </div>
-          </>
+          <iframe
+            src={blobUrl}
+            className="w-full h-full"
+            title="Vista previa del CV"
+          />
         )}
       </div>
 
