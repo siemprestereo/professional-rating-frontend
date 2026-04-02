@@ -215,7 +215,7 @@ function GenerarCvPdf() {
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-8">
         <div className="max-w-lg mx-auto">
-          <BackButton />
+          <BackButton to="/cv-view" />
           <h1 className="text-2xl roboto-light text-white mt-4">Generar CV para imprimir</h1>
           <p className="text-white/80 text-sm mt-1">Elegí el diseño y el contenido que querés incluir</p>
         </div>
