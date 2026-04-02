@@ -56,7 +56,7 @@ function App() {
             <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
             <Route path="/rate/:code" element={<QRResolve />} />
             <Route path="/rate-professional/:professionalId" element={<RatingForm />} />
-            <Route path="/search" element={<SearchProfessionals />} />
+            <Route path="/search" element={<SearchComingSoon />} />
             <Route path="/professional-login" element={<ProfessionalLogin />} />
             <Route path="/professional-register" element={<ProfessionalRegister />} />
             <Route path="/client-login" element={<ClientLogin />} />
