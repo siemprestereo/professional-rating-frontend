@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { BACKEND_URL } from '../config';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 function PreviewCvPdf() {
   const navigate = useNavigate();
@@ -9,7 +17,12 @@ function PreviewCvPdf() {
   const [blobUrl, setBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [numPages, setNumPages] = useState(null);
+  const [pageWidth, setPageWidth] = useState(window.innerWidth);
+  const containerRef = useRef(null);
   const blobRef = useRef(null);
+
+  const layoutNames = { clasico: 'Clásico', minimalista: 'Minimalista', ejecutivo: 'Ejecutivo' };
 
   useEffect(() => {
     const load = async () => {
@@ -33,13 +46,20 @@ function PreviewCvPdf() {
     return () => { if (blobRef.current) URL.revokeObjectURL(blobRef.current); };
   }, [layout]);
 
-  const layoutNames = { clasico: 'Clásico', minimalista: 'Minimalista', ejecutivo: 'Ejecutivo' };
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) setPageWidth(containerRef.current.clientWidth);
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-900">
       {/* Barra superior */}
       <div className="flex items-center justify-between px-4 py-3 bg-gray-900 flex-shrink-0">
-        <p className="text-white font-semibold">
+        <p className="text-white font-semibold text-sm">
           Vista previa — {layoutNames[layout] || layout}
         </p>
         <button
@@ -54,7 +74,7 @@ function PreviewCvPdf() {
       </div>
 
       {/* Contenido */}
-      <div className="flex-1 overflow-hidden">
+      <div ref={containerRef} className="flex-1 overflow-y-auto bg-gray-800">
         {loading && (
           <div className="flex items-center justify-center h-full">
             <p className="text-white">Cargando vista previa...</p>
@@ -68,27 +88,31 @@ function PreviewCvPdf() {
         )}
 
         {!loading && !error && blobUrl && (
-          <div className="flex flex-col items-center justify-center h-full gap-5 px-6">
-            <svg className="w-16 h-16 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-white/70 text-center text-sm">
-              Tu CV está listo para previsualizar
-            </p>
-            <button
-              onClick={() => window.open(blobUrl, '_blank')}
-              className="bg-white text-indigo-600 font-semibold px-8 py-3 rounded-2xl text-sm"
-            >
-              Abrir vista previa
-            </button>
-            <p className="text-white/40 text-xs text-center">
-              Cuando termines, cerrá la pestaña y tocá Volver
-            </p>
-          </div>
+          <Document
+            file={blobUrl}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+            onLoadError={() => setError(true)}
+            loading={
+              <div className="flex items-center justify-center py-12">
+                <p className="text-white">Cargando PDF...</p>
+              </div>
+            }
+          >
+            {numPages && Array.from({ length: numPages }, (_, i) => (
+              <div key={i} className="mb-2">
+                <Page
+                  pageNumber={i + 1}
+                  width={pageWidth}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              </div>
+            ))}
+          </Document>
         )}
       </div>
 
-      {/* Botón Volver siempre visible abajo */}
+      {/* Botón Volver */}
       <div className="bg-gray-900 px-4 py-4 flex-shrink-0">
         <button
           onClick={() => navigate('/generate-pdf')}
