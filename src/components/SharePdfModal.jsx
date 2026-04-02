@@ -5,7 +5,6 @@ const BASE_URL = 'https://www.calificalo.com.ar';
 
 function SharePdfModal({ pdfBlob, professionalName, professionalId, onClose }) {
   const [sharing, setSharing] = useState(false);
-  const [sharedNative, setSharedNative] = useState(false);
   const publicUrl = `${BASE_URL}/public-cv/${professionalId}`;
 
   const sanitize = (name) =>
@@ -19,7 +18,6 @@ function SharePdfModal({ pdfBlob, professionalName, professionalId, onClose }) {
     try {
       const file = new File([pdfBlob], `CV_${sanitize(professionalName)}.pdf`, { type: 'application/pdf' });
       await navigator.share({ files: [file], title: `CV de ${professionalName}` });
-      setSharedNative(true);
     } catch (e) {
       if (e.name !== 'AbortError') console.error(e);
     } finally {
@@ -47,18 +45,13 @@ function SharePdfModal({ pdfBlob, professionalName, professionalId, onClose }) {
             <button
               onClick={handleNativeShare}
               disabled={sharing || !pdfBlob}
-              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all ${
-                sharedNative
-                  ? 'border-green-400 bg-green-50'
-                  : 'border-indigo-200 bg-indigo-50 hover:border-indigo-400 active:scale-95'
-              }`}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:border-indigo-400 active:scale-95 transition-all"
             >
-              <span className="text-2xl">{sharedNative ? '✓' : '📤'}</span>
+              <span className="text-2xl">📤</span>
               <div className="text-left">
                 <p className="font-semibold text-gray-800 text-sm">
-                  {sharing ? 'Preparando...' : sharedNative ? 'Compartido' : 'Compartir archivo PDF'}
+                  {sharing ? 'Preparando...' : 'Compartir archivo PDF'}
                 </p>
-                <p className="text-xs text-gray-500">Abre WhatsApp, Gmail, Drive y más</p>
               </div>
             </button>
           )}
@@ -97,7 +90,7 @@ function SharePdfModal({ pdfBlob, professionalName, professionalId, onClose }) {
 
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
             <p className="text-xs text-indigo-800">
-              <strong>💡 Tip:</strong> Usá "Compartir archivo PDF" para enviar el PDF directamente. WhatsApp y Email comparten el link de tu CV público.
+              <strong>💡 Tip:</strong> Usá Compartir archivo PDF para enviar el PDF directamente, sin descargarlo. Los botones WhatsApp e Email usalos si querés compartir el link de tu CV Digital.
             </p>
           </div>
         </div>

@@ -292,7 +292,7 @@ function GenerarCvPdf() {
 
         {/* ── Contenido a incluir ── */}
         <div className="bg-white rounded-2xl shadow-lg p-5">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Seleccioná el contenido</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Seleccioná el contenido que querés en el PDF</h2>
           <div className="space-y-1">
 
             {/* Seleccionar todos */}
