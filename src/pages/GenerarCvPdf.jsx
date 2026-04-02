@@ -1,0 +1,438 @@
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/BackButton';
+import LoadingScreen from '../components/LoadingScreen';
+import { BACKEND_URL } from '../config';
+
+// ─── Thumbnails CSS de cada layout ────────────────────────────────────────────
+
+function ThumbnailClasico() {
+  return (
+    <div className="w-full h-full flex rounded overflow-hidden border border-gray-200">
+      <div className="w-1/3 bg-slate-100 flex flex-col items-center pt-3 px-1.5 gap-1.5">
+        <div className="w-7 h-7 rounded-full bg-indigo-300" />
+        <div className="w-full space-y-1 mt-1">
+          <div className="h-1 bg-gray-300 rounded" />
+          <div className="h-1 bg-gray-200 rounded w-3/4" />
+          <div className="h-1 bg-gray-200 rounded w-2/3" />
+        </div>
+        <div className="w-full mt-1 space-y-1">
+          <div className="h-1 bg-indigo-200 rounded" />
+          <div className="h-1 bg-gray-200 rounded w-3/4" />
+        </div>
+      </div>
+      <div className="flex-1 bg-white p-2 space-y-2">
+        <div className="h-2 bg-gray-700 rounded w-3/4" />
+        <div className="h-1.5 bg-indigo-400 rounded w-1/2" />
+        <div className="space-y-1 mt-1">
+          <div className="h-1 bg-gray-200 rounded" />
+          <div className="h-1 bg-gray-200 rounded w-5/6" />
+          <div className="h-1 bg-gray-200 rounded w-4/5" />
+        </div>
+        <div className="h-1.5 bg-gray-700 rounded w-1/2 mt-1" />
+        <div className="space-y-1">
+          <div className="h-1 bg-gray-200 rounded w-5/6" />
+          <div className="h-1 bg-gray-200 rounded w-2/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ThumbnailMinimalista() {
+  return (
+    <div className="w-full h-full bg-white rounded border border-gray-200 p-3 space-y-2">
+      <div className="h-2.5 bg-gray-700 rounded w-3/4" />
+      <div className="h-1.5 bg-indigo-400 rounded w-1/2" />
+      <div className="h-px bg-indigo-300 rounded" />
+      <div className="space-y-1 pt-1">
+        <div className="h-1 bg-gray-200 rounded" />
+        <div className="h-1 bg-gray-200 rounded w-5/6" />
+        <div className="h-1 bg-gray-200 rounded w-4/5" />
+      </div>
+      <div className="h-1.5 bg-gray-400 rounded w-2/5 mt-1" />
+      <div className="space-y-1">
+        <div className="h-1 bg-gray-200 rounded w-5/6" />
+        <div className="h-1 bg-gray-200 rounded w-2/3" />
+      </div>
+    </div>
+  );
+}
+
+function ThumbnailEjecutivo() {
+  return (
+    <div className="w-full h-full rounded border border-gray-200 overflow-hidden">
+      <div className="bg-slate-800 px-2 py-2 flex items-center gap-2">
+        <div className="w-6 h-6 rounded-full bg-slate-500 flex-shrink-0" />
+        <div className="flex-1 space-y-1">
+          <div className="h-1.5 bg-white rounded w-14" />
+          <div className="h-1 bg-slate-400 rounded w-10" />
+        </div>
+      </div>
+      <div className="h-1 bg-indigo-500" />
+      <div className="bg-white p-2 space-y-1.5">
+        <div className="h-1.5 bg-gray-700 rounded w-1/2" />
+        <div className="space-y-1">
+          <div className="h-1 bg-gray-200 rounded" />
+          <div className="h-1 bg-gray-200 rounded w-5/6" />
+          <div className="h-1 bg-gray-200 rounded w-4/5" />
+        </div>
+        <div className="h-1.5 bg-gray-700 rounded w-2/5 mt-1" />
+        <div className="space-y-1">
+          <div className="h-1 bg-gray-200 rounded w-5/6" />
+          <div className="h-1 bg-gray-200 rounded w-2/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LAYOUTS = [
+  { id: 'clasico',      name: 'Clásico',      desc: 'Sidebar con foto y datos de contacto', Thumb: ThumbnailClasico },
+  { id: 'minimalista',  name: 'Minimalista',   desc: 'Columna única, limpio y moderno',       Thumb: ThumbnailMinimalista },
+  { id: 'ejecutivo',    name: 'Ejecutivo',     desc: 'Header oscuro con banda de color',      Thumb: ThumbnailEjecutivo },
+];
+
+// ─── Componente principal ──────────────────────────────────────────────────────
+
+function GenerarCvPdf() {
+  const navigate = useNavigate();
+  const [cvData, setCvData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedLayout, setSelectedLayout] = useState('clasico');
+  const [includeDescription, setIncludeDescription] = useState(true);
+  const [includeSkills, setIncludeSkills] = useState(true);
+  const [selectedWorkIds, setSelectedWorkIds] = useState([]);
+  const [selectedEducationIds, setSelectedEducationIds] = useState([]);
+  const [selectedCertIds, setSelectedCertIds] = useState([]);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const prevBlobRef = useRef(null);
+
+  useEffect(() => {
+    loadCvData();
+  }, []);
+
+  // Revoca el blob anterior para no acumular memoria
+  useEffect(() => {
+    return () => {
+      if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current);
+    };
+  }, []);
+
+  const loadCvData = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${BACKEND_URL}/api/cv/me/full`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      setCvData(data);
+      // Seleccionar todos por defecto
+      setSelectedWorkIds((data.workExperiences || []).map(w => w.workHistoryId));
+      setSelectedEducationIds((data.education || []).map(e => e.id));
+      setSelectedCertIds((data.certifications || []).map(c => c.id));
+    } catch {
+      navigate('/cv-view');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleId = (id, list, setList) => {
+    setList(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handlePreview = async (layoutId) => {
+    setLoadingPreview(true);
+    setShowPreview(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${BACKEND_URL}/api/cv/me/preview-pdf?layout=${layoutId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error();
+      const blob = await response.blob();
+      if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current);
+      const url = URL.createObjectURL(blob);
+      prevBlobRef.current = url;
+      setPreviewBlobUrl(url);
+    } catch {
+      setShowPreview(false);
+      alert('No se pudo cargar la vista previa.');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const professional = (() => { try { return JSON.parse(localStorage.getItem('professional')); } catch { return null; } })();
+
+      const body = {
+        layout: selectedLayout,
+        includeDescription,
+        includeSkills,
+        workHistoryIds: selectedWorkIds,
+        educationIds: selectedEducationIds,
+        certificationIds: selectedCertIds,
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/cv/${professional?.id}/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error();
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV_${professional?.name || 'Profesional'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      alert('Hubo un error al generar el PDF. Intentá de nuevo.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  if (loading) return <LoadingScreen message="Cargando tu CV..." />;
+
+  const hasContent =
+    selectedWorkIds.length > 0 ||
+    selectedEducationIds.length > 0 ||
+    selectedCertIds.length > 0 ||
+    (includeDescription && cvData?.description) ||
+    (includeSkills && cvData?.skills);
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-32">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-8">
+        <div className="max-w-lg mx-auto">
+          <BackButton />
+          <h1 className="text-2xl roboto-light text-white mt-4">Generar CV para imprimir</h1>
+          <p className="text-white/80 text-sm mt-1">Elegí el diseño y el contenido que querés incluir</p>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-4">
+
+        {/* ── Selector de layout ── */}
+        <div className="bg-white rounded-2xl shadow-lg p-5">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Elegí el diseño</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {LAYOUTS.map(({ id, name, desc, Thumb }) => (
+              <div key={id} className="flex flex-col gap-2">
+                <button
+                  onClick={() => setSelectedLayout(id)}
+                  className={`rounded-xl overflow-hidden border-2 transition-all aspect-[3/4] ${
+                    selectedLayout === id
+                      ? 'border-indigo-500 shadow-md shadow-indigo-100'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <Thumb />
+                </button>
+                <p className={`text-xs font-semibold text-center ${selectedLayout === id ? 'text-indigo-600' : 'text-gray-500'}`}>
+                  {name}
+                </p>
+                <button
+                  onClick={() => { setSelectedLayout(id); handlePreview(id); }}
+                  className="text-xs text-indigo-500 underline text-center leading-tight"
+                >
+                  Vista previa
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Contenido a incluir ── */}
+        <div className="bg-white rounded-2xl shadow-lg p-5">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Seleccioná el contenido</h2>
+          <div className="space-y-1">
+
+            {/* Descripción */}
+            {cvData?.description && (
+              <CheckRow
+                label="Descripción / Sobre mí"
+                checked={includeDescription}
+                onChange={() => setIncludeDescription(v => !v)}
+              />
+            )}
+
+            {/* Skills */}
+            {cvData?.skills && (
+              <CheckRow
+                label="Aptitudes y habilidades"
+                checked={includeSkills}
+                onChange={() => setIncludeSkills(v => !v)}
+              />
+            )}
+
+            {/* Experiencias laborales */}
+            {(cvData?.workExperiences || []).length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">
+                  Experiencia laboral
+                </p>
+                {cvData.workExperiences.map(w => (
+                  <CheckRow
+                    key={w.workHistoryId}
+                    label={`${w.position}${w.businessName ? ` — ${w.businessName}` : ''}`}
+                    sublabel={w.isActive ? 'Actual' : null}
+                    checked={selectedWorkIds.includes(w.workHistoryId)}
+                    onChange={() => toggleId(w.workHistoryId, selectedWorkIds, setSelectedWorkIds)}
+                  />
+                ))}
+              </>
+            )}
+
+            {/* Educación */}
+            {(cvData?.education || []).length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">
+                  Educación y capacitaciones
+                </p>
+                {cvData.education.map(e => (
+                  <CheckRow
+                    key={e.id}
+                    label={e.degree || e.institution}
+                    sublabel={e.degree ? e.institution : null}
+                    checked={selectedEducationIds.includes(e.id)}
+                    onChange={() => toggleId(e.id, selectedEducationIds, setSelectedEducationIds)}
+                  />
+                ))}
+              </>
+            )}
+
+            {/* Certificaciones */}
+            {(cvData?.certifications || []).length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">
+                  Certificaciones
+                </p>
+                {cvData.certifications.map(c => (
+                  <CheckRow
+                    key={c.id}
+                    label={c.name}
+                    sublabel={c.issuer || null}
+                    checked={selectedCertIds.includes(c.id)}
+                    onChange={() => toggleId(c.id, selectedCertIds, setSelectedCertIds)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Botón sticky ── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 shadow-lg">
+        <div className="max-w-lg mx-auto">
+          <button
+            onClick={handleGenerate}
+            disabled={generating || !hasContent}
+            className={`w-full py-4 rounded-2xl font-semibold text-white text-base transition-all ${
+              generating || !hasContent
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 active:scale-95'
+            }`}
+          >
+            {generating ? 'Generando PDF...' : 'Generar PDF'}
+          </button>
+          {!hasContent && (
+            <p className="text-center text-xs text-gray-400 mt-2">Seleccioná al menos un elemento</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Modal de vista previa ── */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
+            <p className="text-white font-semibold">
+              Vista previa — {LAYOUTS.find(l => l.id === selectedLayout)?.name}
+            </p>
+            <button
+              onClick={() => { setShowPreview(false); setPreviewBlobUrl(null); }}
+              className="text-white p-1"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {loadingPreview ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-white">Cargando vista previa...</p>
+              </div>
+            ) : previewBlobUrl ? (
+              <>
+                <iframe
+                  src={previewBlobUrl}
+                  className="w-full h-full hidden md:block"
+                  title="Vista previa del CV"
+                />
+                {/* En mobile los iframes con PDF no siempre funcionan — ofrecemos link directo */}
+                <div className="md:hidden flex flex-col items-center justify-center h-full gap-4 px-6">
+                  <p className="text-white text-center">Tu dispositivo no puede mostrar la vista previa aquí.</p>
+                  <a
+                    href={previewBlobUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white text-indigo-600 font-semibold px-6 py-3 rounded-2xl"
+                  >
+                    Abrir vista previa
+                  </a>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sub-componente CheckRow ───────────────────────────────────────────────────
+
+function CheckRow({ label, sublabel, checked, onChange }) {
+  return (
+    <label className="flex items-start gap-3 py-3 border-b border-gray-50 cursor-pointer active:bg-gray-50 rounded-lg px-1 transition-colors">
+      <div className="flex-shrink-0 mt-0.5">
+        <div
+          onClick={onChange}
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+            checked ? 'bg-indigo-500 border-indigo-500' : 'border-gray-300'
+          }`}
+        >
+          {checked && (
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 min-w-0" onClick={onChange}>
+        <p className="text-sm text-gray-800 leading-snug">{label}</p>
+        {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
+      </div>
+    </label>
+  );
+}
+
+export default GenerarCvPdf;
