@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/BackButton';
 import LoadingScreen from '../components/LoadingScreen';
+import SharePdfModal from '../components/SharePdfModal';
 import { BACKEND_URL } from '../config';
 
 // ─── Thumbnails CSS de cada layout ────────────────────────────────────────────
@@ -106,6 +107,9 @@ function GenerarCvPdf() {
   const [selectedEducationIds, setSelectedEducationIds] = useState([]);
   const [selectedCertIds, setSelectedCertIds] = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePdfBlob, setSharePdfBlob] = useState(null);
 
   useEffect(() => {
     loadCvData();
@@ -198,6 +202,39 @@ function GenerarCvPdf() {
       alert('Hubo un error al generar el PDF. Intentá de nuevo.');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const professional = (() => { try { return JSON.parse(localStorage.getItem('professional')); } catch { return null; } })();
+
+      const body = {
+        layout: selectedLayout,
+        includeDescription,
+        includeSkills,
+        workHistoryIds: selectedWorkIds,
+        educationIds: selectedEducationIds,
+        certificationIds: selectedCertIds,
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/cv/${professional?.id}/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error();
+
+      const blob = await response.blob();
+      setSharePdfBlob(blob);
+      setShowShareModal(true);
+    } catch {
+      alert('Hubo un error al generar el PDF. Intentá de nuevo.');
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -342,25 +379,45 @@ function GenerarCvPdf() {
         </div>
       </div>
 
-      {/* ── Botón sticky ── */}
+      {/* ── Botones sticky ── */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 shadow-lg">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto space-y-2">
           <button
             onClick={handleGenerate}
-            disabled={generating || !hasContent}
+            disabled={generating || sharing || !hasContent}
             className={`w-full py-4 rounded-2xl font-semibold text-white text-base transition-all ${
-              generating || !hasContent
+              generating || sharing || !hasContent
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 active:scale-95'
             }`}
           >
-            {generating ? 'Generando PDF...' : 'Generar PDF'}
+            {generating ? 'Generando PDF...' : 'Guardar el PDF de tu CV'}
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={generating || sharing || !hasContent}
+            className={`w-full py-4 rounded-2xl font-semibold text-base transition-all border-2 ${
+              generating || sharing || !hasContent
+                ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                : 'border-indigo-400 text-indigo-600 hover:bg-indigo-50 active:scale-95'
+            }`}
+          >
+            {sharing ? 'Preparando...' : 'Compartir el PDF de tu CV'}
           </button>
           {!hasContent && (
-            <p className="text-center text-xs text-gray-400 mt-2">Seleccioná al menos un elemento</p>
+            <p className="text-center text-xs text-gray-400 mt-1">Seleccioná al menos un elemento</p>
           )}
         </div>
       </div>
+
+      {showShareModal && (
+        <SharePdfModal
+          pdfBlob={sharePdfBlob}
+          professionalName={(() => { try { return JSON.parse(localStorage.getItem('professional'))?.name; } catch { return null; } })()}
+          professionalId={(() => { try { return JSON.parse(localStorage.getItem('professional'))?.id; } catch { return null; } })()}
+          onClose={() => { setShowShareModal(false); setSharePdfBlob(null); }}
+        />
+      )}
 
     </div>
   );
