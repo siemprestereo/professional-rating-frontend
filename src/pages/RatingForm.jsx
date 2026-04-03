@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase, Clock } from 'lucide-react';
+import { Star, ArrowLeft, CheckCircle, Loader2, Briefcase, Clock, MapPin } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import api from '../services/api.js';
@@ -289,11 +289,11 @@ function RatingForm({ professionalIdFromToken }) {
             {/* Selector de lugar de trabajo (si tiene múltiples) */}
             {showWorkplaceSelector && (
               <div className="mb-6 animate-slideUp delay-150">
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl px-4 py-3 mb-3 flex items-center gap-3 shadow-sm">
-                  <span className="text-2xl">📍</span>
+                <div className="bg-white border-2 border-orange-200 rounded-2xl px-4 py-3 mb-3 flex items-center gap-3">
+                  <MapPin className="w-6 h-6 text-orange-400 flex-shrink-0" />
                   <div>
-                    <p className="text-white font-bold text-base leading-tight">¿Dónde te atendió?</p>
-                    <p className="text-white/90 text-xs mt-0.5">Seleccioná el lugar de trabajo antes de calificar</p>
+                    <p className="text-gray-800 font-bold text-base leading-tight">¿Dónde te atendió?</p>
+                    <p className="text-gray-500 text-xs mt-0.5">Seleccioná el lugar de trabajo antes de calificar</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -303,18 +303,15 @@ function RatingForm({ professionalIdFromToken }) {
                       type="button"
                       onClick={() => setSelectedWorkplace(job)}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${selectedWorkplace?.workHistoryId === job.workHistoryId
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-purple-300'
+                        ? 'border-orange-400 bg-orange-400'
+                        : 'border-orange-300 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500'
                         }`}
                     >
                       <div className="flex items-center">
-                        <Briefcase className={`w-5 h-5 mr-3 ${selectedWorkplace?.workHistoryId === job.workHistoryId
-                          ? 'text-purple-600'
-                          : 'text-gray-400'
-                          }`} />
+                        <Briefcase className="w-5 h-5 mr-3 text-white" />
                         <div>
-                          <p className="font-semibold text-gray-800 text-base">{job.businessName}</p>
-                          <p className="text-sm text-gray-500">{job.position}</p>
+                          <p className="font-semibold text-white text-base">{job.businessName}</p>
+                          <p className="text-sm text-white/80">{job.position}</p>
                         </div>
                       </div>
                     </button>
