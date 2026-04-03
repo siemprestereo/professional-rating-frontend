@@ -303,7 +303,7 @@ function RatingForm({ professionalIdFromToken }) {
                       type="button"
                       onClick={() => setSelectedWorkplace(job)}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-left ${selectedWorkplace?.workHistoryId === job.workHistoryId
-                        ? 'border-orange-400 bg-orange-400'
+                        ? 'border-purple-600 bg-gradient-to-r from-blue-500 to-purple-600'
                         : 'border-orange-300 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500'
                         }`}
                     >
