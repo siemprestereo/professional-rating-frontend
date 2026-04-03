@@ -52,10 +52,13 @@ function ClientLogin() {
         localStorage.removeItem('qrProfessionalName');
 
         if (data.userType === 'CLIENT') {
-          const destination = data.data?.termsAccepted === false ? '/accept-terms' : '/client-dashboard';
           setToast({ type: 'success', message: '¡Login exitoso! Redirigiendo...' });
           setTimeout(() => {
-            handlePostLoginRedirect(destination, navigate, true);
+            if (data.data?.termsAccepted === false) {
+              navigate('/accept-terms', { replace: true });
+            } else {
+              handlePostLoginRedirect('/client-dashboard', navigate, true);
+            }
           }, 300);
         } else {
           handlePostLoginRedirect('/professional-dashboard', navigate, true);
