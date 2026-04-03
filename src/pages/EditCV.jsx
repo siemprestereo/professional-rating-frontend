@@ -547,7 +547,7 @@ function EditCV() {
                     Sin finalizar
                   </div>
                 ) : (
-                  <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                  <input type="date" value={job.endDate} onChange={(e) => updateJob(index, 'endDate', e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
                 )}
               </div>
             </div>
@@ -848,11 +848,11 @@ function EditCV() {
                             <input type="text" placeholder="Título/Grado" value={edu.degree} onChange={(e) => updateEducation(index, 'degree', e.target.value)} className="border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
                             <div>
                               <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de inicio</label>
-                              <input type="date" value={edu.startDate} onChange={(e) => updateEducation(index, 'startDate', e.target.value)} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
+                              <input type="date" value={edu.startDate} onChange={(e) => updateEducation(index, 'startDate', e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none text-base" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium text-gray-600 mb-1 ml-1">Fecha de finalización</label>
-                              <input type="date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} disabled={edu.currentlyStudying} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
+                              <input type="date" value={edu.endDate} onChange={(e) => updateEducation(index, 'endDate', e.target.value)} max={new Date().toISOString().split('T')[0]} disabled={edu.currentlyStudying} className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed text-base" />
                             </div>
                           </div>
                           <div className="mb-3">
