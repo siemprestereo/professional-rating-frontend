@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, FileText, CheckCircle } from 'lucide-react';
 import { BACKEND_URL } from '../config';
+import { handlePostLoginRedirect } from '../utils/authUtils';
 
 function AcceptTerms() {
   const navigate = useNavigate();
@@ -36,8 +37,11 @@ function AcceptTerms() {
       }
 
       // Redirección
-      const targetPath = userType === 'PROFESSIONAL' ? '/edit-cv' : '/client-dashboard';
-      navigate(targetPath, { replace: true });
+      if (userType === 'PROFESSIONAL') {
+        navigate('/edit-cv', { replace: true });
+      } else {
+        handlePostLoginRedirect('/client-dashboard', navigate, true);
+      }
 
     } catch {
       //
