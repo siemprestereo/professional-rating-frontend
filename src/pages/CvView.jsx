@@ -7,7 +7,7 @@ import BackButton from '../components/BackButton';
 import HomeButton from '../components/HomeButton';
 import { translateProfession } from '../utils/professionalUtils';
 import { BACKEND_URL } from '../config';
-import ProfessionalFaqModal from '../components/ProfessionalFaqModal';
+import HelpSupportModal from '../components/HelpSupportModal';
 
 function CvView() {
   const navigate = useNavigate();
@@ -403,7 +403,7 @@ function CvView() {
       {showShareModal && (
         <ShareModal professionalId={cv.professionalId} professionalName={cv.professionalName} onClose={() => setShowShareModal(false)} />
       )}
-      {showFaq && <ProfessionalFaqModal onClose={() => setShowFaq(false)} />}
+      {showFaq && <HelpSupportModal onClose={() => setShowFaq(false)} professionalName={cv?.professionalName} />}
     </div>
   );
 }
