@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, ChevronRight, Search, AlertTriangle, MapPin } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, ChevronRight, Search, AlertTriangle, MapPin, User, ChevronDown, LogOut, HelpCircle } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
@@ -18,11 +18,25 @@ function CvView() {
   const [isSearchable, setIsSearchable] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     loadCv();
     loadSearchableStatus();
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowUserMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [professionalId]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('professional');
+    localStorage.removeItem('userType');
+    navigate('/');
+  };
 
   const loadCv = async () => {
     try {
@@ -125,7 +139,34 @@ function CvView() {
     <div className="min-h-screen bg-gray-50 animate-fadeIn pb-24">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 px-4 pt-6 pb-24">
         <div className="max-w-4xl mx-auto">
-          <BackButton />
+          <div className="flex items-center justify-between mb-2">
+            <BackButton />
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="bg-white/20 hover:bg-white/30 text-white px-3 sm:px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition-all text-sm sm:text-base"
+              >
+                <User className="w-4 h-4" />
+                <span>{cv?.professionalName?.split(' ')[0] || ''}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
+                  <div className="py-2">
+                    <button onClick={() => { setShowUserMenu(false); setShowFaq(true); }} className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3">
+                      <HelpCircle className="w-5 h-5 text-purple-600" />
+                      <span className="font-medium text-sm sm:text-base">Ayuda y soporte</span>
+                    </button>
+                    <div className="border-t border-gray-200 my-2" />
+                    <button onClick={handleLogout} className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium text-sm sm:text-base">Cerrar sesión</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="text-center">
             <button onClick={() => navigate('/my-profile')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">
               <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden bg-white flex items-center justify-center text-4xl font-bold text-purple-600 animate-scaleIn border-4 border-white shadow-lg">
