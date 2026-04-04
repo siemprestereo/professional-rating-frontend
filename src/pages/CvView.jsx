@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, Briefcase, GraduationCap, ChevronRight, Search, AlertTriangle, MapPin, User, ChevronDown, LogOut, HelpCircle } from 'lucide-react';
+import { Star, Briefcase, GraduationCap, ChevronRight, Search, AlertTriangle, MapPin, User, ChevronDown, LogOut, HelpCircle, ClipboardList } from 'lucide-react';
 import ShareModal from '../components/ShareModal';
 import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
@@ -153,6 +153,14 @@ function CvView() {
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-2xl overflow-hidden z-50 animate-slideDown">
                   <div className="py-2">
+                    <button onClick={() => { setShowUserMenu(false); navigate('/my-profile'); }} className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3">
+                      <User className="w-5 h-5 text-purple-600" />
+                      <span className="font-medium text-sm sm:text-base">Mi perfil</span>
+                    </button>
+                    <button onClick={() => { setShowUserMenu(false); navigate('/ratings-history'); }} className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3">
+                      <ClipboardList className="w-5 h-5 text-purple-600" />
+                      <span className="font-medium text-sm sm:text-base">Mis calificaciones</span>
+                    </button>
                     <button onClick={() => { setShowUserMenu(false); setShowFaq(true); }} className="w-full px-4 py-3 text-left text-gray-700 hover:bg-purple-50 transition-colors flex items-center gap-3">
                       <HelpCircle className="w-5 h-5 text-purple-600" />
                       <span className="font-medium text-sm sm:text-base">Ayuda y soporte</span>
