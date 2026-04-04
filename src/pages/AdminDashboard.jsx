@@ -106,10 +106,12 @@ function AdminDashboard() {
   // Email history
   const [emailHistory, setEmailHistory] = useState([]);
   const [emailHistoryLoading, setEmailHistoryLoading] = useState(false);
+  const [emailHistorySearch, setEmailHistorySearch] = useState('');
 
   // Inbox messages
   const [inboxMessages, setInboxMessages] = useState([]);
   const [inboxLoading, setInboxLoading] = useState(false);
+  const [inboxSearch, setInboxSearch] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Notifications
@@ -1502,53 +1504,84 @@ function AdminDashboard() {
 
             {/* ===== HISTORIAL ===== */}
             {emailMode === 'history' && (
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                {emailHistoryLoading ? (
-                  <div className="flex items-center justify-center py-12 text-gray-400">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando...
-                  </div>
-                ) : emailHistory.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                    <Inbox className="w-10 h-10 mb-2 opacity-40" />
-                    <p className="text-sm">No hay emails enviados aún.</p>
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {emailHistory.map(entry => (
-                      <li key={entry.id} className="p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between gap-3 mb-1">
-                          <span className="font-semibold text-gray-800 text-sm leading-tight">{entry.subject}</span>
-                          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
-                            entry.type === 'BROADCAST'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {entry.type === 'BROADCAST'
-                              ? `Masivo · ${entry.recipientsCount} dest.`
-                              : 'Individual'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-1.5">
-                          {entry.type === 'BROADCAST'
-                            ? <>Rol: <span className="font-medium">{entry.targetRole}</span></>
-                            : <><span className="font-medium">{entry.recipientName || entry.recipientEmail}</span>{entry.recipientName && <span className="text-gray-400"> · {entry.recipientEmail}</span>}</>
-                          }
-                          {' · '}de <span className="font-medium">{entry.senderAlias}</span>
-                        </p>
-                        <p className="text-xs text-gray-400 line-clamp-2">{entry.bodyPreview}</p>
-                        <p className="text-xs text-gray-300 mt-1.5">
-                          {new Date(entry.sentAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={emailHistorySearch}
+                  onChange={e => setEmailHistorySearch(e.target.value)}
+                  placeholder="Buscar por asunto, destinatario..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                />
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  {emailHistoryLoading ? (
+                    <div className="flex items-center justify-center py-12 text-gray-400">
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando...
+                    </div>
+                  ) : emailHistory.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                      <Inbox className="w-10 h-10 mb-2 opacity-40" />
+                      <p className="text-sm">No hay emails enviados aún.</p>
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100">
+                      {emailHistory
+                        .filter(entry => {
+                          const q = emailHistorySearch.toLowerCase();
+                          return !q || entry.subject?.toLowerCase().includes(q) ||
+                            entry.recipientName?.toLowerCase().includes(q) ||
+                            entry.recipientEmail?.toLowerCase().includes(q) ||
+                            entry.targetRole?.toLowerCase().includes(q);
+                        })
+                        .map(entry => (
+                          <li key={entry.id} className="p-4 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-start justify-between gap-3 mb-1">
+                              <span className="font-semibold text-gray-800 text-sm leading-tight">{entry.subject}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                  entry.type === 'BROADCAST' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                }`}>
+                                  {entry.type === 'BROADCAST' ? `Masivo · ${entry.recipientsCount} dest.` : 'Individual'}
+                                </span>
+                                <button
+                                  onClick={async () => {
+                                    await fetch(`${BACKEND_URL}/api/admin/email/log/${entry.id}`, { method: 'DELETE', headers: authHeader() });
+                                    setEmailHistory(prev => prev.filter(e => e.id !== entry.id));
+                                  }}
+                                  className="text-gray-300 hover:text-red-500 transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-1.5">
+                              {entry.type === 'BROADCAST'
+                                ? <>Rol: <span className="font-medium">{entry.targetRole}</span></>
+                                : <><span className="font-medium">{entry.recipientName || entry.recipientEmail}</span>{entry.recipientName && <span className="text-gray-400"> · {entry.recipientEmail}</span>}</>
+                              }
+                              {' · '}de <span className="font-medium">{entry.senderAlias}</span>
+                            </p>
+                            <p className="text-xs text-gray-400 line-clamp-2">{entry.bodyPreview}</p>
+                            <p className="text-xs text-gray-300 mt-1.5">
+                              {new Date(entry.sentAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                            </p>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
 
             {/* ===== RECIBIDOS (inbox) ===== */}
             {emailMode === 'messages' && (
-              <div>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={inboxSearch}
+                  onChange={e => setInboxSearch(e.target.value)}
+                  placeholder="Buscar por nombre, email o mensaje..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+                />
                 {inboxLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
@@ -1560,7 +1593,14 @@ function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {inboxMessages.map(msg => (
+                    {inboxMessages
+                      .filter(msg => {
+                        const q = inboxSearch.toLowerCase();
+                        return !q || msg.senderName?.toLowerCase().includes(q) ||
+                          msg.senderEmail?.toLowerCase().includes(q) ||
+                          msg.message?.toLowerCase().includes(q);
+                      })
+                      .map(msg => (
                       <div
                         key={msg.id}
                         onClick={async () => {
@@ -1584,9 +1624,21 @@ function AdminDashboard() {
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-gray-400 flex-shrink-0">
-                            {new Date(msg.createdAt).toLocaleDateString('es-AR')}
-                          </span>
+                          <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <span className="text-xs text-gray-400">
+                              {new Date(msg.createdAt).toLocaleDateString('es-AR')}
+                            </span>
+                            <button
+                              onClick={async () => {
+                                await fetch(`${BACKEND_URL}/api/admin/messages/${msg.id}`, { method: 'DELETE', headers: authHeader() });
+                                if (!msg.read) setUnreadCount(prev => Math.max(0, prev - 1));
+                                setInboxMessages(prev => prev.filter(m => m.id !== msg.id));
+                              }}
+                              className="text-gray-300 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="text-sm">
