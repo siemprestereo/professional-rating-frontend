@@ -10,6 +10,7 @@ function RatingsHistory() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const workHistoryIdFilter = searchParams.get('workHistoryId');
+  const isProfessional = localStorage.getItem('userType') === 'PROFESSIONAL';
 
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,14 +153,14 @@ function RatingsHistory() {
                   </span>
                 </div>
 
-                {rating.reportStatus === 'PENDING' && (
+                {isProfessional && rating.reportStatus === 'PENDING' && (
                   <div className="mb-2">
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
                       <Clock className="w-3 h-3" /> Bajo revisión
                     </span>
                   </div>
                 )}
-                {rating.reportStatus === 'REJECTED' && (
+                {isProfessional && rating.reportStatus === 'REJECTED' && (
                   <div className="mb-2">
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                       <ShieldOff className="w-3 h-3" /> Denuncia rechazada
