@@ -290,6 +290,7 @@ function AdminDashboard() {
       if (!res.ok) throw new Error('Error al eliminar calificación');
       setRatings(prev => prev.filter(r => r.id !== confirmDeleteRating));
       setConfirmDeleteRating(null);
+      showToast('Calificación eliminada correctamente', 'success');
     } catch (e) {
       setError(e.message);
     } finally {
@@ -308,6 +309,7 @@ function AdminDashboard() {
       if (!res.ok) throw new Error('Error al borrar comentario');
       setRatings(prev => prev.map(r => r.id === confirmClearComment ? { ...r, comment: null } : r));
       setConfirmClearComment(null);
+      showToast('Comentario eliminado correctamente', 'success');
     } catch (e) {
       setError(e.message);
     } finally {
