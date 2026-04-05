@@ -414,7 +414,7 @@ function GenerarCvPdf() {
         <SharePdfModal
           pdfBlob={sharePdfBlob}
           professionalName={(() => { try { return JSON.parse(localStorage.getItem('professional'))?.name; } catch { return null; } })()}
-          professionalId={(() => { try { return JSON.parse(localStorage.getItem('professional'))?.id; } catch { return null; } })()}
+          professionalId={(() => { try { return JSON.parse(localStorage.getItem('professional'))?.publicSlug; } catch { return null; } })()}
           onClose={() => { setShowShareModal(false); setSharePdfBlob(null); }}
         />
       )}

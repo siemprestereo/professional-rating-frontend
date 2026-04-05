@@ -281,7 +281,7 @@ function CompareProfessionals() {
                     {prof.notes && <p className="text-sm text-gray-500 italic break-words mt-2">📝 {prof.notes}</p>}
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <button onClick={() => navigate(`/public-cv/${prof.professionalId}`)} className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                    <button onClick={() => navigate(`/public-cv/${prof.publicSlug || prof.professionalId}`)} className="bg-purple-100 text-purple-600 px-3 py-2 rounded-xl hover:bg-purple-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
                       <Eye className="w-4 h-4" /> Ver CV
                     </button>
                     <button onClick={() => removeProfessional(prof.professionalId)} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl hover:bg-red-200 transition-all text-xs font-semibold flex items-center gap-1 whitespace-nowrap">

@@ -11,7 +11,7 @@ import { getProfessionLabel } from '../constants/professions';
 import { BACKEND_URL } from '../config';
 
 function PublicCvView() {
-  const { professionalId } = useParams();
+  const { professionalSlug } = useParams();
   const navigate = useNavigate();
   const [cvData, setCvData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,11 +29,11 @@ function PublicCvView() {
   const isLoggedIn = !!token;
   const isClient = !!(token && userType === 'CLIENT');
 
-  useEffect(() => { loadData(); }, [professionalId]);
+  useEffect(() => { loadData(); }, [professionalSlug]);
 
   const loadData = async () => {
     try {
-      const cvResponse = await fetch(`${BACKEND_URL}/api/cv/professional/${professionalId}`);
+      const cvResponse = await fetch(`${BACKEND_URL}/api/cv/slug/${professionalSlug}`);
       if (!cvResponse.ok) throw new Error('CV no encontrado');
       const data = await cvResponse.json();
       setCvData(data);
@@ -42,7 +42,7 @@ function PublicCvView() {
         setCheckingFavorite(true);
         try {
           const favoriteResponse = await fetch(
-            `${BACKEND_URL}/api/clients/me/favorites/${professionalId}/check`,
+            `${BACKEND_URL}/api/clients/me/favorites/${data.professionalId}/check`,
             { headers: { 'Authorization': `Bearer ${token}` } }
           );
           if (favoriteResponse.ok) {
@@ -71,7 +71,7 @@ function PublicCvView() {
     const previousState = isFavorite;
     setIsFavorite(!isFavorite);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites/${professionalId}`, {
+      const response = await fetch(`${BACKEND_URL}/api/clients/me/favorites/${cvData.professionalId}`, {
         method: isFavorite ? 'DELETE' : 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: isFavorite ? undefined : JSON.stringify({})
@@ -85,7 +85,7 @@ function PublicCvView() {
   };
 
   const handleWorkClick = () => {
-    navigate(`/stats-public/${professionalId}`);
+    navigate(`/stats-public/${cvData.publicSlug}`);
   };
 
   const handleHome = () => {
@@ -166,7 +166,7 @@ function PublicCvView() {
               )}
             </div>
 
-            <div onClick={() => navigate(`/stats-public/${professionalId}`)} className="cursor-pointer hover:scale-105 transition-transform">
+            <div onClick={() => navigate(`/stats-public/${cvData?.publicSlug}`)} className="cursor-pointer hover:scale-105 transition-transform">
               <div className="flex items-center justify-center mb-3">
                 {renderStars(cvData.reputationScore || 0)}
                 <span className="ml-2 text-white font-semibold text-lg">{(cvData.reputationScore || 0).toFixed(1)}</span>
@@ -271,7 +271,7 @@ function PublicCvView() {
           )}
 
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 animate-slideUp">
-            <button onClick={() => navigate(`/stats-public/${professionalId}`)}
+            <button onClick={() => navigate(`/stats-public/${cvData.publicSlug}`)}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold py-4 px-6 rounded-xl hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-lg">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 4 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -421,7 +421,7 @@ function PublicCvView() {
       {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showShareModal && (
-        <ShareModal professionalId={professionalId} professionalName={cvData.professionalName} onClose={() => setShowShareModal(false)} />
+        <ShareModal professionalId={cvData.publicSlug} professionalName={cvData.professionalName} onClose={() => setShowShareModal(false)} />
       )}
       {showBadgeModal && cvData && (() => {
         const totalRatings = cvData.totalRatings || 0;

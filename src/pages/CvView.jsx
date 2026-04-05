@@ -401,7 +401,7 @@ function CvView() {
       <HomeButton />
 
       {showShareModal && (
-        <ShareModal professionalId={cv.professionalId} professionalName={cv.professionalName} onClose={() => setShowShareModal(false)} />
+        <ShareModal professionalId={cv.publicSlug} professionalName={cv.professionalName} onClose={() => setShowShareModal(false)} />
       )}
       {showFaq && <HelpSupportModal onClose={() => setShowFaq(false)} professionalName={cv?.professionalName} />}
     </div>

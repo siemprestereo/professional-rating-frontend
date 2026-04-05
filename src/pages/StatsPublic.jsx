@@ -6,14 +6,14 @@ import HomeButton from '../components/HomeButton';
 import { BACKEND_URL } from '../config';
 
 function StatsPublic() {
-  const { professionalId } = useParams();
+  const { professionalSlug } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [monthlyData, setMonthlyData] = useState([]);
   const [businessData, setBusinessData] = useState([]);
   const [professionData, setProfessionData] = useState(null);
 
-  useEffect(() => { loadAllStats(); }, [professionalId]);
+  useEffect(() => { loadAllStats(); }, [professionalSlug]);
 
   const fillLast6Months = (data) => {
     const now = new Date();
@@ -31,9 +31,9 @@ function StatsPublic() {
   const loadAllStats = async () => {
     try {
       const [monthlyRes, businessRes, professionRes] = await Promise.all([
-        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-month`),
-        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-business`),
-        fetch(`${BACKEND_URL}/api/stats/professional/${professionalId}/by-profession-type`)
+        fetch(`${BACKEND_URL}/api/stats/slug/${professionalSlug}/by-month`),
+        fetch(`${BACKEND_URL}/api/stats/slug/${professionalSlug}/by-business`),
+        fetch(`${BACKEND_URL}/api/stats/slug/${professionalSlug}/by-profession-type`)
       ]);
 
       if (monthlyRes.ok) {

@@ -54,8 +54,8 @@ function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/accept-terms" element={<AcceptTerms />} />
 
-            <Route path="/professional/:professionalId" element={<PublicCvView />} />
-            <Route path="/public-cv/:professionalId" element={<PublicCvView />} />
+            <Route path="/professional/:professionalSlug" element={<PublicCvView />} />
+            <Route path="/public-cv/:professionalSlug" element={<PublicCvView />} />
             <Route path="/rate/:code" element={<QRResolve />} />
             <Route path="/rate-professional/:professionalId" element={<RatingForm />} />
             <Route path="/search" element={<SearchProfessionals />} />
@@ -67,7 +67,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/pending-verification" element={<PendingVerification />} />
-            <Route path="/stats-public/:professionalId" element={<StatsPublic />} />
+            <Route path="/stats-public/:professionalSlug" element={<StatsPublic />} />
             <Route path="/ratings-history" element={<RatingsHistory />} />
 
             {/* Rutas protegidas — PROFESIONALES */}

@@ -49,9 +49,9 @@ function SavedProfessionals() {
     toggleSelection(professionalId);
   }, [toggleSelection]);
 
-  const handleViewCV = useCallback((e, professionalId) => {
+  const handleViewCV = useCallback((e, prof) => {
     e.stopPropagation();
-    navigate(`/public-cv/${professionalId}`);
+    navigate(`/public-cv/${prof.publicSlug || prof.professionalId}`);
   }, [navigate]);
 
   const handleRemoveFavorite = useCallback(async (e, professionalId) => {
@@ -123,7 +123,7 @@ function SavedProfessionals() {
                           <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">{translateProfession(prof.professionType)}</p>
                         </div>
                         <div className="flex flex-col gap-1.5 flex-shrink-0">
-                          <button onClick={(e) => handleViewCV(e, prof.professionalId)} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-purple-100">
+                          <button onClick={(e) => handleViewCV(e, prof)} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-purple-100">
                             <Eye className="w-3 h-3" /> CV
                           </button>
                           <button onClick={(e) => handleRemoveFavorite(e, prof.professionalId)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-red-100">

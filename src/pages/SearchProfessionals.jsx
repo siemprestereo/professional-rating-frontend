@@ -133,7 +133,7 @@ function SearchProfessionals() {
     return (
       <div
         key={professional.id}
-        onClick={() => checkAuthAndExecute(() => navigate(`/public-cv/${professional.id}`), 'profile')}
+        onClick={() => checkAuthAndExecute(() => navigate(`/public-cv/${professional.publicSlug || professional.id}`), 'profile')}
         className="bg-white rounded-2xl shadow-md p-4 mb-3 cursor-pointer hover:shadow-xl transition-all animate-slideUp border border-gray-100"
         style={{ animationDelay: `${index * 50}ms` }}
       >
