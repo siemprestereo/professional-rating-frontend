@@ -2,21 +2,33 @@ import { Star } from 'lucide-react';
 
 // ✅ Diccionario fuera de la función para mejor performance
 const PROFESSION_TRANSLATIONS = {
-  'WAITER': 'Mozo',
-  'ELECTRICIAN': 'Electricista',
-  'PAINTER': 'Pintor',
-  'HAIRDRESSER': 'Peluquero',
-  'PLUMBER': 'Plomero',
-  'CARPENTER': 'Carpintero',
-  'MECHANIC': 'Mecánico',
-  'CHEF': 'Chef',
+  'WAITER': 'Mozo/Camarero',
+  'CHEF': 'Chef/Cocinero',
   'BARISTA': 'Barista',
   'BARTENDER': 'Bartender',
+  'ELECTRICIAN': 'Electricista',
+  'PLUMBER': 'Plomero/a',
+  'PAINTER': 'Pintor/a',
+  'CARPENTER': 'Carpintero/a',
+  'CONSTRUCTION_WORKER': 'Obrero de construcción',
+  'GARDENER': 'Jardinero/a',
+  'AIR_CONDITIONING_TECHNICIAN': 'Instalador de A/A',
+  'GENERAL_MAINTENANCE': 'Mantenimiento general',
   'CLEANER': 'Personal de limpieza',
-  'GARDENER': 'Jardinero',
+  'HAIRDRESSER': 'Peluquero/a',
+  'PILATES': 'Instructor/a de Pilates',
+  'MECHANIC': 'Mecánico/a',
   'DRIVER': 'Conductor',
-  'SECURITY': 'Seguridad',
-  'RECEPTIONIST': 'Recepcionista'
+  'SECURITY': 'Personal de seguridad',
+  'RECEPTIONIST': 'Recepcionista',
+  'TUTORING_GENERAL': 'Clases particulares',
+  'MATH_TUTOR': 'Docente de matemáticas',
+  'ENGLISH_TUTOR': 'Docente de inglés',
+  'OTHER_TUTOR': 'Docente de otras materias',
+  'OTHER': 'Otro',
+  // legacy codes
+  'MOZO_A': 'Mozo/Camarero',
+  'MOZO': 'Mozo/Camarero',
 };
 
 /**
