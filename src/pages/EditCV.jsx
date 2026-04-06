@@ -28,7 +28,7 @@ function EditCV() {
   const [description, setDescription] = useState('');
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
-  const [professionType, setProfessionType] = useState('');
+  const [professionTypes, setProfessionTypes] = useState([]);
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [savingProfession, setSavingProfession] = useState(false);
   const [freelanceJobs, setFreelanceJobs] = useState([]);
@@ -88,7 +88,7 @@ function EditCV() {
         return;
       }
 
-      setProfessionType(professional.professionType || '');
+      setProfessionTypes(professional.professionTypes?.length ? professional.professionTypes : (professional.professionType ? [professional.professionType] : []));
       setProfessionalTitle(professional.professionalTitle || '');
 
       const token = localStorage.getItem('authToken');
@@ -362,8 +362,8 @@ function EditCV() {
   };
 
   const handleSaveProfession = async () => {
-    if (!professionType) {
-      setToast({ type: 'error', message: 'Por favor seleccioná tu tipo de profesión' });
+    if (professionTypes.length === 0) {
+      setToast({ type: 'error', message: 'Por favor seleccioná al menos una profesión' });
       return;
     }
     setSavingProfession(true);
@@ -372,14 +372,15 @@ function EditCV() {
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ professionalTitle, professionType })
+        body: JSON.stringify({ professionalTitle, professionTypes, professionType: professionTypes[0] || null })
       });
       if (response.ok) {
         const updatedData = await response.json();
-        setProfessionType(updatedData.professionType || '');
+        const updatedTypes = updatedData.professionTypes?.length ? updatedData.professionTypes : (updatedData.professionType ? [updatedData.professionType] : []);
+        setProfessionTypes(updatedTypes);
         setProfessionalTitle(updatedData.professionalTitle || '');
         const stored = JSON.parse(localStorage.getItem('professional') || '{}');
-        localStorage.setItem('professional', JSON.stringify({ ...stored, professionType: updatedData.professionType, professionalTitle: updatedData.professionalTitle }));
+        localStorage.setItem('professional', JSON.stringify({ ...stored, professionTypes: updatedTypes, professionType: updatedData.professionType, professionalTitle: updatedData.professionalTitle }));
         setToast({ type: 'success', message: 'Información profesional guardada' });
       } else {
         const e = await response.json();
@@ -663,8 +664,9 @@ function EditCV() {
           </h2>
           <div className="mb-4">
             <ProfessionSelector
-              value={professionType}
-              onChange={(val) => setProfessionType(val)}
+              multiple
+              values={professionTypes}
+              onChange={(vals) => setProfessionTypes(vals)}
               required
               focusColor="purple"
             />

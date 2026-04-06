@@ -244,7 +244,11 @@ function CompareProfessionals() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold text-gray-800 break-words">{prof.professionalName}</h3>
-                    <p className="text-sm text-purple-600 mb-1 break-words">{translateProfession(prof.professionType)}</p>
+                    <p className="text-sm text-purple-600 mb-1 break-words">
+                      {prof.professionTypes?.length > 0
+                        ? prof.professionTypes.map(translateProfession).join(' · ')
+                        : translateProfession(prof.professionType)}
+                    </p>
                     <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-2 ${badge.bgColor} ${badge.borderColor} border`}>
                       <span className="text-sm">{badge.emoji}</span>
                       <span className={badge.color}>{badge.name}</span>

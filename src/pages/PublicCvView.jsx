@@ -147,8 +147,12 @@ function PublicCvView() {
             {cvData.professionalTitle && (
               <p className="text-white font-semibold text-lg mb-1">{cvData.professionalTitle}</p>
             )}
-            {cvData.professionType && (
-              <p className={`text-white/80 mb-3 ${cvData.professionalTitle ? 'text-sm' : 'text-lg'}`}>{getProfessionLabel(cvData.professionType)}</p>
+            {(cvData.professionTypes?.length > 0 || cvData.professionType) && (
+              <p className={`text-white/80 mb-3 ${cvData.professionalTitle ? 'text-sm' : 'text-lg'}`}>
+                {cvData.professionTypes?.length > 0
+                  ? cvData.professionTypes.map(getProfessionLabel).join(' · ')
+                  : getProfessionLabel(cvData.professionType)}
+              </p>
             )}
 
             <div className="flex items-center justify-center gap-3 mb-3">

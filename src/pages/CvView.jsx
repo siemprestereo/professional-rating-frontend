@@ -187,8 +187,12 @@ function CvView() {
               {cv.professionalTitle && (
                 <p className="text-white font-semibold text-lg mb-1 animate-slideUp">{cv.professionalTitle}</p>
               )}
-              {cv.professionType && (
-                <p className={`text-white/80 text-base mb-4 animate-slideUp ${cv.professionalTitle ? 'text-sm' : 'text-lg'}`}>{translateProfession(cv.professionType)}</p>
+              {(cv.professionTypes?.length > 0 || cv.professionType) && (
+                <p className={`text-white/80 text-base mb-4 animate-slideUp ${cv.professionalTitle ? 'text-sm' : 'text-lg'}`}>
+                  {cv.professionTypes?.length > 0
+                    ? cv.professionTypes.map(translateProfession).join(' · ')
+                    : translateProfession(cv.professionType)}
+                </p>
               )}
             </button>
             <button onClick={() => navigate('/stats')} className="w-full hover:opacity-90 transition-opacity focus:outline-none">

@@ -7,7 +7,7 @@ import { formatDate, clearAllAppData } from '../utils/storage';
 
 function UpgradeToProfessionalModal({ onClose, onSuccess }) {
   const [step, setStep] = useState(1);
-  const [professionType, setProfessionType] = useState('');
+  const [professionTypes, setProfessionTypes] = useState([]);
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -40,8 +40,8 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
   };
 
   const handleSubmit = async () => {
-    if (!professionType) {
-      setError('Debes seleccionar un tipo de profesión');
+    if (professionTypes.length === 0) {
+      setError('Debes seleccionar al menos un tipo de profesión');
       return;
     }
 
@@ -51,7 +51,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
     try {
       const response = await api.switchRole(
         'PROFESSIONAL',
-        professionType,
+        professionTypes,
         professionalTitle || null
       );
 
@@ -138,8 +138,9 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
 
             <div className="mb-4">
               <ProfessionSelector
-                value={professionType}
-                onChange={(val) => setProfessionType(val)}
+                multiple
+                values={professionTypes}
+                onChange={(vals) => setProfessionTypes(vals)}
                 focusColor="blue"
               />
             </div>
@@ -173,7 +174,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
               </button>
               <button
                 onClick={() => setStep(2)}
-                disabled={!professionType}
+                disabled={professionTypes.length === 0}
                 className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 rounded-2xl hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 transition-all text-base"
               >
                 Continuar
@@ -226,7 +227,7 @@ function UpgradeToProfessionalModal({ onClose, onSuccess }) {
 
             <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 mb-6">
               <p className="text-sm text-blue-800">
-                <strong>Profesión:</strong> {getProfessionLabel(professionType)}
+                <strong>Profesión{professionTypes.length > 1 ? 'es' : ''}:</strong> {professionTypes.map(getProfessionLabel).join(', ')}
               </p>
               {professionalTitle && (
                 <p className="text-sm text-blue-800 mt-1">

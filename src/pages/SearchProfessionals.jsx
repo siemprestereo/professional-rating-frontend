@@ -127,7 +127,9 @@ function SearchProfessionals() {
 
   const renderProfessionalCard = (professional, index = 0) => {
     const badge = getProfessionalBadge(professional.totalRatings);
-    const professionDisplay = translateProfession(professional.professionType || professional.profession);
+    const professionDisplay = professional.professionTypes?.length > 0
+      ? professional.professionTypes.map(translateProfession).join(' · ')
+      : translateProfession(professional.professionType || professional.profession);
     const zones = professional.zones || [];
 
     return (

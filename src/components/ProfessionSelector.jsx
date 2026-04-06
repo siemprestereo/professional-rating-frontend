@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Briefcase, Lightbulb, Loader2 } from 'lucide-react';
+import { ChevronDown, Search, Briefcase, Lightbulb, Loader2, Check, X } from 'lucide-react';
 import { suggestProfession } from '../services/api';
 import { BACKEND_URL } from '../config';
 
 /**
  * Props:
- * - value: string con el code de la profesión (ej: 'ELECTRICIAN')
- * - onChange: función que recibe el code seleccionado
+ * - value: string con el code de la profesión (ej: 'ELECTRICIAN') — single mode
+ * - onChange: función que recibe el code seleccionado — single mode
+ * - multiple: boolean — enables multi-select mode
+ * - values: string[] — selected codes in multi mode
  * - required: boolean
  * - focusColor: "purple" | "blue" | "green"
  * - placeholder: string
@@ -15,6 +17,8 @@ import { BACKEND_URL } from '../config';
 function ProfessionSelector({
   value = '',
   onChange,
+  multiple = false,
+  values = [],
   required = false,
   focusColor = 'purple',
   placeholder = 'Seleccioná una profesión',
@@ -34,6 +38,7 @@ function ProfessionSelector({
   const accentText = { purple: 'text-purple-600', blue: 'text-blue-600', green: 'text-green-600' }[focusColor] || 'text-purple-600';
   const accentBorder = { purple: 'border-purple-500', blue: 'border-blue-500', green: 'border-green-500' }[focusColor] || 'border-purple-500';
   const focusBorder = { purple: 'focus:border-purple-500', blue: 'focus:border-blue-500', green: 'focus:border-green-500' }[focusColor] || 'focus:border-purple-500';
+  const accentCheck = { purple: 'bg-purple-600', blue: 'bg-blue-600', green: 'bg-green-600' }[focusColor] || 'bg-purple-600';
 
   useEffect(() => {
     const load = async () => {
@@ -63,7 +68,24 @@ function ProfessionSelector({
     if (open && searchRef.current) setTimeout(() => searchRef.current?.focus(), 50);
   }, [open]);
 
-  const handleSelect = (profCode) => { onChange(profCode); setOpen(false); setSearch(''); };
+  const handleSelect = (profCode) => {
+    if (multiple) {
+      const updated = values.includes(profCode)
+        ? values.filter(v => v !== profCode)
+        : [...values, profCode];
+      onChange(updated);
+      // keep dropdown open
+    } else {
+      onChange(profCode);
+      setOpen(false);
+      setSearch('');
+    }
+  };
+
+  const handleRemoveTag = (e, profCode) => {
+    e.stopPropagation();
+    onChange(values.filter(v => v !== profCode));
+  };
 
   const handleToggle = () => {
     setOpen(prev => !prev);
@@ -100,26 +122,53 @@ function ProfessionSelector({
     a === 'Otras' ? 1 : b === 'Otras' ? -1 : a.localeCompare(b, 'es')
   );
 
-  const selectedLabel = value ? (professions.find(p => p.code === value)?.displayName || value) : '';
+  const selectedLabel = !multiple && value
+    ? (professions.find(p => p.code === value)?.displayName || value)
+    : '';
+
+  const selectedLabels = multiple
+    ? values.map(v => professions.find(p => p.code === v)?.displayName || v)
+    : [];
+
+  const hasSelection = multiple ? values.length > 0 : !!selectedLabel;
 
   return (
     <div ref={containerRef} className="relative">
       <label className="block text-gray-700 font-semibold mb-2 flex items-center text-base">
         <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
-        Profesión {required && '*'}
+        Profesión{multiple ? 'es' : ''} {required && '*'}
       </label>
 
       <button
         type="button"
         onClick={handleToggle}
-        className={`w-full border-2 rounded-2xl px-4 py-3 text-left transition-all text-base flex items-center justify-between bg-white
+        className={`w-full border-2 rounded-2xl px-4 py-3 text-left transition-all text-base flex items-center justify-between bg-white min-h-[52px]
           ${open ? accentBorder : 'border-gray-200 hover:border-gray-300'}
-          ${selectedLabel ? 'text-gray-800' : 'text-gray-400'}`}
+          ${hasSelection ? 'text-gray-800' : 'text-gray-400'}`}
       >
-        <span className="truncate">{selectedLabel || placeholder}</span>
+        {multiple ? (
+          <span className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+            {selectedLabels.length > 0 ? selectedLabels.map((label, i) => (
+              <span key={values[i]} className={`inline-flex items-center gap-1 text-sm px-2.5 py-0.5 rounded-full font-medium ${accentBg} ${accentText}`}>
+                {label}
+                <button
+                  type="button"
+                  onClick={(e) => handleRemoveTag(e, values[i])}
+                  className="ml-0.5 rounded-full hover:opacity-70"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )) : (
+              <span className="text-gray-400">{placeholder}</span>
+            )}
+          </span>
+        ) : (
+          <span className="truncate">{selectedLabel || placeholder}</span>
+        )}
         {loadingProfessions
-          ? <Loader2 className="w-4 h-4 text-gray-400 flex-shrink-0 animate-spin" />
-          : <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+          ? <Loader2 className="w-4 h-4 text-gray-400 flex-shrink-0 animate-spin ml-2" />
+          : <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 ml-2 transition-transform ${open ? 'rotate-180' : ''}`} />
         }
       </button>
 
@@ -147,26 +196,33 @@ function ProfessionSelector({
             ) : categories.length > 0 ? (
               categories.map(cat => (
                 <li key={cat}>
-                  {/* Category header — only show if more than one category or searching */}
                   {(categories.length > 1 || search.trim()) && (
                     <div className="px-4 pt-2.5 pb-1 text-xs font-bold text-gray-400 uppercase tracking-wide">
                       {cat}
                     </div>
                   )}
-                  {grouped[cat].map(prof => (
-                    <div
-                      key={prof.code}
-                      onClick={() => handleSelect(prof.code)}
-                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors
-                        ${categories.length > 1 ? 'pl-5' : ''}
-                        ${prof.code === value
-                          ? `${accentBg} ${accentText} font-semibold`
-                          : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                      {prof.displayName}
-                    </div>
-                  ))}
+                  {grouped[cat].map(prof => {
+                    const isSelected = multiple ? values.includes(prof.code) : prof.code === value;
+                    return (
+                      <div
+                        key={prof.code}
+                        onClick={() => handleSelect(prof.code)}
+                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between
+                          ${categories.length > 1 ? 'pl-5' : ''}
+                          ${isSelected
+                            ? `${accentBg} ${accentText} font-semibold`
+                            : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                      >
+                        <span>{prof.displayName}</span>
+                        {multiple && isSelected && (
+                          <span className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${accentCheck}`}>
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </li>
               ))
             ) : (

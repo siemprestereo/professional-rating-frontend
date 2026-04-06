@@ -120,7 +120,11 @@ function SavedProfessionals() {
                       <div className="flex justify-between items-start gap-2">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-base sm:text-lg font-bold text-gray-800 truncate">{prof.professionalName}</h3>
-                          <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">{translateProfession(prof.professionType)}</p>
+                          <p className="text-xs sm:text-sm text-purple-600 font-medium truncate">
+                            {prof.professionTypes?.length > 0
+                              ? prof.professionTypes.map(translateProfession).join(' · ')
+                              : translateProfession(prof.professionType)}
+                          </p>
                         </div>
                         <div className="flex flex-col gap-1.5 flex-shrink-0">
                           <button onClick={(e) => handleViewCV(e, prof)} className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-all text-[10px] font-bold flex items-center justify-center gap-1 border border-purple-100">

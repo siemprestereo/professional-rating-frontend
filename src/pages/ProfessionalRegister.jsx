@@ -15,7 +15,7 @@ function ProfessionalRegister() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [professionType, setProfessionType] = useState('');
+  const [professionTypes, setProfessionTypes] = useState([]);
   const [professionalTitle, setProfessionalTitle] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,8 +72,8 @@ function ProfessionalRegister() {
 
     const formattedName = formatName(name);
 
-    if (!professionType) {
-      setToast({ type: 'error', message: 'Por favor seleccioná tu profesión' });
+    if (professionTypes.length === 0) {
+      setToast({ type: 'error', message: 'Por favor seleccioná al menos una profesión' });
       return;
     }
 
@@ -100,7 +100,9 @@ function ProfessionalRegister() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formattedName, email, password,
-          professionType, professionalTitle: professionalTitle || null,
+          professionTypes,
+          professionType: professionTypes[0] || null,
+          professionalTitle: professionalTitle || null,
           location: location || null
         })
       });
@@ -191,8 +193,9 @@ function ProfessionalRegister() {
 
           <div className="mb-3 sm:mb-4">
             <ProfessionSelector
-              value={professionType}
-              onChange={(val) => setProfessionType(val)}
+              multiple
+              values={professionTypes}
+              onChange={(vals) => setProfessionTypes(vals)}
               required
               focusColor="blue"
               professionalName={name}

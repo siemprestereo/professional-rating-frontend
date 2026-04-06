@@ -95,10 +95,12 @@ export const resolveQR = async (code) => {
 
 // ========== ROLE SWITCHING ==========
 // ✅ CORREGIDO: newRole coincide con el DTO del backend
-export const switchRole = async (newRole, professionType = null, professionalTitle = null) => {
+export const switchRole = async (newRole, professionTypes = null, professionalTitle = null) => {
+  const types = Array.isArray(professionTypes) ? professionTypes : (professionTypes ? [professionTypes] : []);
   const response = await apiClient.post('/role/switch', {
     newRole,  // ← CRÍTICO: debe ser "newRole", no "targetRole"
-    professionType,
+    professionTypes: types,
+    professionType: types[0] || null,
     professionalTitle
   });
   return response.data;
