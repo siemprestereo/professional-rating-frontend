@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Edit, Home, ChevronDown, FileText, LogOut } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Edit, Home, ChevronDown, FileText, LogOut } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import BackButton from '../components/BackButton';
 import { BACKEND_URL } from '../config';
@@ -186,6 +186,18 @@ function MyProfile() {
                 <span>Ubicación</span>
               </div>
               <p className="text-gray-800 text-base font-medium ml-6">{professional.location || 'No especificada'}</p>
+            </div>
+
+            <div>
+              <div className="flex items-center text-gray-400 text-sm mb-1">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>Fecha de nacimiento</span>
+              </div>
+              <p className="text-gray-800 text-base font-medium ml-6">
+                {professional.birthDate
+                  ? new Date(professional.birthDate + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                  : 'No especificada'}
+              </p>
             </div>
           </div>
         </div>
