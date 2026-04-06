@@ -963,13 +963,13 @@ function AdminDashboard() {
                     {user.activeRole === 'PROFESSIONAL' && (
                       <div className="grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => window.open(`/professional/${user.id}`, '_blank')}
+                          onClick={() => window.open(`/professional/${user.publicSlug || user.id}`, '_blank')}
                           className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
                         >
                           <FileText className="w-3.5 h-3.5" /> Ver CV
                         </button>
                         <button
-                          onClick={() => window.open(`/stats-public/${user.id}`, '_blank')}
+                          onClick={() => window.open(`/stats-public/${user.publicSlug || user.id}`, '_blank')}
                           className="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           <TrendingUp className="w-3.5 h-3.5" /> Ver Stats
