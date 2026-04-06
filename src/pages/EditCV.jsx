@@ -100,7 +100,7 @@ function EditCV() {
         const data = await response.json();
         setCv({ id: data.id });
         setDescription(data.description || '');
-        setSkills(data.skills ? data.skills.split(',').map(s => s.trim()).filter(Boolean) : []);
+        setSkills(data.skills ? data.skills.split(',').map(s => { const t = s.trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; }).filter(Boolean) : []);
         setZones(data.zones || []);
 
         const allJobs = (data.workExperiences || []).map(exp => ({
@@ -620,7 +620,8 @@ function EditCV() {
               onKeyDown={(e) => {
                 if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
                   e.preventDefault();
-                  const tag = skillInput.trim().replace(/,$/, '');
+                  const raw = skillInput.trim().replace(/,$/, '');
+                  const tag = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
                   if (tag && !skills.includes(tag)) setSkills(prev => [...prev, tag]);
                   setSkillInput('');
                 }
@@ -632,7 +633,8 @@ function EditCV() {
             <button
               type="button"
               onClick={() => {
-                const tag = skillInput.trim().replace(/,$/, '');
+                const raw = skillInput.trim().replace(/,$/, '');
+                const tag = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
                 if (tag && !skills.includes(tag)) setSkills(prev => [...prev, tag]);
                 setSkillInput('');
               }}
