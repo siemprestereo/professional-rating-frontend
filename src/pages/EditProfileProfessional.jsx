@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Mail, Phone, Save, Trash2, UserCheck } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Save, Trash2, UserCheck, Calendar } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import SwitchToClientModal from '../components/SwitchToClientModal';
@@ -22,6 +22,7 @@ function EditProfileProfessional() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [isAlreadyClient, setIsAlreadyClient] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -54,6 +55,7 @@ function EditProfileProfessional() {
       setEmail(localData.email || '');
       setPhone(localData.phone || '');
       setLocation(localData.location || '');
+      setBirthDate(localData.birthDate || '');
 
       try {
         const [profileResponse, roleResponse] = await Promise.all([
@@ -72,6 +74,7 @@ function EditProfileProfessional() {
           setEmail(serverData.email || '');
           setPhone(serverData.phone || '');
           setLocation(serverData.location || '');
+          setBirthDate(serverData.birthDate || '');
           localStorage.setItem('professional', JSON.stringify(serverData));
         }
 
@@ -112,7 +115,7 @@ function EditProfileProfessional() {
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone, location })
+        body: JSON.stringify({ phone, location, birthDate: birthDate || null })
       });
 
       if (!response.ok) {
@@ -126,6 +129,7 @@ function EditProfileProfessional() {
       setEmail(updatedData.email || '');
       setPhone(updatedData.phone || '');
       setLocation(updatedData.location || '');
+      setBirthDate(updatedData.birthDate || '');
       localStorage.setItem('professional', JSON.stringify(updatedData));
       setToast({ type: 'success', message: 'Perfil actualizado correctamente' });
     } catch (err) {
@@ -215,8 +219,16 @@ function EditProfileProfessional() {
               <p className="text-sm text-gray-500 mt-1">Formato: +54 11 1234-5678</p>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <LocationSelector value={location} onChange={setLocation} focusColor="purple" label="Lugar de residencia" />
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-purple-600" /> Fecha de nacimiento
+              </label>
+              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-purple-500 focus:outline-none transition-all" />
             </div>
 
             <button type="submit" disabled={saving}

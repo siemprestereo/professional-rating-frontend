@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, User, Mail, Phone, Save, Trash2, Briefcase } from 'lucide-react';
+import { Loader2, User, Mail, Phone, Save, Trash2, Briefcase, Calendar } from 'lucide-react';
 import Toast from '../components/Toast';
 import ErrorModal from '../components/ErrorModal';
 import UpgradeToProfessionalModal from '../components/UpgradeToProfessionalModal';
@@ -22,6 +22,7 @@ function EditProfile() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
+  const [birthDate, setBirthDate] = useState('');
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -53,6 +54,7 @@ function EditProfile() {
       setEmail(localData.email || '');
       setPhone(localData.phone || '');
       setLocation(localData.location || '');
+      setBirthDate(localData.birthDate || '');
 
       try {
         const response = await fetch(`${BACKEND_URL}/api/auth/me/client`, {
@@ -65,6 +67,7 @@ function EditProfile() {
           setEmail(serverData.email || '');
           setPhone(serverData.phone || '');
           setLocation(serverData.location || '');
+          setBirthDate(serverData.birthDate || '');
           localStorage.setItem('client', JSON.stringify(serverData));
         }
       } catch {
@@ -91,7 +94,7 @@ function EditProfile() {
       const response = await fetch(`${BACKEND_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone, location })
+        body: JSON.stringify({ phone, location, birthDate: birthDate || null })
       });
       if (!response.ok) throw new Error('Error al actualizar');
       const updatedData = await response.json();
@@ -167,8 +170,16 @@ function EditProfile() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                 className="w-full border-2 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all" />
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <LocationSelector value={location} onChange={setLocation} focusColor="green" label="Lugar de residencia" />
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-teal-600" /> Fecha de nacimiento
+              </label>
+              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 focus:border-teal-500 focus:outline-none transition-all" />
             </div>
             <button type="submit" disabled={saving}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center text-lg shadow-lg disabled:opacity-50 hover:scale-105 transition-all">
