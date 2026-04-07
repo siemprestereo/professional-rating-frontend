@@ -8,6 +8,7 @@ import api from '../services/api';
 import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
 import NotificationBell from '../components/NotificationBell';
+import SearchComingSoonModal from '../components/SearchComingSoonModal';
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ function ClientDashboard() {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showSearchComingSoon, setShowSearchComingSoon] = useState(false);
   const [supportMessage, setSupportMessage] = useState('');
   const [supportSending, setSupportSending] = useState(false);
   const [supportSent, setSupportSent] = useState(false);
@@ -410,7 +412,7 @@ function ClientDashboard() {
       <div className="px-4 -mt-16">
         <div className="grid grid-cols-2 gap-3 mb-4 animate-slideUp">
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => setShowSearchComingSoon(true)}
             className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-all"
           >
             <Search className="w-10 h-10 text-white mx-auto mb-3" />
@@ -559,6 +561,8 @@ function ClientDashboard() {
       />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {showSearchComingSoon && <SearchComingSoonModal onClose={() => setShowSearchComingSoon(false)} />}
 
       {showHelpModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn" onClick={() => { setShowHelpModal(false); setSupportMessage(''); setSupportSent(false); }}>
