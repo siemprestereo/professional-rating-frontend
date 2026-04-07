@@ -12,9 +12,9 @@ function SearchComingSoonModal({ onClose }) {
         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Search className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-3">Próximamente</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-3">En breve</h2>
         <p className="text-gray-500 text-base mb-6">
-          Estamos incorporando profesionales a la plataforma. En breve podrás buscar y contactar profesionales de distintos rubros cerca tuyo.
+          Esta función estará disponible muy pronto.
         </p>
         <button
           onClick={onClose}

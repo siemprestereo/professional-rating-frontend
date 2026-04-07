@@ -11,6 +11,7 @@ import { exchangeOAuthCode, saveAuthData } from '../utils/authUtils';
 import { BACKEND_URL } from '../config';
 import NotificationBell from '../components/NotificationBell';
 import HelpSupportModal from '../components/HelpSupportModal';
+import SearchComingSoonModal from '../components/SearchComingSoonModal';
 
 function ProfessionalDashboard() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ function ProfessionalDashboard() {
   const [hasWorkExperiences, setHasWorkExperiences] = useState(true);
   const [timeLeft, setTimeLeft] = useState(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showSearchComingSoon, setShowSearchComingSoon] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -485,7 +487,7 @@ function ProfessionalDashboard() {
           </h3>
           <p className="text-white/90 text-sm mb-4">Descubrí y conectá con otros profesionales en la plataforma</p>
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => setShowSearchComingSoon(true)}
             className="w-full bg-white text-purple-600 font-bold py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 ripple text-base"
           >
             🔍 Buscar Profesionales
@@ -519,6 +521,7 @@ function ProfessionalDashboard() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {errorModal && <ErrorModal title={errorModal.title} message={errorModal.message} onClose={() => setErrorModal(null)} />}
+      {showSearchComingSoon && <SearchComingSoonModal onClose={() => setShowSearchComingSoon(false)} />}
 
       {showHelpModal && (
         <HelpSupportModal onClose={() => setShowHelpModal(false)} professionalName={professional?.name} />
