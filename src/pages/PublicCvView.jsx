@@ -21,6 +21,7 @@ function PublicCvView() {
   const [toast, setToast] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalMessage, setLoginModalMessage] = useState(null);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
@@ -161,8 +162,9 @@ function PublicCvView() {
                 <span className={badge.color}>{badge.name}</span>
               </button>
 
-              {isClient && !checkingFavorite && (
-                <button onClick={toggleFavorite}
+              {!checkingFavorite && (
+                <button
+                  onClick={isClient ? toggleFavorite : () => { setLoginModalMessage('Para poder guardar a este Profesional en tu lista de favoritos, tenés que iniciar sesión o registrarte.'); setShowLoginModal(true); }}
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-lg border-2 border-white active:scale-90 ${isFavorite ? 'bg-red-500 hover:bg-red-600' : 'bg-white hover:bg-gray-100'}`}
                   aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}>
                   <Heart className={`w-6 h-6 transition-transform ${isFavorite ? 'text-white fill-white scale-110' : 'text-gray-400'}`} />
@@ -422,7 +424,7 @@ function PublicCvView() {
         </button>
       </div>
 
-      {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
+      {showLoginModal && <LoginRequiredModal onClose={() => { setShowLoginModal(false); setLoginModalMessage(null); }} message={loginModalMessage} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showShareModal && (
         <ShareModal professionalId={cvData.publicSlug} professionalName={cvData.professionalName} onClose={() => setShowShareModal(false)} />

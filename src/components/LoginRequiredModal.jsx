@@ -35,6 +35,15 @@ function LoginRequiredModal({ onClose, title, message }) {
         </div>
 
         <div className="space-y-3">
+          <a
+            href="https://calificalo.com.ar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full border-2 border-gray-200 text-gray-600 px-6 py-3 rounded-2xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-base"
+          >
+            ¿Qué es Calificalo?
+          </a>
+
           <button
             onClick={handleClientLogin}
             className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition-all flex items-center justify-center gap-2 text-base"

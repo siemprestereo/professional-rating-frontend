@@ -297,6 +297,9 @@ function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70 space-y-1">
           <p className="text-sm sm:text-base">Consultas y sugerencias: <a href="mailto:hola@calificalo.com.ar" className="text-white/90 hover:text-white underline transition-colors">hola@calificalo.com.ar</a></p>
           <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
+          <p className="text-sm sm:text-base">
+            <a href="/terms" className="text-white/70 hover:text-white underline transition-colors">Términos y condiciones</a>
+          </p>
         </div>
       </footer>
 
