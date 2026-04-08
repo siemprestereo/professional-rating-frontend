@@ -39,7 +39,7 @@ function LoginRequiredModal({ onClose, title, message }) {
             href="https://calificalo.com.ar"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full border-2 border-gray-200 text-gray-600 px-6 py-3 rounded-2xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-base"
+            className="w-full border-2 border-orange-400 text-orange-500 px-6 py-3 rounded-2xl font-semibold hover:bg-orange-50 transition-all flex items-center justify-center gap-2 text-base"
           >
             ¿Qué es Calificalo?
           </a>
