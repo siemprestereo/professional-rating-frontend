@@ -140,8 +140,12 @@ function LandingPage() {
               <span className="text-yellow-300 font-bold">profesional</span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-white/90 mb-4 sm:mb-6 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
-              La plataforma que transforma calificaciones en oportunidades laborales para profesionales de todos los rubros
+            <p className="text-sm sm:text-base md:text-lg text-white/90 mb-2 sm:mb-3 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
+              Tus clientes te califican con un QR después de cada servicio, y esas calificaciones se convierten en tu reputación y tu CV para conseguir más trabajo.
+            </p>
+
+            <p className="text-xs sm:text-sm md:text-base text-white/80 mb-4 sm:mb-6 max-w-2xl mx-auto animate-slideUp delay-100 px-4 leading-snug">
+              ¿Necesitás un electricista, un plomero o alguien para atención al público? Buscá profesionales y elegí según lo que opinan sus clientes.
             </p>
 
             <div className="flex flex-col gap-2 sm:gap-3 justify-center items-center animate-slideUp delay-200 px-4">
@@ -294,7 +298,7 @@ function LandingPage() {
       <footer className="bg-black/20 backdrop-blur-md py-6 sm:py-8 mt-12 sm:mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-white/70 space-y-1">
           <p className="text-sm sm:text-base">Consultas y sugerencias: <a href="mailto:hola@calificalo.com.ar" className="text-white/90 hover:text-white underline transition-colors">hola@calificalo.com.ar</a></p>
-          <p className="text-sm sm:text-base">© 2025 Calificalo - Tu reputación profesional</p>
+          <p className="text-sm sm:text-base">© {new Date().getFullYear()} Calificalo - Tu reputación profesional</p>
           <p className="text-sm sm:text-base">
             <a href="/terms" className="text-white/70 hover:text-white underline transition-colors">Términos y condiciones</a>
           </p>
