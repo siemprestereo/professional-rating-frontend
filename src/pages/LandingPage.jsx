@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Star, Users, TrendingUp, QrCode, Search, UserPlus, ArrowRight, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import LoginRequiredModal from '../components/LoginRequiredModal';
-import SearchComingSoonModal from '../components/SearchComingSoonModal';
 import { getFirstName } from '../utils/formatName';
 
 function FaqItem({ question, answer }) {
@@ -24,7 +23,6 @@ function LandingPage() {
   const [userInfo, setUserInfo] = useState(null);
   const [installPrompt, setInstallPrompt] = useState(null);
   const [faqOpen, setFaqOpen] = useState(null);
-  const [showSearchComingSoon, setShowSearchComingSoon] = useState(false);
 
   useEffect(() => {
     // Obtener información del usuario del token
@@ -64,7 +62,7 @@ function LandingPage() {
   };
 
   const handleSearchClick = () => {
-    setShowSearchComingSoon(true);
+    navigate('/search');
   };
 
   const handleDashboard = () => {
@@ -307,7 +305,6 @@ function LandingPage() {
       {showLoginModal && (
         <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
       )}
-      {showSearchComingSoon && <SearchComingSoonModal onClose={() => setShowSearchComingSoon(false)} />}
     </div>
   );
 }
