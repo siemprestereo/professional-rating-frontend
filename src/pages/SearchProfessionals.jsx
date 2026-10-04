@@ -127,6 +127,27 @@ function SearchProfessionals() {
       : translateProfession(professional.professionType || professional.profession);
     const zones = professional.zones || [];
 
+    // Zonas que coinciden con la ubicación elegida o el texto buscado van primero (orden estable)
+    const norm = (s) => (s || '').toLowerCase().trim();
+    const searchTerms = [selectedLocalidad || selectedProvinciaNombre, searchTerm].map(norm).filter(Boolean);
+    const matchesSearch = (z) => searchTerms.some(t => norm(z.zona).includes(t) || norm(z.provincia).includes(t));
+    const sortedZones = [...zones].sort((a, b) => matchesSearch(b) - matchesSearch(a));
+
+    // Máximo 3 zonas visibles, agrupadas por provincia (la provincia se muestra una sola vez)
+    const visibleZones = sortedZones.slice(0, 3);
+    const hiddenZonesCount = sortedZones.length - visibleZones.length;
+    const zoneGroups = [];
+    visibleZones.forEach(z => {
+      const provincia = z.provincia || z.zona;
+      let group = zoneGroups.find(g => g.provincia === provincia);
+      if (!group) {
+        group = { provincia, zonas: [] };
+        zoneGroups.push(group);
+      }
+      // Si la zona es igual a la provincia no se repite como chip
+      if (z.provincia && norm(z.zona) !== norm(z.provincia)) group.zonas.push(z);
+    });
+
     return (
       <div
         key={professional.id}
@@ -143,15 +164,20 @@ function SearchProfessionals() {
             <p className="text-xs text-purple-600 font-semibold mb-1">{professionDisplay}</p>
 
             {zones.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-2">
-                {zones.slice(0, 3).map(zone => (
-                  <span key={zone.id} className="bg-purple-50 border border-purple-200 text-purple-700 text-xs px-2 py-0.5 rounded-full">
-                    📍 {zone.zona}
-                  </span>
+              <div className="mb-2 space-y-1">
+                {zoneGroups.map(group => (
+                  <div key={group.provincia} className="flex flex-wrap items-center gap-1">
+                    <span className="text-xs font-semibold text-gray-600">📍 {group.provincia}</span>
+                    {group.zonas.map(zone => (
+                      <span key={zone.id} className="bg-purple-50 border border-purple-200 text-purple-700 text-xs px-2 py-0.5 rounded-full">
+                        {zone.zona}
+                      </span>
+                    ))}
+                  </div>
                 ))}
-                {zones.length > 3 && (
-                  <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
-                    +{zones.length - 3} más
+                {hiddenZonesCount > 0 && (
+                  <span className="inline-block bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
+                    +{hiddenZonesCount} más
                   </span>
                 )}
               </div>
