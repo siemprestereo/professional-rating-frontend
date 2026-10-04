@@ -4,6 +4,7 @@ import { Search, Star, MapPin, User, Loader2, Home, Zap, Wrench, UtensilsCrossed
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import SearchableSelect from '../components/SearchableSelect';
 import { getProfessionalBadge } from '../utils/professionalBadge';
+import { translateProfession } from '../utils/professionalUtils';
 import { useGeoref } from '../hooks/useGeoref';
 import { BACKEND_URL } from '../config';
 
@@ -111,12 +112,6 @@ function SearchProfessionals() {
     setSelectedProvinciaNombre(prov?.nombre || '');
     setSelectedLocalidad('');
     if (id) fetchSegundoNivel(id);
-  };
-
-  const translateProfession = (type) => {
-    if (!type) return '';
-    const translations = { 'WAITER': 'Mozo', 'ELECTRICIAN': 'Electricista', 'PAINTER': 'Pintor', 'HAIRDRESSER': 'Peluquero', 'PLUMBER': 'Plomero', 'CARPENTER': 'Carpintero', 'MECHANIC': 'Mecánico', 'CHEF': 'Chef', 'BARISTA': 'Barista', 'BARTENDER': 'Bartender', 'CLEANER': 'Personal de limpieza', 'GARDENER': 'Jardinero', 'DRIVER': 'Conductor', 'SECURITY': 'Seguridad', 'RECEPTIONIST': 'Recepcionista', 'OTHER': 'Otro' };
-    return translations[type.toUpperCase()] || type;
   };
 
   const renderStars = (score) => {
