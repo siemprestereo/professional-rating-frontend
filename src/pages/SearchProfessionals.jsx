@@ -233,6 +233,12 @@ function SearchProfessionals() {
             <div className="animate-fadeIn">
               {professionals.length > 0 ? (
                 professionals.map((p, i) => renderProfessionalCard(p, i))
+              ) : !loading && !searchTerm.trim() ? (
+                <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
+                  <Search className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                  <p className="text-gray-600 font-semibold mb-1">¿A quién buscás?</p>
+                  <p className="text-gray-400 text-sm">Escribí un nombre o rubro para ver profesionales.</p>
+                </div>
               ) : !loading && (
                 <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100">
                   <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
